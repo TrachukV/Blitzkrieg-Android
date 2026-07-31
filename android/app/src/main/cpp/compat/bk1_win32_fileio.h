@@ -85,6 +85,28 @@ HMODULE GetModuleHandleA( const char *pszModule );
 }
 #endif
 
+// Drive enumeration. StreamIO/RandomGenInternal.cpp stirs the volume layout
+// into its seed; Android has one filesystem, so that is what it reports.
+#define DRIVE_UNKNOWN     0
+#define DRIVE_NO_ROOT_DIR 1
+#define DRIVE_REMOVABLE   2
+#define DRIVE_FIXED       3
+#define DRIVE_REMOTE      4
+#define DRIVE_CDROM       5
+#define DRIVE_RAMDISK     6
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+DWORD GetLogicalDriveStringsA( DWORD nBufferLength, char *pszBuffer );
+UINT  GetDriveTypeA( const char *pszRoot );
+#ifdef __cplusplus
+}
+#endif
+
+#define GetLogicalDriveStrings GetLogicalDriveStringsA
+#define GetDriveType           GetDriveTypeA
+
 #define CreateFile      CreateFileA
 #define GetFullPathName GetFullPathNameA
 #define GetDiskFreeSpace GetDiskFreeSpaceA

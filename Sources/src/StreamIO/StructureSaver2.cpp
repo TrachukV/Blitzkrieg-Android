@@ -333,7 +333,7 @@ IRefCount* CStructureSaver2::LoadObject()
 bool CStructureSaver2::StartChunk( const SSChunkID idChunk )
 {
 	CChunkLevel &last = chunks.back();
-	chunks.push_back();
+	chunks.push_back( CChunkLevel() );
 	if ( IsReading() ) 
 	{
 		bool bRes = GetShortChunk( last, idChunk, chunks.back(), last.nChunkNumber );
@@ -384,7 +384,7 @@ void CStructureSaver2::Start( IStructureSaver::EAccessMode eAccessMode, IProgres
 	chunks.clear();
 	obj.Clear();
 	data.Clear();
-	chunks.push_back();
+	chunks.push_back( CChunkLevel() );
 	bIsReading = eAccessMode == IStructureSaver::READ;
 	if ( IsReading() )
 	{

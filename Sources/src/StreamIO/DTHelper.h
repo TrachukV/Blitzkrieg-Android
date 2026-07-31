@@ -170,8 +170,8 @@ class CTreeAccessor
 			CallObjectSerialize( idChunk, pData, &separator );
 		}
 
-	template <class T1, class T2>
-		void __cdecl AddInternal( const DTChunkID idChunk, T1 *p, std::basic_string<T2> *pData ) 
+	template <class T1, class T2, class T3>
+		void __cdecl AddInternal( const DTChunkID idChunk, T1 *p, std::basic_string<T2, T3> *pData ) 
 		{
 			int nVal = pSS->StartChunk( idChunk );
 			if ( nVal == 0 )

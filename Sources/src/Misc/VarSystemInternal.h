@@ -3,6 +3,8 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma ONCE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#include "..\Misc\WideString.h"
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct SSerialVariantT : public variant_t
 {
 	SSerialVariantT() {  }
@@ -83,13 +85,13 @@ struct SSerialVariantT : public variant_t
 				{
 					if ( oldvt == VT_BSTR ) 
 						SysFreeString( bstrVal );
-					std::wstring str;
+					bk1_wstring str;
 					saver.Add( "Var", &str );
 					bstrVal = SysAllocString( str.c_str() );
 				}
 				else
 				{
-					std::wstring str = bstr_t( bstrVal );
+					bk1_wstring str( bstrVal );
 					NI_ASSERT_T( str.size() == SysStringLen(bstrVal), "Unsupported BSTR value" );
 					saver.Add( "Var", &str );
 				}
@@ -380,10 +382,10 @@ private:
 protected:
 	const TVarSystem::CVarsMap::const_iterator& GetIt() const { return *pos; }
 public:
-	CTVarSystemIterator( const TVarSystem *pVS, TVarAccepter &accepter )
+	CTVarSystemIterator( const TVarSystem *pVS, const TVarAccepter &accepter )
 	{
 		TSorter sorter;
-		for ( TVarSystem::CVarsMap::const_iterator it = pVS->begin(); it != pVS->end(); ++it )
+		for ( typename TVarSystem::CVarsMap::const_iterator it = pVS->begin(); it != pVS->end(); ++it )
 		{
 			if ( accepter(it->second) ) 
 				positions.push_back( it );

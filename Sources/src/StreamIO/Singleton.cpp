@@ -97,7 +97,7 @@ bool CSingleton::UnRegister( IRefCount *pObj )
 {
 	for ( CObjectIDs::iterator it = objects.begin(); it != objects.end(); ++it )
 	{
-		if ( it->second == pObj )
+		if ( it->second.GetPtr() == pObj )
 		{
 			objects.erase( it );
 			return true;

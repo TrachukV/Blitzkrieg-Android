@@ -264,6 +264,23 @@ BOOL GetDiskFreeSpaceA( const char *pszRoot, DWORD *pnSectorsPerCluster,
     return TRUE;
 }
 
+DWORD GetLogicalDriveStringsA( DWORD nBufferLength, char *pszBuffer )
+{
+    // The Windows form is a run of NUL-terminated roots ending in a second
+    // NUL. There is one root here.
+    static const char szRoot[] = "/\0";
+    const DWORD nNeeded = (DWORD)sizeof( szRoot );
+    if ( pszBuffer == 0 || nBufferLength < nNeeded )
+        return nNeeded;
+    memcpy( pszBuffer, szRoot, nNeeded );
+    return nNeeded - 1;
+}
+
+UINT GetDriveTypeA( const char * )
+{
+    return DRIVE_FIXED;
+}
+
 HMODULE GetModuleHandleA( const char * )
 {
     // The engine only compares the result against zero.

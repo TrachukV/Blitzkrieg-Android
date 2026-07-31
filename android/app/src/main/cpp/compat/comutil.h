@@ -292,12 +292,60 @@ public:
         boolVal = bValue ? VARIANT_TRUE : VARIANT_FALSE;
     }
 
-    operator int() const { return vt == VT_INT ? intVal : lVal; }
-    operator long() const { return lVal; }
-    operator short() const { return iVal; }
-    operator float() const { return fltVal; }
-    operator double() const { return vt == VT_R4 ? fltVal : dblVal; }
-    operator bool() const { return boolVal != VARIANT_FALSE; }
+    _variant_t( const _bstr_t &str )
+    {
+        VariantInit( this );
+        AssignBstr( str );
+    }
+
+    // An exact match for a narrow literal, without which assigning one is
+    // ambiguous between the copy assignment and the _bstr_t one.
+    _variant_t( const char *psz )
+    {
+        VariantInit( this );
+        AssignBstr( _bstr_t( psz ) );
+    }
+
+    _variant_t &operator=( const char *psz )
+    {
+        VariantClear( this );
+        AssignBstr( _bstr_t( psz ) );
+        return *this;
+    }
+
+    _variant_t &operator=( const _bstr_t &str )
+    {
+        VariantClear( this );
+        AssignBstr( str );
+        return *this;
+    }
+
+    // Coerced by the variant's own type rather than by reading whichever union
+    // member the caller asked for: a VT_R4 read as a long would otherwise
+    // return the float's bit pattern.
+    double AsDouble() const
+    {
+        switch ( vt )
+        {
+        case VT_EMPTY:
+        case VT_NULL:   return 0.0;
+        case VT_R4:     return (double)fltVal;
+        case VT_R8:     return dblVal;
+        case VT_BOOL:   return boolVal != VARIANT_FALSE ? 1.0 : 0.0;
+        case VT_UI1:    return (double)bVal;
+        case VT_I2:     return (double)iVal;
+        case VT_INT:    return (double)intVal;
+        case VT_UI4:    return (double)ulVal;
+        default:        return (double)lVal;
+        }
+    }
+
+    operator int() const { return (int)AsDouble(); }
+    operator long() const { return (long)AsDouble(); }
+    operator short() const { return (short)AsDouble(); }
+    operator float() const { return (float)AsDouble(); }
+    operator double() const { return AsDouble(); }
+    operator bool() const { return AsDouble() != 0.0; }
 
     // Without these the implicit conversions above make 'a == b' ambiguous
     // against the built-in operators.
@@ -315,6 +363,17 @@ public:
     }
 
     bool operator!=( const _variant_t &other ) const { return !( *this == other ); }
+
+private:
+    // The variant owns its BSTR, so it takes a copy rather than the _bstr_t's.
+    void AssignBstr( const _bstr_t &str )
+    {
+        const BSTR src = (BSTR)str;
+        vt = VT_BSTR;
+        bstrVal = SysAllocStringByteLen( (const char *)src, SysStringByteLen( src ) );
+    }
+
+public:
 
     void Clear() { VariantClear( this ); }
 };

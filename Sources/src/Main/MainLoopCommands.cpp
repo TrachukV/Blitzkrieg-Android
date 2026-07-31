@@ -72,7 +72,7 @@ void CICSave::Exec( IMainLoop *pML )
 				                   ( GetGlobalVar( ("Mission." + hdr.szMissionName + ".Random").c_str(), 0 ) != 0 );
 			//
 			const DWORD dwSignature = NSaveLoad::SFileHeader::SIGNATURE;
-			CStreamAccessor stream = pStream;
+			CStreamAccessor stream( pStream );
 			stream << dwSignature;
 			stream << hdr;
 			if ( hdr.bRandomMission ) 
@@ -112,7 +112,7 @@ void CICLoad::Exec( IMainLoop *pML )
 	}
 	// load and check header
 	{
-		CStreamAccessor stream = pStream;
+		CStreamAccessor stream( pStream );
 		DWORD dwSignature = 0;
 		stream >> dwSignature;
 		if ( dwSignature == NSaveLoad::SFileHeader::SIGNATURE ) 

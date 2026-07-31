@@ -21,7 +21,7 @@ void CLanChat::InitInGameChat( INetDriver *_pNetDriver )
 void CLanChat::SendMessage( const WORD *pszMessage, const SPlayerInfo &ourPlayer )
 {
 	BYTE msgID = NGM_CHAT_MESSAGE;
-	std::wstring szMessage = pszMessage;
+	std::wstring szMessage = Bk1AsWide( pszMessage );
 
 	CStreamAccessor info = CreateObject<IDataStream>( STREAMIO_MEMORY_STREAM );	
 	info << msgID << szMessage << ourPlayer.szName;
@@ -29,13 +29,13 @@ void CLanChat::SendMessage( const WORD *pszMessage, const SPlayerInfo &ourPlayer
 	pNetDriver->SendBroadcast( info );
 
 	if ( ourPlayer.fPing != -1.0f && ourPlayer.nSide != -1 )
-		messages.AddMessage( new CChatMessage( pszMessage, ourPlayer.szName.c_str(), false ) );
+		messages.AddMessage( new CChatMessage( pszMessage, Bk1AsUtf16( ourPlayer.szName.c_str() ), false ) );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CLanChat::SendWhisperMessage( const WORD *pszMessage, const SPlayerInfo &toPlayer, const SPlayerInfo &ourPlayer )
 {
 	BYTE msgID = NGM_CHAT_MESSAGE;
-	std::wstring szMessage = pszMessage;
+	std::wstring szMessage = Bk1AsWide( pszMessage );
 	
 	if ( toPlayer.nClientID != -1 )
 	{
@@ -46,7 +46,7 @@ void CLanChat::SendWhisperMessage( const WORD *pszMessage, const SPlayerInfo &to
 	}
 
 	if ( ourPlayer.fPing != -1.0f && ourPlayer.nSide != -1 )	
-		messages.AddMessage( new CChatMessage( pszMessage, ourPlayer.szName.c_str(), true ) );
+		messages.AddMessage( new CChatMessage( pszMessage, Bk1AsUtf16( ourPlayer.szName.c_str() ), true ) );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CLanChat::Segment()
@@ -71,10 +71,10 @@ void CLanChat::Segment()
 		switch ( eMsgID )
 		{
 			case INetDriver::DIRECT:
-				messages.AddMessage( new CChatMessage( szMessage.c_str(), szPlayer.c_str(), true ) );
+				messages.AddMessage( new CChatMessage( Bk1AsUtf16( szMessage.c_str() ), Bk1AsUtf16( szPlayer.c_str() ), true ) );
 				break;
 			case INetDriver::BROADCAST:
-				messages.AddMessage( new CChatMessage( szMessage.c_str(), szPlayer.c_str(), false ) );
+				messages.AddMessage( new CChatMessage( Bk1AsUtf16( szMessage.c_str() ), Bk1AsUtf16( szPlayer.c_str() ), false ) );
 				break;
 		}
 	}

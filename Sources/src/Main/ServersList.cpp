@@ -301,11 +301,11 @@ void CGameSpyServersList::CreateInGameChat( CPtr<IChat> *pChat, INetDriver *pInG
 	{
 		*pChat = new CGameSpyPeerChat();
 		
-		std::wstring szPlayerName = GetGlobalWVar( "Options.Multiplayer.GameSpyPlayerName", L"Noname" );
+		std::wstring szPlayerName = Bk1AsWide( GetGlobalWVar( "Options.Multiplayer.GameSpyPlayerName", Bk1AsUtf16( L"Noname" ) ) );
 		if ( szPlayerName == L"Noname" )
 			szPlayerName = NStr::ToUnicode( GetGlobalVar( "Options.Multiplayer.PlayerName", "Noname" ) );
 
-		(*pChat)->InitGSChat( szPlayerName.c_str() );
+		(*pChat)->InitGSChat( Bk1AsUtf16( szPlayerName.c_str() ) );
 	}
 
 	(*pChat)->InitInGameChat( pInGameNetDriver );

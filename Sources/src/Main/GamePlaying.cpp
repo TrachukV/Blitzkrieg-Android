@@ -302,7 +302,7 @@ void CGamePlaying::Segment()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const bool CGamePlaying::GetPlayerInfo( const WORD *pszPlayerName, SPlayerInfo *pInfo ) const
 {
-	std::wstring szPlayerName = pszPlayerName;
+	std::wstring szPlayerName = Bk1AsWide( pszPlayerName );
 	
 	int i = 0;
 	while ( i < 16 && ( players[i].eState == SPlayerInfo::EPS_VALID || players[i].szName != szPlayerName ) )
@@ -374,7 +374,7 @@ void CGamePlaying::TogglePause()
 void CGamePlaying::GameSpeed( const int nChange )
 {
 	CStreamAccessor pkt = CreateObject<IDataStream>( STREAMIO_MEMORY_STREAM );
-	pkt << BYTE( NGM_GAME_SPEED ) << short int( nChange );
+	pkt << BYTE( NGM_GAME_SPEED ) << short( nChange );
 	pInGameNetDriver->SendBroadcast( pkt );
 
 	commands.push_back( new IMultiplayer::CCommand( IMultiplayer::GPC_GAME_SPEED, nOurID, nChange, 0 ) );

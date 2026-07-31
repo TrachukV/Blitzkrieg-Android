@@ -53,8 +53,17 @@ BOOL GetExitCodeProcess( HANDLE hProcess, DWORD *pdwExitCode );
 BOOL TerminateProcess( HANDLE hProcess, UINT uExitCode );
 DWORD GetCurrentProcessId( void );
 
+// The path of the module the code is running from. The engine uses it to find
+// its own file and read the version out of it. Here that is the shared library
+// this code is linked into, which is the same question and the same answer:
+// "which build am I".
+DWORD GetModuleFileNameA( HMODULE hModule, char *pszFileName, DWORD nSize );
+
 #ifdef __cplusplus
 }
 #endif
 
 #define CreateProcess CreateProcessA
+#ifndef GetModuleFileName
+#define GetModuleFileName GetModuleFileNameA
+#endif

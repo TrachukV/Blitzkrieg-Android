@@ -1001,14 +1001,14 @@ struct SUnitBaseRPGStats : public SHPObjectRPGStats
 		{
 			// find min and max gun priority
 			int nMin = 1000000000, nMax = -1000000000;
-			for ( std::vector<TGun>::const_iterator it = guns.begin(); it != guns.end(); ++it )
+			for ( typename std::vector<TGun>::const_iterator it = guns.begin(); it != guns.end(); ++it )
 			{
 				nMin = Min( nMin, it->nPriority );
 				nMax = Max( nMax, it->nPriority );
 			}
 			// set priority and count ammos
 			Zero( nAmmos );
-			for ( std::vector<TGun>::iterator it = guns.begin(); it != guns.end(); ++it )
+			for ( typename std::vector<TGun>::iterator it = guns.begin(); it != guns.end(); ++it )
 			{
 				if ( (pPrimaryGun == 0) && (it->nPriority == nMin) )
 					pPrimaryGun = &( *it );
@@ -1022,7 +1022,7 @@ struct SUnitBaseRPGStats : public SHPObjectRPGStats
 		{
 			// count shell types
 			int nDamageTypes[3] = { 0, 0, 0 };
-			for ( std::vector<TGun>::const_iterator it = guns.begin(); it != guns.end(); ++it )
+			for ( typename std::vector<TGun>::const_iterator it = guns.begin(); it != guns.end(); ++it )
 			{
 				for ( std::vector<SWeaponRPGStats::SShell>::const_iterator shell = it->pWeapon->shells.begin(); shell != it->pWeapon->shells.end(); ++shell )
 					nDamageTypes[shell->eDamageType] = 1;

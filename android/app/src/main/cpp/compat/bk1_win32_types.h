@@ -4,6 +4,7 @@
 // the original sources keep their spelling.
 #include <cstdint>
 #include <cstddef>
+#include <stdlib.h>
 
 typedef unsigned char       BYTE;
 typedef unsigned short      WORD;
@@ -89,6 +90,16 @@ typedef long                HRESULT;
 #define WINGDIAPI
 #define WINADVAPI
 
+// The Windows text macros. The engine was built without UNICODE defined, so
+// TCHAR is char and these leave their argument alone -- which is what the two
+// call sites that use them expect.
+#ifndef TEXT
+#define TEXT( quote ) quote
+#endif
+#ifndef _T
+#define _T( quote ) quote
+#endif
+
 #define MAKEWORD(a, b) \
     ((WORD)(((BYTE)(a)) | ((WORD)((BYTE)(b))) << 8))
 #define MAKELONG(a, b) \
@@ -138,6 +149,19 @@ inline bool operator!=( const GUID &a, const GUID &b ) { return !( a == b ); }
 
 #define IsEqualGUID( a, b ) ( (a) == (b) )
 #define IsEqualIID( a, b )  ( (a) == (b) )
+
+// ole32's generator. The engine stamps a fresh identifier on each mission and
+// only ever needs it to be unique, so a random RFC 4122 version 4 value from
+// the platform CSPRNG carries the same meaning as the Windows original.
+inline HRESULT CoCreateGuid( GUID *pGuid )
+{
+    if ( pGuid == 0 )
+        return E_INVALIDARG;
+    arc4random_buf( pGuid, sizeof( GUID ) );
+    pGuid->Data3 = (WORD)( ( pGuid->Data3 & 0x0FFF ) | 0x4000 );
+    pGuid->Data4[0] = (BYTE)( ( pGuid->Data4[0] & 0x3F ) | 0x80 );
+    return S_OK;
+}
 
 // {00000000-0000-0000-C000-000000000046} and {0000000C-...}, the well-known
 // IUnknown and IStream identifiers.
@@ -287,3 +311,4 @@ typedef struct _EXCEPTION_POINTERS {
 #include "bk1_win32_openfile.h"
 #include "bk1_win32_window.h"
 #include "bk1_win32_keys.h"
+#include "bk1_win32_version.h"

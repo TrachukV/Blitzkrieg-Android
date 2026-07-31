@@ -1,6 +1,7 @@
 // Process creation, declared in bk1_win32_process.h, over fork and exec.
 #include "bk1_win32_process.h"
 
+#include <dlfcn.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -209,6 +210,37 @@ BOOL TerminateProcess( HANDLE hProcess, UINT )
 DWORD GetCurrentProcessId( void )
 {
     return (DWORD)getpid();
+}
+
+DWORD GetModuleFileNameA( HMODULE, char *pszFileName, DWORD nSize )
+{
+    if ( pszFileName == 0 || nSize == 0 )
+        return 0;
+
+    // dladdr on an address inside this library gives the path the loader
+    // mapped it from -- which is exactly what the Windows call returns for the
+    // module the caller is in.
+    Dl_info info;
+    memset( &info, 0, sizeof( info ) );
+    const char *pszPath = 0;
+    if ( dladdr( (const void *)&GetModuleFileNameA, &info ) != 0 &&
+         info.dli_fname != 0 )
+    {
+        pszPath = info.dli_fname;
+    }
+    if ( pszPath == 0 )
+        pszPath = "libblitzkrieg.so";
+
+    const size_t nLength = strlen( pszPath );
+    if ( nLength >= nSize )
+    {
+        // Windows truncates and fills the buffer; so does this.
+        memcpy( pszFileName, pszPath, nSize - 1 );
+        pszFileName[nSize - 1] = 0;
+        return nSize;
+    }
+    memcpy( pszFileName, pszPath, nLength + 1 );
+    return (DWORD)nLength;
 }
 
 }   // extern "C"

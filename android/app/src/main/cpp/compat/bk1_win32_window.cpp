@@ -1,6 +1,7 @@
 // The virtual window and cursor declared in bk1_win32_window.h.
 #include "bk1_win32_window.h"
 
+#include <android/log.h>
 #include <string.h>
 
 namespace {
@@ -281,6 +282,21 @@ BOOL SystemParametersInfoA( UINT uAction, UINT uParam, void *pvParam, UINT )
     default:
         return FALSE;
     }
+}
+
+int MessageBoxA( HWND, const char *pszText, const char *pszCaption, UINT uType )
+{
+    // The severity the caller asked for decides the log level, so a warning
+    // does not read as a crash in the log and a crash does not get lost.
+    const int nPriority = ( ( uType & MB_ICONHAND ) == MB_ICONHAND )
+                              ? ANDROID_LOG_ERROR
+                              : ( ( uType & MB_ICONEXCLAMATION ) == MB_ICONEXCLAMATION )
+                                    ? ANDROID_LOG_WARN
+                                    : ANDROID_LOG_INFO;
+    __android_log_print( nPriority, "Blitzkrieg", "%s: %s",
+                         ( pszCaption != 0 ) ? pszCaption : "message",
+                         ( pszText != 0 ) ? pszText : "" );
+    return IDOK;
 }
 
 }   // extern "C"

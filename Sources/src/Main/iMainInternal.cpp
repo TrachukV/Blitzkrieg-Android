@@ -2,6 +2,7 @@
 
 #include <mmsystem.h>
 
+#include "../Misc/WideString.h"
 #include "iMainInternal.h"
 #include "iMainCommands.h"
 #include "SaveCommandsHistoryCommand.h"
@@ -574,7 +575,7 @@ void CMainLoop::OnMultiplayerStateCommand( const SGameMessage &msg )
 					pBuffer->Write( CONSOLE_STREAM_CHAT, szOutput.c_str(), 0xffff0000 );
 				}
 				GetSingleton<IScene>()->AddSound( "Int_information", VNULL3, SFX_INTERFACE, SAM_ADD_N_FORGET );
-				pTransceiver->CommandClientDropPlayer( pPlayerInfo->GetName().c_str() );
+				pTransceiver->CommandClientDropPlayer( Bk1AsUtf16( pPlayerInfo->GetName().c_str() ) );
 			}
 			
 			break;

@@ -92,6 +92,38 @@ UINT GetDoubleClickTime( void );
 #define SPI_SETKEYBOARDSPEED  0x000B
 
 BOOL SystemParametersInfoA( UINT uAction, UINT uParam, void *pvParam, UINT fWinIni );
+
+// --- MessageBox ---
+// The engine puts a box on screen when something has gone wrong badly enough
+// that it wants the player to see it before anything else. There is no modal
+// box available to native code on Android without going up into Java, and the
+// places this is called from are already failing -- an exception handler, a
+// missing file -- so the message goes to the log, where it survives the crash
+// that usually follows. IDOK comes back because every caller here uses MB_OK
+// and none of them branch on the answer.
+#define MB_OK                0x00000000
+#define MB_OKCANCEL          0x00000001
+#define MB_YESNO             0x00000004
+#define MB_ICONHAND          0x00000010
+#define MB_ICONQUESTION      0x00000020
+#define MB_ICONEXCLAMATION   0x00000030
+#define MB_ICONASTERISK      0x00000040
+#define MB_ICONERROR         MB_ICONHAND
+#define MB_ICONWARNING       MB_ICONEXCLAMATION
+#define MB_ICONINFORMATION   MB_ICONASTERISK
+#define MB_SYSTEMMODAL       0x00001000
+#define MB_TASKMODAL         0x00002000
+#define MB_TOPMOST           0x00040000
+
+#define IDOK     1
+#define IDCANCEL 2
+#define IDYES    6
+#define IDNO     7
+
+int MessageBoxA( HWND hWnd, const char *pszText, const char *pszCaption, UINT uType );
+#ifndef MessageBox
+#define MessageBox MessageBoxA
+#endif
 #ifndef SystemParametersInfo
 #define SystemParametersInfo SystemParametersInfoA
 #endif

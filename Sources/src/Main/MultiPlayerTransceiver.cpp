@@ -125,13 +125,13 @@ void CMultiPlayerTransceiver::LoadGameSettings()
 	std::vector<int> busyNumbers( 16, 0 );
 	for ( int i = 0; i != nNumPlayers; ++i )
 	{
-		SPlayerInfo &player = *players.insert( players.end() );
+		SPlayerInfo &player = *players.insert( players.end(), SPlayerInfo() );
 
 		player.totalLagTime = 0;
 		player.lastLagUpdateTime = 0;
 
 		szValueName = NStr::Format( "Multiplayer.Player%d.Name", i );
-		player.szName = GetGlobalWVar( szValueName.c_str(), L"Unknown Player" );
+		player.szName = Bk1AsWide( GetGlobalWVar( szValueName.c_str(), Bk1AsUtf16( L"Unknown Player" ) ) );
 
 		szValueName = NStr::Format( "Multiplayer.Player%d.Side", i );
 		player.nSide = GetGlobalVar( szValueName.c_str(), int(-1) );
@@ -287,7 +287,7 @@ void CMultiPlayerTransceiver::SendChatMessages()
 		// скопировать во временную переменную, чтобы не затёрлось следующим вызовом pBuffer->Read
 		std::wstring szMessageType = pszString;
 		const wchar_t *pszString1 = pBuffer->Read( CONSOLE_STREAM_NET_CHAT );
-		pMultiplayer->SendInGameChatMessage( szMessageType.c_str(), pszString1 );
+		pMultiplayer->SendInGameChatMessage( Bk1AsUtf16( szMessageType.c_str() ), Bk1AsUtf16( pszString1 ) );
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -859,7 +859,7 @@ void CMultiPlayerTransceiver::CommandClientSpeed( const int nChange )
 void CMultiPlayerTransceiver::CommandClientDropPlayer( const WORD *pszPlayerNick )
 {
 	CPlayersList::iterator iter = players.begin();
-	while ( iter != players.end() && iter->szName != pszPlayerNick )
+	while ( iter != players.end() && iter->szName != Bk1AsWide( pszPlayerNick ) )
 		++iter;
 
 	if ( iter != players.end() && nMyNumber != iter->nLogicID && ( wMask & (1UL << iter->nLogicID) ) )

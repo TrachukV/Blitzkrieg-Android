@@ -106,8 +106,8 @@ void CGameSpyPeerChat::InitGSChat( const char *pszRealUserName, const char *pszN
 void CGameSpyPeerChat::InitGSChat( const WORD *pszUserName )
 {
 	NStr::SetCodePage( GetACP() );
-	szRealUserName = NStr::ToAscii( pszUserName );
-	szNick = NStr::ToAscii( pszUserName );
+	szRealUserName = NStr::ToAscii( Bk1AsWide( pszUserName ) );
+	szNick = NStr::ToAscii( Bk1AsWide( pszUserName ) );
 	nNamePostfix = -1;
 
 	eMode = EUM_NONE;
@@ -157,7 +157,7 @@ void CGameSpyPeerChat::SendMessage( const WORD *pszMessage, const SPlayerInfo &o
 		if ( eInitState == EIS_INITIALIZED )
 		{
 			NStr::SetCodePage( GetACP() );
-			peerMessageRoom( peer, TitleRoom, NStr::ToAscii( pszMessage ).c_str(), NormalMessage );
+			peerMessageRoom( peer, TitleRoom, NStr::ToAscii( Bk1AsWide( pszMessage ) ).c_str(), NormalMessage );
 		}
 	}
 }
@@ -178,11 +178,11 @@ void CGameSpyPeerChat::SendMessage( const WORD *pszMessage, const WORD *wszToPla
 		NStr::SetCodePage( GetACP() );
 		if ( bWhisper )
 		{
-			peerMessagePlayer( peer, NStr::ToAscii( wszToPlayer ).c_str(), NStr::ToAscii( pszMessage ).c_str(), NormalMessage );
-			messages.AddMessage( new CChatMessage( pszMessage, NStr::ToUnicode(szNick).c_str(), true ) );
+			peerMessagePlayer( peer, NStr::ToAscii( Bk1AsWide( wszToPlayer ) ).c_str(), NStr::ToAscii( Bk1AsWide( pszMessage ) ).c_str(), NormalMessage );
+			messages.AddMessage( new CChatMessage( pszMessage, Bk1AsUtf16( NStr::ToUnicode(szNick).c_str() ), true ) );
 		}
 		else
-			peerMessageRoom( peer, TitleRoom, NStr::ToAscii( pszMessage ).c_str(), NormalMessage );
+			peerMessageRoom( peer, TitleRoom, NStr::ToAscii( Bk1AsWide( pszMessage ) ).c_str(), NormalMessage );
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -204,7 +204,7 @@ void CGameSpyPeerChat::Segment()
 		if ( lastTimeToTryToReconnect + 5000 < curTime )
 		{
 			NStr::SetCodePage( GetACP() );
-			InitGSChat( NStr::ToUnicode( szRealUserName.c_str() ).c_str() );
+			InitGSChat( Bk1AsUtf16( NStr::ToUnicode( szRealUserName.c_str() ).c_str() ) );
 			lastTimeToTryToReconnect = curTime;
 		}
 	}

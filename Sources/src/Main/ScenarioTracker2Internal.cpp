@@ -391,7 +391,7 @@ int ScriptErrorOut( struct lua_State *state )
 static int Sqrt( struct lua_State *pState )
 {
 	Script script( pState );
-	script.PushNumber(  sqrt( script.GetObject(1) ) );
+	script.PushNumber(  sqrt( static_cast<double>( script.GetObject(1) ) ) );
 	return 1;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -986,7 +986,7 @@ void CScenarioTracker2::StartCampaign( const std::string &_szCampaignName, const
 				pPlayer->SetSide( pStats->szSideName );
 			variant_t varPlayerName;
 			GetSingleton<IOptionSystem>()->Get( "GamePlay.PlayerName", &varPlayerName );
-			pPlayer->SetName( (wchar_t*)bstr_t(varPlayerName) );
+			pPlayer->SetName( (const wchar_t*)bstr_t(varPlayerName) );
 		}
 		// enemy player (1)
 		if ( IPlayerScenarioInfo *pPlayer = AddPlayer(1) ) 

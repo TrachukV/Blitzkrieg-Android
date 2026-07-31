@@ -18,12 +18,12 @@ int CMPToUICommandManager::operator&( IStructureSaver &ss )
 	return 0;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CMPToUICommandManager::AddCommandToUI( SToUICommand &cmd )
+void CMPToUICommandManager::AddCommandToUI( const SToUICommand &cmd )
 {
 	commandsToUI.push_back( cmd );
 }
 //////////////////////////////////////////////////////////////////////
-void CMPToUICommandManager::AddNotificationFromUI( SFromUINotification &notify )
+void CMPToUICommandManager::AddNotificationFromUI( const SFromUINotification &notify )
 {
 	notificationsFromUI.push_back( notify );
 }

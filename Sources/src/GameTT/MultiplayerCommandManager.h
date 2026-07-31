@@ -352,8 +352,8 @@ interface IMPToUICommandManager : public IRefCount
 	enum { tidTypeID = GAMETT_MULTIPLAYER_TO_UI_COMMANDS };
 
 	//adding
-	virtual void STDCALL AddCommandToUI( SToUICommand &cmd ) = 0;
-	virtual void STDCALL AddNotificationFromUI( SFromUINotification &notify ) = 0;
+	virtual void STDCALL AddCommandToUI( const SToUICommand &cmd ) = 0;
+	virtual void STDCALL AddNotificationFromUI( const SFromUINotification &notify ) = 0;
 
 	//recieveing. return true if put command by ptr. if ptr == 0 or no more commands
 	// returns false;

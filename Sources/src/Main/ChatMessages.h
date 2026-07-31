@@ -16,13 +16,13 @@ public:
 
 	//
 	CChatMessage() { }
-	CChatMessage( const WORD *pszMessage, const WORD *pszPlayerName, bool _bWhisper ) : szMessage( pszMessage ), szPlayerName( pszPlayerName ), bWhisper( _bWhisper ) { }
+	CChatMessage( const WORD *pszMessage, const WORD *pszPlayerName, bool _bWhisper ) : szMessage( Bk1AsWide( pszMessage ) ), szPlayerName( Bk1AsWide( pszPlayerName ) ), bWhisper( _bWhisper ) { }
 	CChatMessage( const char *pszMessage, const char *pszPlayerName, bool _bWhisper );
 	
 	virtual const EMultiplayerMessages GetMessageID() const { return E_CHAT_MESSAGE; }
 	virtual void SendToUI();
 
-	const WORD* GetPlayerNick() const { return szPlayerName.c_str(); }
+	const WORD* GetPlayerNick() const { return Bk1AsUtf16( szPlayerName.c_str() ); }
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CSimpleChatMessage : public IMultiplayerMessage

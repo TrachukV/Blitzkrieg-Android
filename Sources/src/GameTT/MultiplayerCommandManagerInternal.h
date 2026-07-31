@@ -37,8 +37,8 @@ class CMPToUICommandManager : public IMPToUICommandManager
 
 public:
 	//adding
-	virtual void STDCALL AddCommandToUI( SToUICommand & cmd );
-	virtual void STDCALL AddNotificationFromUI( SFromUINotification & notify ) ;
+	virtual void STDCALL AddCommandToUI( const SToUICommand & cmd );
+	virtual void STDCALL AddNotificationFromUI( const SFromUINotification & notify ) ;
 	
 	//recieveing. return true if put command by ptr. if ptr == 0 or no more commands
 	// returns false;

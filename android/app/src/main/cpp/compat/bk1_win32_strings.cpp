@@ -228,6 +228,110 @@ int WideCharToMultiByte( UINT nCodePage, DWORD /*dwFlags*/, const wchar_t *pSrc,
     return nWritten;
 }
 
+int Bk1Utf16Len( const unsigned short *psz )
+{
+    if ( psz == 0 )
+        return 0;
+    int n = 0;
+    while ( psz[n] != 0 )
+        ++n;
+    return n;
+}
+
+int Bk1AnsiToUtf16( UINT nCodePage, const char *pszSrc, int nSrcLen,
+                    unsigned short *pDst, int nDstLen )
+{
+    if ( pszSrc == 0 )
+        return 0;
+    if ( nSrcLen < 0 )
+        nSrcLen = (int)strlen( pszSrc ) + 1;      // terminator included
+
+    const UINT nPage = ResolveCodePage( nCodePage );
+    int nWritten = 0;
+    int i = 0;
+    while ( i < nSrcLen )
+    {
+        unsigned int cp;
+        if ( nPage == CP_UTF8 )
+            cp = DecodeUtf8( pszSrc, nSrcLen, &i );
+        else
+            cp = AnsiByteToUnicode( (unsigned char)pszSrc[i++], nPage );
+
+        // a code point outside the basic plane needs a surrogate pair
+        if ( cp >= 0x10000 )
+        {
+            const unsigned int v = cp - 0x10000;
+            if ( pDst != 0 )
+            {
+                if ( nWritten + 2 > nDstLen )
+                    return 0;
+                pDst[nWritten]     = (unsigned short)( 0xD800 + ( v >> 10 ) );
+                pDst[nWritten + 1] = (unsigned short)( 0xDC00 + ( v & 0x3FF ) );
+            }
+            nWritten += 2;
+            continue;
+        }
+
+        if ( pDst != 0 )
+        {
+            if ( nWritten >= nDstLen )
+                return 0;
+            pDst[nWritten] = (unsigned short)cp;
+        }
+        ++nWritten;
+    }
+    return nWritten;
+}
+
+int Bk1Utf16ToAnsi( UINT nCodePage, const unsigned short *pSrc, int nSrcLen,
+                    char *pszDst, int nDstLen )
+{
+    if ( pSrc == 0 )
+        return 0;
+    if ( nSrcLen < 0 )
+        nSrcLen = Bk1Utf16Len( pSrc ) + 1;        // terminator included
+
+    const UINT nPage = ResolveCodePage( nCodePage );
+    int nWritten = 0;
+    for ( int i = 0; i < nSrcLen; ++i )
+    {
+        unsigned int cp = pSrc[i];
+        // recombine a surrogate pair before converting
+        if ( cp >= 0xD800 && cp <= 0xDBFF && i + 1 < nSrcLen &&
+             pSrc[i + 1] >= 0xDC00 && pSrc[i + 1] <= 0xDFFF )
+        {
+            cp = 0x10000 + ( ( cp - 0xD800 ) << 10 ) + ( pSrc[i + 1] - 0xDC00 );
+            ++i;
+        }
+
+        if ( nPage == CP_UTF8 )
+        {
+            char buff[4];
+            const int nNeed = EncodeUtf8( cp, pszDst != 0 ? buff : 0, 4 );
+            if ( pszDst != 0 )
+            {
+                if ( nWritten + nNeed > nDstLen )
+                    return 0;
+                memcpy( pszDst + nWritten, buff, nNeed );
+            }
+            nWritten += nNeed;
+            continue;
+        }
+
+        int nByte = UnicodeToAnsiByte( cp, nPage );
+        if ( nByte < 0 )
+            nByte = '?';
+        if ( pszDst != 0 )
+        {
+            if ( nWritten >= nDstLen )
+                return 0;
+            pszDst[nWritten] = (char)nByte;
+        }
+        ++nWritten;
+    }
+    return nWritten;
+}
+
 void OutputDebugStringA( const char *pszText )
 {
 #if defined( __ANDROID__ )

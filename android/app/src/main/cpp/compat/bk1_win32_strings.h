@@ -27,6 +27,22 @@ int WideCharToMultiByte( UINT nCodePage, DWORD dwFlags, const wchar_t *pSrc,
                          int nSrcLen, char *pszDst, int nDstLen,
                          const char *pszDefault, BOOL *pbUsedDefault );
 
+// The same conversions against UTF-16 rather than the platform's wchar_t.
+// The engine's wide strings, and the text MSXML held, are UTF-16, so these are
+// what the XML and text layers need; MultiByteToWideChar above is for the
+// places that genuinely want wchar_t.
+//
+// Both return the number of units written, or the number required when the
+// destination is null. 'nSrcLen' of -1 means the source is NUL-terminated and
+// the terminator is included, as on Windows.
+int Bk1AnsiToUtf16( UINT nCodePage, const char *pszSrc, int nSrcLen,
+                    unsigned short *pDst, int nDstLen );
+int Bk1Utf16ToAnsi( UINT nCodePage, const unsigned short *pSrc, int nSrcLen,
+                    char *pszDst, int nDstLen );
+
+// Length of a NUL-terminated UTF-16 string, in code units.
+int Bk1Utf16Len( const unsigned short *psz );
+
 void OutputDebugStringA( const char *pszText );
 #define OutputDebugString OutputDebugStringA
 

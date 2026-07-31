@@ -286,7 +286,20 @@ bool CDataTreeXML::StringData( WORD *pData )
 	{
 		if ( xmlCurrNode )
 		{
+#if defined( _MSC_VER )
 			wcscpy( pData, (const wchar_t*)xmlCurrNode->text );
+#else
+			// wchar_t is 32 bits here while the engine's wide strings are
+			// UTF-16, so the copy goes through the UTF-16 view rather than
+			// through the platform's wide-character functions.
+			{
+				const unsigned short *pwzText = xmlCurrNode->text.Utf16();
+				int nLen = 0;
+				while ( pwzText[nLen] != 0 )
+					++nLen;
+				memcpy( pData, pwzText, ( nLen + 1 ) * sizeof( WORD ) );
+			}
+#endif
 			return true;
 		}
 	}

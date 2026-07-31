@@ -217,7 +217,7 @@ struct SGFXLVertex
 		struct
 		{
 			CVec3 pos;
-			DWORD color, specular;
+			DWORD reservedColor_, reservedSpecular_;	// 'color'/'specular' are the ones above
 			CVec2 tex;
 		};
 	};
@@ -273,7 +273,7 @@ struct SGFXLVertex2
 		struct
 		{
 			CVec3 pos;
-			DWORD color, specular;
+			DWORD reservedColor_, reservedSpecular_;	// 'color'/'specular' are the ones above
 			CVec2 tex, tex1;
 		};
 	};
@@ -334,7 +334,7 @@ struct SGFXTLVertex
 		struct
 		{
 			CVec4 pos;
-			DWORD color, specular;
+			DWORD reservedColor_, reservedSpecular_;	// 'color'/'specular' are the ones above
 			CVec2 tex;
 		};
 	};
@@ -373,7 +373,7 @@ struct SGFXTLVertex2
 		struct
 		{
 			CVec4 pos;
-			DWORD color, specular;
+			DWORD reservedColor_, reservedSpecular_;	// 'color'/'specular' are the ones above
 			CVec2 tex;
 			CVec2 tex1;
 		};
@@ -415,7 +415,7 @@ struct SGFXTLPoint
 		struct
 		{
 			CVec4 pos;
-			DWORD color;
+			DWORD reservedColor_;			// 'color' is the one above
 		};
 	};
 	//
@@ -447,7 +447,7 @@ struct SGFXLineVertex
 		struct
 		{
 			CVec3 pos;
-			DWORD color;
+			DWORD reservedColor_;			// 'color' is the one above
 		};
 	};
 	//

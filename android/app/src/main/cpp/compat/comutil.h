@@ -287,6 +287,23 @@ public:
     operator double() const { return vt == VT_R4 ? fltVal : dblVal; }
     operator bool() const { return boolVal != VARIANT_FALSE; }
 
+    // Without these the implicit conversions above make 'a == b' ambiguous
+    // against the built-in operators.
+    bool operator==( const _variant_t &other ) const
+    {
+        if ( vt != other.vt )
+            return false;
+        if ( vt == VT_BSTR )
+        {
+            const UINT n = SysStringByteLen( bstrVal );
+            return n == SysStringByteLen( other.bstrVal ) &&
+                   memcmp( bstrVal, other.bstrVal, n ) == 0;
+        }
+        return memcmp( &lVal, &other.lVal, sizeof( CY ) ) == 0;
+    }
+
+    bool operator!=( const _variant_t &other ) const { return !( *this == other ); }
+
     void Clear() { VariantClear( this ); }
 };
 

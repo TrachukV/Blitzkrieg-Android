@@ -65,7 +65,46 @@ typedef long                HRESULT;
 #define SUCCEEDED(hr) (((HRESULT)(hr)) >= 0)
 #define FAILED(hr)    (((HRESULT)(hr)) < 0)
 #define S_OK          ((HRESULT)0)
+#define S_FALSE       ((HRESULT)1)
 #define E_FAIL        ((HRESULT)0x80004005L)
+#define E_NOINTERFACE ((HRESULT)0x80004002L)
+#define E_INVALIDARG  ((HRESULT)0x80070057L)
+#define E_OUTOFMEMORY ((HRESULT)0x8007000EL)
+
+// The structured-storage results StreamIO's stream implementations return.
+#define STG_E_INVALIDFUNCTION ((HRESULT)0x80030001L)
+#define STG_E_FILENOTFOUND    ((HRESULT)0x80030002L)
+#define STG_E_ACCESSDENIED    ((HRESULT)0x80030005L)
+#define STG_E_INVALIDPOINTER  ((HRESULT)0x80030009L)
+#define STG_E_WRITEFAULT      ((HRESULT)0x8003001DL)
+#define STG_E_INVALIDPARAMETER ((HRESULT)0x80030057L)
+
+// COM interface identifiers. The engine compares them; it never marshals.
+typedef struct _GUID {
+    DWORD Data1;
+    WORD  Data2;
+    WORD  Data3;
+    BYTE  Data4[8];
+} GUID, IID, CLSID;
+typedef const GUID& REFIID;
+typedef const GUID& REFGUID;
+
+inline bool operator==( const GUID &a, const GUID &b )
+{
+    return a.Data1 == b.Data1 && a.Data2 == b.Data2 && a.Data3 == b.Data3 &&
+           __builtin_memcmp( a.Data4, b.Data4, 8 ) == 0;
+}
+inline bool operator!=( const GUID &a, const GUID &b ) { return !( a == b ); }
+
+#define IsEqualGUID( a, b ) ( (a) == (b) )
+#define IsEqualIID( a, b )  ( (a) == (b) )
+
+// {00000000-0000-0000-C000-000000000046} and {0000000C-...}, the well-known
+// IUnknown and IStream identifiers.
+static const IID IID_IUnknown =
+    { 0x00000000, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
+static const IID IID_IStream =
+    { 0x0000000C, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
 
 // IStream's seek origin, which StreamIO/StreamIO.h names in its own interface.
 typedef enum tagSTREAM_SEEK {

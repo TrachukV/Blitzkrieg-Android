@@ -113,7 +113,7 @@ public:
 	}
 	void Set1() 
 	{ 
-		memset( array.GetBuffer(), unsigned int(-1), array.GetSizeX() * array.GetSizeY());
+		memset( array.GetBuffer(), -1, array.GetSizeX() * array.GetSizeY());
 	};
 
 	int GetSizeX() const { return xSize; }

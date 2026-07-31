@@ -177,7 +177,7 @@ struct SSerialVarEqFunctional
 template <class TVarSystem>
 struct SEmptySorter
 {
-	void Sort( std::list<TVarSystem::CVarsMap::const_iterator> &lst ) const {  }
+	void Sort( std::list<typename TVarSystem::CVarsMap::const_iterator> &lst ) const {  }
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
@@ -369,11 +369,11 @@ struct SVarAccepter
 	const bool operator()( const TVar &var ) const { return true; } 
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template < class TVarSystem, class TBase, class TSorter = SEmptySorter<TVarSystem>, class TVarAccepter = SVarAccepter<TVarSystem::CVar> >
+template < class TVarSystem, class TBase, class TSorter = SEmptySorter<TVarSystem>, class TVarAccepter = SVarAccepter<typename TVarSystem::CVar> >
 class CTVarSystemIterator : public TBase
 {
 public:
-	typedef std::list<TVarSystem::CVarsMap::const_iterator> CPosList;
+	typedef std::list<typename TVarSystem::CVarsMap::const_iterator> CPosList;
 private:
 	CPosList positions;										// all positions, sorted by some criterion
 	CPosList::const_iterator pos;					// current iteration position

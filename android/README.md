@@ -25,11 +25,19 @@ The game modules without the editor and tools come to roughly 200 000 lines.
 Win32 enters through each module's `StdAfx.h`, not through the code, which is
 what makes a shim layer viable.
 
-The renderer is **Direct3D 8** — `Sources/src/GFX` carries `GeometryBuffer`,
-`GeometryMesh`, `Shader` and `GraphicsEngine`, with `IDirect3DDevice8` behind
-them. This is a 3D engine with an isometric camera, not a sprite blitter, which
-is the usual assumption about this game. `GFX` is only ~9 000 lines, small
-enough to reimplement on bgfx rather than port.
+The renderer is **Direct3D 8 fixed-function used as a 2D blitter**. There are
+no programmable shaders anywhere — `CreateVertexShader`, `CreatePixelShader`,
+`vs_1_`, `ps_1_` and `D3DVS_` return zero hits across `GFX` and `Scene`, and
+`CGraphicsEngine::SetVertexShader` merely forwards an FVF code. The ground is
+not a heightfield mesh: `Scene/MeshBuilders.cpp` generates tile vertices
+directly in screen pixels and emits them pre-transformed (`D3DFVF_XYZRHW`),
+and `CTerrain::Draw` runs with depth test and write off. The camera is
+orthographic; `CreatePerspectiveProjectionMatrixRH` exists in `Misc/Geometry.h`
+and has no call site anywhere in the tree.
+
+This is the opposite of the usual assumption in the helpful direction: the
+world is screen-space 2D, so `GFX` — only ~9 000 lines — is reimplemented on
+bgfx as a sprite/quad batcher rather than ported as a 3D renderer.
 
 There is no Granny anywhere in the tree, so the animation-asset problem that
 blocked 263 meshes in the Blitzkrieg 2 port does not exist here.
@@ -57,11 +65,18 @@ the NDK does not provide:
 | File | Why |
 | --- | --- |
 | `stl/_config.h`, `stl_user_config.h` | Neutralise STLport so libc++ is used instead |
-| `hash_map`, `hash_set` | STLport put these in the global namespace; aliased onto `std::unordered_*`, whose template parameters sit in the same order |
+| `hash_map`, `hash_set` | The engine spells these `std::hash_map` / `std::hash_set` — 14 and 3 call sites, none unqualified — so the aliases are injected into `std`, onto `std::unordered_*`, whose template parameters sit in the same order |
 | `comutil.h` | `_variant_t` and `_bstr_t`, the only COM types the engine's property system uses |
 | `windows.h`, `bk1_win32_types.h` | The Win32 scalar types, handles and macros `StdAfx.h` reaches for |
 | `imagehlp.h` | BugSlayer's declarations, included from every module's `StdAfx.h` |
 | `bk1_msvc_types.h` | Force-included ahead of every unit |
+
+STLport is **vendored in this repository** at `Sources/sdk/stlport`, so
+neutralising it in favour of libc++ is a choice rather than a necessity. The
+choice is not free: the engine uses STLport extensions such as `std::construct`,
+and libc++ brings its own `<cmath>` float overloads that collide with the
+engine's (see below). Building against the vendored copy remains the fallback
+if the libc++ path proves more expensive than it looks.
 
 Two compiler flags carry more weight than the whole layer:
 
@@ -94,9 +109,29 @@ Each needs an arm64 path beside the x86 one, keeping the original build intact.
 `Float2Int` in particular rounds to nearest rather than truncating, so a plain
 C cast would change gameplay arithmetic.
 
-One 64-bit defect is already visible: `Misc/HashFuncs.h` casts pointers to
-`int` (`reinterpret_cast<int>( pData )`), which does not compile on arm64 and
-must widen.
+Two more source-level defects are confirmed:
+
+- `Misc/HashFuncs.h` casts pointers to `int` in three places
+  (`reinterpret_cast<int>( pData )`, `int( a.GetPtr() )`), which does not
+  compile on arm64 and must widen.
+- `Misc/Geometry.h`'s `CVec4` anonymous union declares `w` twice, in
+  `struct { float x, y, z, w; }` and again in `struct { float u, v, q, w; }`.
+  MSVC 6 accepted it; clang rejects the union and the rejection poisons every
+  downstream member initialiser.
+- `Misc/Tools.h` redefines `fabs`, `cos`, `sin`, `acos` and `asin` for `float`
+  at global scope. C++11 added those overloads to `<cmath>`, so libc++ already
+  has them and the engine's collide. They need guarding on non-MSVC.
+
+Compiling `Misc/StrProc.cpp` today leaves 20 errors: 14 inline-assembly, 5
+`<cmath>` collisions, and the error limit. Both classes are inventoried above.
+
+A full-tree attempt over all 170 `AILogic/*.cpp` — with backslash includes
+rewritten, the shim force-included and STLport aliased — compiled none of them.
+That number is inflated by a harness without the vendored STLport or a
+precompiled header, but two contributions are not harness-dependent: the 18
+inline-assembly errors `Misc/Tools.h` injects into every translation unit, and
+the `CVec4` union, which alone accounted for most of the errors in the files
+where it was measured.
 
 ## Data
 
@@ -105,3 +140,39 @@ DLLs, and 2.5 GB of `Data` with Scenarios, Maps, Units, Squads, Terrain, Music,
 Movies and Textes. Unlike the Blitzkrieg 2 tree, no campaign descriptors appear
 to be missing. FMOD and Bink are the proprietary audio and video layers, both of
 which the Blitzkrieg 2 port already replaced with Oboe and a native decoder.
+
+## Lineage, settled
+
+The simulation is not merely similar to Blitzkrieg 2's — it is the same file,
+edited. `AILogic/UnitsSegments.h` is byte-identical between the two trees, and
+`CAIUnit::operator&` in both assigns the same arbitrary serialization slot
+numbers to the same fields (5 = timeToDeath, 6 = player, 11 = fCamouflage,
+15 = fHitPoints, 22 = pTankPit, 40 = bFreeEnemySearch), with slot 16 commented
+out in Blitzkrieg 2 and later fields appended from 53 up. Arbitrary numbering
+matched to arbitrary fields is not convergent design.
+
+Below the simulation the two share nothing: `IDataStream` against
+`CDataStream`, `IStorage` against `NVFS::IVFS`, `StreamIO/DataBase.h` against
+`NDb::Get`.
+
+## What the Blitzkrieg 2 Android port gives us
+
+About a fifth of its 43 564 lines of C++ — roughly 9 000 — carries over.
+
+Essentially unchanged: the whole audio stack (the software mixer, the Oboe
+output, the RIFF/WAVE and MS-ADPCM decoder — and Blitzkrieg 1's shipped voice
+files are MS-ADPCM too — the PCM ring and the Vorbis streamer), the platform
+and path layers, and the case-insensitive path resolution in the VFS, which is
+the single most valuable piece for a Windows game on a case-sensitive
+filesystem.
+
+With rework: the EGL/bgfx bootstrap and the 2D textured-quad batcher, the frame
+pacer and lifecycle loop, the DXT decoder, and the video bridge — Blitzkrieg 1
+ships Bink as well.
+
+Not at all: everything named for Blitzkrieg 2's content — the single-player and
+menu runtimes, the mission tracker, the `.xdb` descriptor plumbing, the libdb
+bridge, and the Granny converter, which has nothing to convert here.
+
+The build scaffolding transfers wholesale: the Gradle signing and NDK
+configuration, the CMake game-activity/Oboe/bgfx setup, and the manifest.

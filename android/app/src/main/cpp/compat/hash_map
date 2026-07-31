@@ -1,26 +1,29 @@
 #pragma once
-// STLport put hash_map in the global namespace; libc++ has no such header.
-// The template parameters sit in the same order as std::unordered_map's, so
-// the original declarations bind unchanged and only the implementation moves.
+// STLport shipped hash_map, and the engine spells it std::hash_map -- 14 call
+// sites do, none use it unqualified. libc++ has no such member, so the alias is
+// injected where the sources look for it. The template parameters sit in the
+// same order as std::unordered_map's, so the original declarations bind
+// unchanged and only the implementation moves.
 #include <unordered_map>
 #include <functional>
 
-template <class Key>
-struct hash : std::hash<Key> {};
+namespace std {
 
 template <
         class Key,
         class T,
         class HashFcn = hash<Key>,
-        class EqualKey = std::equal_to<Key>,
-        class Alloc = std::allocator<std::pair<const Key, T> > >
-using hash_map = std::unordered_map<Key, T, HashFcn, EqualKey, Alloc>;
+        class EqualKey = equal_to<Key>,
+        class Alloc = allocator<pair<const Key, T> > >
+using hash_map = unordered_map<Key, T, HashFcn, EqualKey, Alloc>;
 
 template <
         class Key,
         class T,
         class HashFcn = hash<Key>,
-        class EqualKey = std::equal_to<Key>,
-        class Alloc = std::allocator<std::pair<const Key, T> > >
-using hash_multimap =
-        std::unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>;
+        class EqualKey = equal_to<Key>,
+        class Alloc = allocator<pair<const Key, T> > >
+using hash_multimap = unordered_multimap<Key, T, HashFcn, EqualKey, Alloc>;
+
+}  // namespace std
+

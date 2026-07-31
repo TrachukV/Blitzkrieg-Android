@@ -67,7 +67,7 @@ void CCommonGameCreationInfo::Init()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const bool CCommonGameCreationInfo::GetPlayerInfo( const WORD *pszPlayerName, SPlayerInfo *pInfo ) const
 {
-	std::wstring szPlayerName = pszPlayerName;
+	std::wstring szPlayerName = Bk1AsWide( pszPlayerName );
 	
 	int i = 0;
 	while ( i < 16 && ( players[i].eState != SPlayerInfo::EPS_VALID || players[i].szName != szPlayerName ) )
@@ -316,7 +316,7 @@ void CCommonGameCreationInfo::SetGlobalVars( const int nOurLogicID )
 		if ( players[i].eState == SPlayerInfo::EPS_VALID )
 		{
 			szValueName = NStr::Format( "Multiplayer.Player%d.Name", nPlayers );
-			SetGlobalVar( szValueName.c_str(), players[i].szName.c_str() );
+			SetGlobalVar( szValueName.c_str(), Bk1AsUtf16( players[i].szName.c_str() ) );
 
 			szValueName = NStr::Format( "Multiplayer.Player%d.Side", nPlayers );
 			SetGlobalVar( szValueName.c_str(), int(players[i].nSide) );
@@ -489,7 +489,7 @@ void CServerGameCreation::Init( INetDriver *_pInGameNetDriver, INetDriver *_pOut
 	players[0].eState = SPlayerInfo::EPS_VALID;
 	NStr::SetCodePage( GetACP() );
 	
-	players[0].szName = GetGlobalWVar( "Options.Multiplayer.GameSpyPlayerName", L"Noname" );
+	players[0].szName = Bk1AsWide( GetGlobalWVar( "Options.Multiplayer.GameSpyPlayerName", Bk1AsUtf16( L"Noname" ) ) );
 	if ( players[0].szName == L"Noname" )
 		players[0].szName = NStr::ToUnicode( GetGlobalVar( "Options.Multiplayer.PlayerName", "Noname" ) );
 
@@ -1180,7 +1180,7 @@ void CClientGameCreation::ProcessLogicIDSet( int nClientID, CStreamAccessor &pkt
 	players[nLogicID].eState = SPlayerInfo::EPS_CONNECTED;
 	NStr::SetCodePage( GetACP() );
 
-	players[nLogicID].szName = GetGlobalWVar( "Options.Multiplayer.GameSpyPlayerName", L"Noname" );
+	players[nLogicID].szName = Bk1AsWide( GetGlobalWVar( "Options.Multiplayer.GameSpyPlayerName", Bk1AsUtf16( L"Noname" ) ) );
 	if ( players[nLogicID].szName == L"Noname" )
 		players[nLogicID].szName = NStr::ToUnicode( GetGlobalVar( "Options.Multiplayer.PlayerName", "Noname" ) );
 

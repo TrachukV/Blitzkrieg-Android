@@ -6,7 +6,12 @@
 #include "GameCreationInterfaces.h"
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 interface INetDriver;
-class IMultiplayer::CCommand;
+// IMultiplayer::CCommand is nested, and a nested class cannot be forward
+// declared from outside its enclosing one. MSVC 6 accepted the declaration
+// that used to stand here; every compiler since rejects it. The type is used
+// below by value inside containers, so the definition is what is needed
+// anyway, and Multiplayer.h does not include this header back.
+#include "Multiplayer.h"
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CGamePlaying : public IGamePlaying
 {

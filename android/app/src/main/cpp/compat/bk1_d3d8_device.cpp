@@ -1,0 +1,1100 @@
+// The Direct3D 8 device, over OpenGL ES.
+//
+// The engine sets fixed-function state as it goes and then draws; this keeps
+// that state as it arrives and applies it at the draw, because GLES has no
+// state to set until there is a program bound and a vertex layout to describe.
+//
+// The engine's own renderer is a 2D blitter -- pre-transformed vertices, depth
+// off for the ground, five texture operations -- so nothing here reaches for a
+// pipeline that is not needed.
+#include "bk1_d3d8_gles.h"
+
+#include <math.h>
+#include <string.h>
+
+namespace NBk1D3D {
+
+namespace {
+
+// ---------------------------------------------------------------------------
+// State translation
+// ---------------------------------------------------------------------------
+GLenum BlendFactor( DWORD dwBlend )
+{
+    switch ( dwBlend )
+    {
+    case D3DBLEND_ZERO:         return GL_ZERO;
+    case D3DBLEND_ONE:          return GL_ONE;
+    case D3DBLEND_SRCCOLOR:     return GL_SRC_COLOR;
+    case D3DBLEND_INVSRCCOLOR:  return GL_ONE_MINUS_SRC_COLOR;
+    case D3DBLEND_SRCALPHA:     return GL_SRC_ALPHA;
+    case D3DBLEND_INVSRCALPHA:  return GL_ONE_MINUS_SRC_ALPHA;
+    case D3DBLEND_DESTALPHA:    return GL_DST_ALPHA;
+    case D3DBLEND_INVDESTALPHA: return GL_ONE_MINUS_DST_ALPHA;
+    case D3DBLEND_DESTCOLOR:    return GL_DST_COLOR;
+    case D3DBLEND_INVDESTCOLOR: return GL_ONE_MINUS_DST_COLOR;
+    case D3DBLEND_SRCALPHASAT:  return GL_SRC_ALPHA_SATURATE;
+    default:                    return GL_ONE;
+    }
+}
+
+GLenum CompareFunc( DWORD dwFunc )
+{
+    switch ( dwFunc )
+    {
+    case D3DCMP_NEVER:        return GL_NEVER;
+    case D3DCMP_LESS:         return GL_LESS;
+    case D3DCMP_EQUAL:        return GL_EQUAL;
+    case D3DCMP_LESSEQUAL:    return GL_LEQUAL;
+    case D3DCMP_GREATER:      return GL_GREATER;
+    case D3DCMP_NOTEQUAL:     return GL_NOTEQUAL;
+    case D3DCMP_GREATEREQUAL: return GL_GEQUAL;
+    default:                  return GL_ALWAYS;
+    }
+}
+
+GLenum StencilOp( DWORD dwOp )
+{
+    switch ( dwOp )
+    {
+    case D3DSTENCILOP_ZERO:    return GL_ZERO;
+    case D3DSTENCILOP_REPLACE: return GL_REPLACE;
+    case D3DSTENCILOP_INCRSAT: return GL_INCR;
+    case D3DSTENCILOP_DECRSAT: return GL_DECR;
+    case D3DSTENCILOP_INVERT:  return GL_INVERT;
+    case D3DSTENCILOP_INCR:    return GL_INCR_WRAP;
+    case D3DSTENCILOP_DECR:    return GL_DECR_WRAP;
+    default:                   return GL_KEEP;
+    }
+}
+
+GLenum AddressMode( DWORD dwAddress )
+{
+    // GLES has no border mode; clamping to the edge is the nearest thing and
+    // the engine only uses it on sprites that do not reach their border.
+    return ( dwAddress == D3DTADDRESS_WRAP ) ? GL_REPEAT : GL_CLAMP_TO_EDGE;
+}
+
+// How many vertices a primitive count covers.
+int VertexCount( D3DPRIMITIVETYPE type, UINT nPrimitives )
+{
+    switch ( type )
+    {
+    case D3DPT_POINTLIST:     return (int)nPrimitives;
+    case D3DPT_LINELIST:      return (int)nPrimitives * 2;
+    case D3DPT_LINESTRIP:     return (int)nPrimitives + 1;
+    case D3DPT_TRIANGLELIST:  return (int)nPrimitives * 3;
+    case D3DPT_TRIANGLESTRIP:
+    case D3DPT_TRIANGLEFAN:   return (int)nPrimitives + 2;
+    default:                  return 0;
+    }
+}
+
+GLenum PrimitiveMode( D3DPRIMITIVETYPE type )
+{
+    switch ( type )
+    {
+    case D3DPT_POINTLIST:     return GL_POINTS;
+    case D3DPT_LINELIST:      return GL_LINES;
+    case D3DPT_LINESTRIP:     return GL_LINE_STRIP;
+    case D3DPT_TRIANGLESTRIP: return GL_TRIANGLE_STRIP;
+    case D3DPT_TRIANGLEFAN:   return GL_TRIANGLE_FAN;
+    default:                  return GL_TRIANGLES;
+    }
+}
+
+void MultiplyMatrix( const D3DMATRIX &a, const D3DMATRIX &b, D3DMATRIX *pOut )
+{
+    for ( int r = 0; r < 4; ++r )
+    {
+        for ( int c = 0; c < 4; ++c )
+        {
+            float f = 0.0f;
+            for ( int k = 0; k < 4; ++k )
+                f += a.m[r][k] * b.m[k][c];
+            pOut->m[r][c] = f;
+        }
+    }
+}
+
+void IdentityMatrix( D3DMATRIX *pOut )
+{
+    memset( pOut, 0, sizeof( *pOut ) );
+    pOut->m[0][0] = pOut->m[1][1] = pOut->m[2][2] = pOut->m[3][3] = 1.0f;
+}
+
+// ---------------------------------------------------------------------------
+// The device
+// ---------------------------------------------------------------------------
+struct SDevice : public IDirect3DDevice8
+{
+    LONG nRefCount;
+
+    D3DPRESENT_PARAMETERS present;
+    SProgram              program;
+    bool                  bProgramBuilt;
+
+    // fixed-function state, as the engine sets it
+    DWORD       renderStates[256];
+    SStageState stages[MAX_STAGES];
+    STexture   *pStageTexture[MAX_STAGES];
+
+    D3DMATRIX matWorld;
+    D3DMATRIX matView;
+    D3DMATRIX matProjection;
+
+    D3DVIEWPORT8 viewport;
+
+    // geometry
+    SVertexBuffer *pStream;
+    UINT           nStreamStride;
+    SIndexBuffer  *pIndices;
+    UINT           nBaseVertexIndex;
+    DWORD          dwFVF;
+
+    GLuint nVertexArray;
+
+    SDevice();
+    ~SDevice();
+
+    // --- IUnknown ---
+    HRESULT STDCALL QueryInterface( REFIID, void **ppvObject ) override
+    {
+        if ( ppvObject == 0 )
+            return E_INVALIDARG;
+        *ppvObject = this;
+        ++nRefCount;
+        return S_OK;
+    }
+    ULONG STDCALL AddRef() override { return (ULONG)++nRefCount; }
+    ULONG STDCALL Release() override
+    {
+        const LONG n = --nRefCount;
+        if ( n <= 0 )
+            delete this;
+        return (ULONG)n;
+    }
+
+    // --- lifetime ---
+    HRESULT STDCALL TestCooperativeLevel() override { return D3D_OK; }
+    UINT    STDCALL GetAvailableTextureMem() override { return 256u * 1024u * 1024u; }
+
+    HRESULT STDCALL Reset( D3DPRESENT_PARAMETERS *pParameters ) override
+    {
+        if ( pParameters != 0 )
+        {
+            present = *pParameters;
+            Bk1SetClientSize( (int)present.BackBufferWidth,
+                              (int)present.BackBufferHeight );
+        }
+        return D3D_OK;
+    }
+
+    // The swap belongs to the Android layer, which owns the EGL surface: it
+    // presents after the engine's frame returns. Here the queue is only
+    // flushed so the frame is complete when that happens.
+    HRESULT STDCALL Present( const RECT *, const RECT *, HWND, const void * ) override
+    {
+        glFlush();
+        return D3D_OK;
+    }
+
+    HRESULT STDCALL GetFrontBuffer( IDirect3DSurface8 *pDestSurface ) override
+    {
+        // Used for screenshots. The surface is filled from the framebuffer.
+        SSurface *pSurface = (SSurface *)pDestSurface;
+        if ( pSurface == 0 )
+            return D3DERR_INVALIDCALL;
+        BYTE *pPixels = pSurface->Pixels();
+        if ( pPixels == 0 )
+            return D3DERR_INVALIDCALL;
+
+        glReadPixels( 0, 0, (GLsizei)pSurface->nWidth, (GLsizei)pSurface->nHeight,
+                      GL_RGBA, GL_UNSIGNED_BYTE, pPixels );
+        // GLES reads bottom-up in R,G,B,A; the engine expects top-down in the
+        // order a 32-bit ARGB word holds.
+        const int nPitch = pSurface->Pitch();
+        std::vector<BYTE> row( (size_t)nPitch );
+        for ( UINT y = 0; y < pSurface->nHeight / 2; ++y )
+        {
+            BYTE *pTop = pPixels + (size_t)y * nPitch;
+            BYTE *pBottom = pPixels + (size_t)( pSurface->nHeight - 1 - y ) * nPitch;
+            memcpy( &row[0], pTop, nPitch );
+            memcpy( pTop, pBottom, nPitch );
+            memcpy( pBottom, &row[0], nPitch );
+        }
+        for ( size_t p = 0; p + 3 < (size_t)nPitch * pSurface->nHeight; p += 4 )
+        {
+            const BYTE r = pPixels[p];
+            pPixels[p] = pPixels[p + 2];
+            pPixels[p + 2] = r;
+        }
+        return D3D_OK;
+    }
+
+    // Android manages display gamma; the engine's ramp is accepted and kept so
+    // a read returns what was written.
+    D3DGAMMARAMP gammaRamp;
+    void STDCALL SetGammaRamp( DWORD, const D3DGAMMARAMP *pRamp ) override
+    {
+        if ( pRamp != 0 )
+            gammaRamp = *pRamp;
+    }
+    void STDCALL GetGammaRamp( D3DGAMMARAMP *pRamp ) override
+    {
+        if ( pRamp != 0 )
+            *pRamp = gammaRamp;
+    }
+
+    // --- resources ---
+    HRESULT STDCALL CreateTexture( UINT nWidth, UINT nHeight, UINT nLevels, DWORD dwUsage,
+                                   D3DFORMAT format, D3DPOOL,
+                                   IDirect3DTexture8 **ppTexture ) override;
+    HRESULT STDCALL CreateVertexBuffer( UINT nLength, DWORD, DWORD dwVertexFVF, D3DPOOL,
+                                        IDirect3DVertexBuffer8 **ppBuffer ) override;
+    HRESULT STDCALL CreateIndexBuffer( UINT nLength, DWORD, D3DFORMAT format, D3DPOOL,
+                                       IDirect3DIndexBuffer8 **ppBuffer ) override;
+    HRESULT STDCALL CreateDepthStencilSurface( UINT nWidth, UINT nHeight, D3DFORMAT format,
+                                               D3DMULTISAMPLE_TYPE,
+                                               IDirect3DSurface8 **ppSurface ) override;
+    HRESULT STDCALL CreateImageSurface( UINT nWidth, UINT nHeight, D3DFORMAT format,
+                                        IDirect3DSurface8 **ppSurface ) override;
+
+    HRESULT STDCALL CopyRects( IDirect3DSurface8 *pSource, const RECT *pSourceRects,
+                               UINT nRects, IDirect3DSurface8 *pDest,
+                               const POINT *pDestPoints ) override;
+    HRESULT STDCALL UpdateTexture( IDirect3DBaseTexture8 *pSource,
+                                   IDirect3DBaseTexture8 *pDest ) override;
+
+    // --- render targets ---
+    // Rendering goes to the surface the Android layer made current. The engine
+    // asks for the target so it can put it back afterwards, which costs
+    // nothing to answer.
+    HRESULT STDCALL GetRenderTarget( IDirect3DSurface8 **ppRenderTarget ) override
+    {
+        if ( ppRenderTarget != 0 )
+            *ppRenderTarget = 0;
+        return D3D_OK;
+    }
+    HRESULT STDCALL GetDepthStencilSurface( IDirect3DSurface8 **ppSurface ) override
+    {
+        if ( ppSurface != 0 )
+            *ppSurface = 0;
+        return D3D_OK;
+    }
+    HRESULT STDCALL SetRenderTarget( IDirect3DSurface8 *, IDirect3DSurface8 * ) override
+    {
+        return D3D_OK;
+    }
+
+    // --- the frame ---
+    HRESULT STDCALL BeginScene() override
+    {
+        EnsureProgram();
+        return D3D_OK;
+    }
+    HRESULT STDCALL EndScene() override { return D3D_OK; }
+    HRESULT STDCALL Clear( DWORD nCount, const void *pRects, DWORD dwFlags,
+                           D3DCOLOR color, float fZ, DWORD dwStencil ) override;
+
+    // --- state ---
+    HRESULT STDCALL SetTransform( D3DTRANSFORMSTATETYPE state,
+                                  const D3DMATRIX *pMatrix ) override;
+    HRESULT STDCALL SetViewport( const D3DVIEWPORT8 *pViewport ) override;
+    HRESULT STDCALL SetMaterial( const D3DMATERIAL8 * ) override { return D3D_OK; }
+    HRESULT STDCALL SetLight( DWORD, const D3DLIGHT8 * ) override { return D3D_OK; }
+    HRESULT STDCALL LightEnable( DWORD, BOOL ) override { return D3D_OK; }
+    HRESULT STDCALL SetRenderState( D3DRENDERSTATETYPE state, DWORD dwValue ) override;
+    HRESULT STDCALL SetTexture( DWORD nStage, IDirect3DBaseTexture8 *pTexture ) override;
+    HRESULT STDCALL SetTextureStageState( DWORD nStage, D3DTEXTURESTAGESTATETYPE type,
+                                          DWORD dwValue ) override;
+
+    // --- geometry ---
+    HRESULT STDCALL SetStreamSource( UINT, IDirect3DVertexBuffer8 *pStreamData,
+                                     UINT nStride ) override
+    {
+        pStream = (SVertexBuffer *)pStreamData;
+        nStreamStride = nStride;
+        return D3D_OK;
+    }
+    HRESULT STDCALL SetIndices( IDirect3DIndexBuffer8 *pIndexData,
+                                UINT nBaseIndex ) override
+    {
+        pIndices = (SIndexBuffer *)pIndexData;
+        nBaseVertexIndex = nBaseIndex;
+        return D3D_OK;
+    }
+    HRESULT STDCALL SetVertexShader( DWORD dwHandle ) override
+    {
+        // An FVF code, never a shader: there are none in the tree.
+        dwFVF = dwHandle;
+        return D3D_OK;
+    }
+    HRESULT STDCALL DrawPrimitive( D3DPRIMITIVETYPE type, UINT nStartVertex,
+                                   UINT nPrimitiveCount ) override;
+    HRESULT STDCALL DrawIndexedPrimitive( D3DPRIMITIVETYPE type, UINT nMinIndex,
+                                          UINT nNumVertices, UINT nStartIndex,
+                                          UINT nPrimitiveCount ) override;
+
+    // --- internals ---
+    void EnsureProgram();
+    void ApplyState();
+    void BindVertexLayout( const SVertexLayout &layout, int nBaseOffset );
+};
+
+SDevice::SDevice()
+    : nRefCount( 1 ), bProgramBuilt( false ), pStream( 0 ), nStreamStride( 0 ),
+      pIndices( 0 ), nBaseVertexIndex( 0 ), dwFVF( 0 ), nVertexArray( 0 )
+{
+    memset( &present, 0, sizeof( present ) );
+    memset( renderStates, 0, sizeof( renderStates ) );
+    memset( pStageTexture, 0, sizeof( pStageTexture ) );
+    memset( &gammaRamp, 0, sizeof( gammaRamp ) );
+    IdentityMatrix( &matWorld );
+    IdentityMatrix( &matView );
+    IdentityMatrix( &matProjection );
+    memset( &viewport, 0, sizeof( viewport ) );
+
+    // The defaults Direct3D starts a device with, so that state the engine
+    // never sets still behaves as it did.
+    renderStates[D3DRS_ZENABLE] = D3DZB_TRUE;
+    renderStates[D3DRS_ZWRITEENABLE] = TRUE;
+    renderStates[D3DRS_ZFUNC] = D3DCMP_LESSEQUAL;
+    renderStates[D3DRS_ALPHABLENDENABLE] = FALSE;
+    renderStates[D3DRS_SRCBLEND] = D3DBLEND_ONE;
+    renderStates[D3DRS_DESTBLEND] = D3DBLEND_ZERO;
+    renderStates[D3DRS_ALPHATESTENABLE] = FALSE;
+    renderStates[D3DRS_ALPHAFUNC] = D3DCMP_ALWAYS;
+    renderStates[D3DRS_ALPHAREF] = 0;
+    renderStates[D3DRS_CULLMODE] = D3DCULL_CCW;
+    renderStates[D3DRS_STENCILENABLE] = FALSE;
+    renderStates[D3DRS_STENCILFUNC] = D3DCMP_ALWAYS;
+    renderStates[D3DRS_STENCILMASK] = 0xFFFFFFFF;
+    renderStates[D3DRS_STENCILWRITEMASK] = 0xFFFFFFFF;
+    renderStates[D3DRS_TEXTUREFACTOR] = 0xFFFFFFFF;
+}
+
+SDevice::~SDevice()
+{
+    if ( nVertexArray != 0 )
+        glDeleteVertexArrays( 1, &nVertexArray );
+    if ( program.nProgram != 0 )
+        glDeleteProgram( program.nProgram );
+}
+
+void SDevice::EnsureProgram()
+{
+    if ( bProgramBuilt )
+        return;
+    bProgramBuilt = true;               // one attempt; a failure is logged once
+    BuildProgram( &program );
+    if ( nVertexArray == 0 )
+        glGenVertexArrays( 1, &nVertexArray );
+}
+
+// ---------------------------------------------------------------------------
+// Resource creation
+// ---------------------------------------------------------------------------
+HRESULT STDCALL SDevice::CreateTexture( UINT nWidth, UINT nHeight, UINT nLevels,
+                                        DWORD dwUsage, D3DFORMAT format, D3DPOOL,
+                                        IDirect3DTexture8 **ppTexture )
+{
+    if ( ppTexture == 0 || nWidth == 0 || nHeight == 0 )
+        return D3DERR_INVALIDCALL;
+
+    STexture *pTexture = new STexture();
+    pTexture->nWidth = nWidth;
+    pTexture->nHeight = nHeight;
+    pTexture->format = format;
+    pTexture->dwUsage = dwUsage;
+
+    // Zero levels means the full chain, as Direct3D reads it.
+    if ( nLevels == 0 )
+    {
+        nLevels = 1;
+        UINT w = nWidth, h = nHeight;
+        while ( w > 1 || h > 1 )
+        {
+            w = w > 1 ? w / 2 : 1;
+            h = h > 1 ? h / 2 : 1;
+            ++nLevels;
+        }
+    }
+    pTexture->nLevels = nLevels;
+    pTexture->levels.resize( nLevels );
+
+    UINT w = nWidth, h = nHeight;
+    for ( UINT i = 0; i < nLevels; ++i )
+    {
+        pTexture->levels[i].nWidth = w;
+        pTexture->levels[i].nHeight = h;
+        const int nBytes = ( format == D3DFMT_DXT1 || format == D3DFMT_DXT2 ||
+                             format == D3DFMT_DXT3 || format == D3DFMT_DXT4 ||
+                             format == D3DFMT_DXT5 )
+                               ? ( (int)( ( w + 3 ) / 4 ) * (int)( ( h + 3 ) / 4 ) *
+                                   ( format == D3DFMT_DXT1 ? 8 : 16 ) )
+                               : (int)( w * h * 4 );
+        pTexture->levels[i].data.assign( (size_t)nBytes, 0 );
+        w = w > 1 ? w / 2 : 1;
+        h = h > 1 ? h / 2 : 1;
+    }
+
+    *ppTexture = pTexture;
+    return D3D_OK;
+}
+
+HRESULT STDCALL SDevice::CreateVertexBuffer( UINT nLength, DWORD, DWORD dwVertexFVF,
+                                             D3DPOOL, IDirect3DVertexBuffer8 **ppBuffer )
+{
+    if ( ppBuffer == 0 )
+        return D3DERR_INVALIDCALL;
+    SVertexBuffer *pBuffer = new SVertexBuffer();
+    pBuffer->data.assign( nLength, 0 );
+    pBuffer->dwFVF = dwVertexFVF;
+    *ppBuffer = pBuffer;
+    return D3D_OK;
+}
+
+HRESULT STDCALL SDevice::CreateIndexBuffer( UINT nLength, DWORD, D3DFORMAT format,
+                                            D3DPOOL, IDirect3DIndexBuffer8 **ppBuffer )
+{
+    if ( ppBuffer == 0 )
+        return D3DERR_INVALIDCALL;
+    SIndexBuffer *pBuffer = new SIndexBuffer();
+    pBuffer->data.assign( nLength, 0 );
+    pBuffer->format = format;
+    *ppBuffer = pBuffer;
+    return D3D_OK;
+}
+
+HRESULT STDCALL SDevice::CreateDepthStencilSurface( UINT nWidth, UINT nHeight,
+                                                    D3DFORMAT format,
+                                                    D3DMULTISAMPLE_TYPE,
+                                                    IDirect3DSurface8 **ppSurface )
+{
+    // The depth buffer belongs to the EGL surface the Android layer created;
+    // the engine only holds this to put it back as the target.
+    if ( ppSurface == 0 )
+        return D3DERR_INVALIDCALL;
+    SSurface *pSurface = new SSurface();
+    pSurface->nWidth = nWidth;
+    pSurface->nHeight = nHeight;
+    pSurface->format = format;
+    *ppSurface = pSurface;
+    return D3D_OK;
+}
+
+HRESULT STDCALL SDevice::CreateImageSurface( UINT nWidth, UINT nHeight, D3DFORMAT format,
+                                             IDirect3DSurface8 **ppSurface )
+{
+    if ( ppSurface == 0 )
+        return D3DERR_INVALIDCALL;
+    SSurface *pSurface = new SSurface();
+    pSurface->nWidth = nWidth;
+    pSurface->nHeight = nHeight;
+    pSurface->format = format;
+    pSurface->data.assign( (size_t)nWidth * nHeight * 4, 0 );
+    *ppSurface = pSurface;
+    return D3D_OK;
+}
+
+HRESULT STDCALL SDevice::CopyRects( IDirect3DSurface8 *pSource, const RECT *pSourceRects,
+                                    UINT nRects, IDirect3DSurface8 *pDest,
+                                    const POINT *pDestPoints )
+{
+    SSurface *pFrom = (SSurface *)pSource;
+    SSurface *pTo = (SSurface *)pDest;
+    if ( pFrom == 0 || pTo == 0 )
+        return D3DERR_INVALIDCALL;
+
+    BYTE *pSrcBits = pFrom->Pixels();
+    BYTE *pDstBits = pTo->Pixels();
+    if ( pSrcBits == 0 || pDstBits == 0 )
+        return D3DERR_INVALIDCALL;
+
+    const int nSrcPitch = pFrom->Pitch();
+    const int nDstPitch = pTo->Pitch();
+    const int nBytesPerPixel = 4;
+
+    // No rectangles means the whole surface, as Direct3D reads it.
+    if ( nRects == 0 || pSourceRects == 0 )
+    {
+        const UINT nHeight = pFrom->nHeight < pTo->nHeight ? pFrom->nHeight : pTo->nHeight;
+        const int nRowBytes = nSrcPitch < nDstPitch ? nSrcPitch : nDstPitch;
+        for ( UINT y = 0; y < nHeight; ++y )
+            memcpy( pDstBits + (size_t)y * nDstPitch, pSrcBits + (size_t)y * nSrcPitch,
+                    nRowBytes );
+    }
+    else
+    {
+        for ( UINT i = 0; i < nRects; ++i )
+        {
+            const RECT &rc = pSourceRects[i];
+            const int nX = ( pDestPoints != 0 ) ? (int)pDestPoints[i].x : (int)rc.left;
+            const int nY = ( pDestPoints != 0 ) ? (int)pDestPoints[i].y : (int)rc.top;
+            const int nWidth = (int)( rc.right - rc.left );
+            for ( int y = 0; y < (int)( rc.bottom - rc.top ); ++y )
+            {
+                memcpy( pDstBits + (size_t)( nY + y ) * nDstPitch + (size_t)nX * nBytesPerPixel,
+                        pSrcBits + (size_t)( rc.top + y ) * nSrcPitch +
+                            (size_t)rc.left * nBytesPerPixel,
+                        (size_t)nWidth * nBytesPerPixel );
+            }
+        }
+    }
+
+    if ( pTo->pOwner != 0 )
+        pTo->pOwner->bUploaded = false;
+    return D3D_OK;
+}
+
+HRESULT STDCALL SDevice::UpdateTexture( IDirect3DBaseTexture8 *pSource,
+                                        IDirect3DBaseTexture8 *pDest )
+{
+    STexture *pFrom = (STexture *)pSource;
+    STexture *pTo = (STexture *)pDest;
+    if ( pFrom == 0 || pTo == 0 )
+        return D3DERR_INVALIDCALL;
+
+    const size_t nLevels = pFrom->levels.size() < pTo->levels.size()
+                               ? pFrom->levels.size() : pTo->levels.size();
+    for ( size_t i = 0; i < nLevels; ++i )
+    {
+        const size_t n = pFrom->levels[i].data.size() < pTo->levels[i].data.size()
+                             ? pFrom->levels[i].data.size() : pTo->levels[i].data.size();
+        if ( n > 0 )
+            memcpy( &pTo->levels[i].data[0], &pFrom->levels[i].data[0], n );
+    }
+    pTo->bUploaded = false;
+    return D3D_OK;
+}
+
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+HRESULT STDCALL SDevice::Clear( DWORD, const void *, DWORD dwFlags, D3DCOLOR color,
+                                float fZ, DWORD dwStencil )
+{
+    GLbitfield nMask = 0;
+    if ( dwFlags & D3DCLEAR_TARGET )
+    {
+        // D3DCOLOR is A,R,G,B packed into a word.
+        const float fA = (float)( ( color >> 24 ) & 0xFF ) / 255.0f;
+        const float fR = (float)( ( color >> 16 ) & 0xFF ) / 255.0f;
+        const float fG = (float)( ( color >> 8 ) & 0xFF ) / 255.0f;
+        const float fB = (float)( color & 0xFF ) / 255.0f;
+        glClearColor( fR, fG, fB, fA );
+        nMask |= GL_COLOR_BUFFER_BIT;
+    }
+    if ( dwFlags & D3DCLEAR_ZBUFFER )
+    {
+        glClearDepthf( fZ );
+        // A depth clear is refused when writing is off, so it is turned on for
+        // the clear and put back.
+        glDepthMask( GL_TRUE );
+        nMask |= GL_DEPTH_BUFFER_BIT;
+    }
+    if ( dwFlags & D3DCLEAR_STENCIL )
+    {
+        glClearStencil( (GLint)dwStencil );
+        nMask |= GL_STENCIL_BUFFER_BIT;
+    }
+    if ( nMask != 0 )
+        glClear( nMask );
+    if ( dwFlags & D3DCLEAR_ZBUFFER )
+        glDepthMask( renderStates[D3DRS_ZWRITEENABLE] ? GL_TRUE : GL_FALSE );
+    return D3D_OK;
+}
+
+HRESULT STDCALL SDevice::SetTransform( D3DTRANSFORMSTATETYPE state,
+                                       const D3DMATRIX *pMatrix )
+{
+    if ( pMatrix == 0 )
+        return D3DERR_INVALIDCALL;
+    if ( state == D3DTS_VIEW )
+        matView = *pMatrix;
+    else if ( state == D3DTS_PROJECTION )
+        matProjection = *pMatrix;
+    else if ( state >= (D3DTRANSFORMSTATETYPE)256 )
+        matWorld = *pMatrix;        // D3DTS_WORLDMATRIX( n ); the engine uses one
+    return D3D_OK;
+}
+
+HRESULT STDCALL SDevice::SetViewport( const D3DVIEWPORT8 *pViewport )
+{
+    if ( pViewport == 0 )
+        return D3DERR_INVALIDCALL;
+    viewport = *pViewport;
+    glViewport( (GLint)viewport.X, (GLint)viewport.Y,
+                (GLsizei)viewport.Width, (GLsizei)viewport.Height );
+    glDepthRangef( viewport.MinZ, viewport.MaxZ );
+    return D3D_OK;
+}
+
+HRESULT STDCALL SDevice::SetRenderState( D3DRENDERSTATETYPE state, DWORD dwValue )
+{
+    if ( (DWORD)state < 256 )
+        renderStates[state] = dwValue;
+    return D3D_OK;
+}
+
+HRESULT STDCALL SDevice::SetTexture( DWORD nStage, IDirect3DBaseTexture8 *pTexture )
+{
+    if ( nStage < MAX_STAGES )
+        pStageTexture[nStage] = (STexture *)pTexture;
+    return D3D_OK;
+}
+
+HRESULT STDCALL SDevice::SetTextureStageState( DWORD nStage,
+                                               D3DTEXTURESTAGESTATETYPE type,
+                                               DWORD dwValue )
+{
+    if ( nStage >= MAX_STAGES )
+        return D3D_OK;
+    SStageState &stage = stages[nStage];
+    switch ( type )
+    {
+    case D3DTSS_COLOROP:       stage.dwColorOp = dwValue; break;
+    case D3DTSS_COLORARG1:     stage.dwColorArg1 = dwValue; break;
+    case D3DTSS_COLORARG2:     stage.dwColorArg2 = dwValue; break;
+    case D3DTSS_ALPHAOP:       stage.dwAlphaOp = dwValue; break;
+    case D3DTSS_ALPHAARG1:     stage.dwAlphaArg1 = dwValue; break;
+    case D3DTSS_ALPHAARG2:     stage.dwAlphaArg2 = dwValue; break;
+    case D3DTSS_TEXCOORDINDEX: stage.dwTexCoordIndex = dwValue; break;
+    case D3DTSS_ADDRESSU:      stage.dwAddressU = dwValue; break;
+    case D3DTSS_ADDRESSV:      stage.dwAddressV = dwValue; break;
+    case D3DTSS_MAGFILTER:     stage.dwMagFilter = dwValue; break;
+    case D3DTSS_MINFILTER:     stage.dwMinFilter = dwValue; break;
+    default: break;
+    }
+    return D3D_OK;
+}
+
+// ---------------------------------------------------------------------------
+// Drawing
+// ---------------------------------------------------------------------------
+void SDevice::ApplyState()
+{
+    // depth
+    if ( renderStates[D3DRS_ZENABLE] != D3DZB_FALSE )
+    {
+        glEnable( GL_DEPTH_TEST );
+        glDepthFunc( CompareFunc( renderStates[D3DRS_ZFUNC] ) );
+    }
+    else
+    {
+        glDisable( GL_DEPTH_TEST );
+    }
+    glDepthMask( renderStates[D3DRS_ZWRITEENABLE] ? GL_TRUE : GL_FALSE );
+
+    // blending
+    if ( renderStates[D3DRS_ALPHABLENDENABLE] )
+    {
+        glEnable( GL_BLEND );
+        glBlendFunc( BlendFactor( renderStates[D3DRS_SRCBLEND] ),
+                     BlendFactor( renderStates[D3DRS_DESTBLEND] ) );
+    }
+    else
+    {
+        glDisable( GL_BLEND );
+    }
+
+    // culling. Direct3D names the winding it discards; GLES names the face.
+    switch ( renderStates[D3DRS_CULLMODE] )
+    {
+    case D3DCULL_NONE:
+        glDisable( GL_CULL_FACE );
+        break;
+    case D3DCULL_CW:
+        glEnable( GL_CULL_FACE );
+        glFrontFace( GL_CCW );
+        glCullFace( GL_BACK );
+        break;
+    default:
+        glEnable( GL_CULL_FACE );
+        glFrontFace( GL_CW );
+        glCullFace( GL_BACK );
+        break;
+    }
+
+    // stencil
+    if ( renderStates[D3DRS_STENCILENABLE] )
+    {
+        glEnable( GL_STENCIL_TEST );
+        glStencilFunc( CompareFunc( renderStates[D3DRS_STENCILFUNC] ),
+                       (GLint)renderStates[D3DRS_STENCILREF],
+                       (GLuint)renderStates[D3DRS_STENCILMASK] );
+        glStencilOp( StencilOp( renderStates[D3DRS_STENCILFAIL] ),
+                     StencilOp( renderStates[D3DRS_STENCILZFAIL] ),
+                     StencilOp( renderStates[D3DRS_STENCILPASS] ) );
+        glStencilMask( (GLuint)renderStates[D3DRS_STENCILWRITEMASK] );
+    }
+    else
+    {
+        glDisable( GL_STENCIL_TEST );
+    }
+
+    // the texture stages and their samplers
+    glUseProgram( program.nProgram );
+
+    GLint colorOps[2] = { (GLint)stages[0].dwColorOp, (GLint)stages[1].dwColorOp };
+    GLint alphaOps[2] = { (GLint)stages[0].dwAlphaOp, (GLint)stages[1].dwAlphaOp };
+    GLint colorArgs[4] = { (GLint)stages[0].dwColorArg1, (GLint)stages[0].dwColorArg2,
+                           (GLint)stages[1].dwColorArg1, (GLint)stages[1].dwColorArg2 };
+    GLint alphaArgs[4] = { (GLint)stages[0].dwAlphaArg1, (GLint)stages[0].dwAlphaArg2,
+                           (GLint)stages[1].dwAlphaArg1, (GLint)stages[1].dwAlphaArg2 };
+    glUniform2iv( program.nStageOpUniform, 1, colorOps );
+    glUniform2iv( program.nAlphaOpUniform, 1, alphaOps );
+    glUniform4iv( program.nStageArgUniform, 1, colorArgs );
+    glUniform4iv( program.nAlphaArgUniform, 1, alphaArgs );
+
+    const DWORD dwFactor = renderStates[D3DRS_TEXTUREFACTOR];
+    glUniform4f( program.nTextureFactorUniform,
+                 (float)( ( dwFactor >> 16 ) & 0xFF ) / 255.0f,
+                 (float)( ( dwFactor >> 8 ) & 0xFF ) / 255.0f,
+                 (float)( dwFactor & 0xFF ) / 255.0f,
+                 (float)( ( dwFactor >> 24 ) & 0xFF ) / 255.0f );
+
+    glUniform3f( program.nAlphaTestUniform,
+                 renderStates[D3DRS_ALPHATESTENABLE] ? 1.0f : 0.0f,
+                 (float)renderStates[D3DRS_ALPHAFUNC],
+                 (float)renderStates[D3DRS_ALPHAREF] / 255.0f );
+
+    for ( int i = 0; i < MAX_TEXTURE_UNITS; ++i )
+    {
+        glActiveTexture( GL_TEXTURE0 + i );
+        if ( pStageTexture[i] != 0 )
+        {
+            pStageTexture[i]->EnsureUploaded();
+            glBindTexture( GL_TEXTURE_2D, pStageTexture[i]->nGLTexture );
+            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                             AddressMode( stages[i].dwAddressU ) );
+            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                             AddressMode( stages[i].dwAddressV ) );
+            const GLenum eMag = ( stages[i].dwMagFilter == D3DTEXF_POINT )
+                                    ? GL_NEAREST : GL_LINEAR;
+            // A single-level texture must not ask for a mip filter.
+            const bool bMipped = pStageTexture[i]->levels.size() > 1;
+            GLenum eMin;
+            if ( stages[i].dwMinFilter == D3DTEXF_POINT )
+                eMin = bMipped ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST;
+            else
+                eMin = bMipped ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
+            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, eMag );
+            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, eMin );
+        }
+        else
+        {
+            glBindTexture( GL_TEXTURE_2D, 0 );
+        }
+        glUniform1i( program.nSamplerUniform[i], i );
+    }
+    glActiveTexture( GL_TEXTURE0 );
+
+    // the transform, and the viewport the pre-transformed path maps against
+    D3DMATRIX matWorldView, matCombined;
+    MultiplyMatrix( matWorld, matView, &matWorldView );
+    MultiplyMatrix( matWorldView, matProjection, &matCombined );
+    // Direct3D's matrices are row-major and multiply a row vector on the left;
+    // the shader multiplies a column vector, so the matrix goes up transposed.
+    glUniformMatrix4fv( program.nTransformUniform, 1, GL_TRUE, &matCombined.m[0][0] );
+
+    int nClientWidth = 0, nClientHeight = 0;
+    Bk1GetClientSize( &nClientWidth, &nClientHeight );
+    const GLint nViewportSize = glGetUniformLocation( program.nProgram, "uViewportSize" );
+    glUniform2f( nViewportSize,
+                 viewport.Width != 0 ? (float)viewport.Width : (float)nClientWidth,
+                 viewport.Height != 0 ? (float)viewport.Height : (float)nClientHeight );
+}
+
+void SDevice::BindVertexLayout( const SVertexLayout &layout, int nBaseOffset )
+{
+    const GLsizei nStride = (GLsizei)( nStreamStride != 0 ? nStreamStride : layout.nStride );
+
+    if ( program.nPositionAttrib >= 0 )
+    {
+        glEnableVertexAttribArray( program.nPositionAttrib );
+        glVertexAttribPointer( program.nPositionAttrib, layout.bTransformed ? 4 : 3,
+                               GL_FLOAT, GL_FALSE, nStride,
+                               (const void *)(size_t)( nBaseOffset + layout.nPositionOffset ) );
+    }
+
+    // The colours arrive as a packed word, which is B, G, R, A in memory --
+    // what a D3DCOLOR is. GLES 3 has no BGRA vertex format, so the bytes go up
+    // in memory order and the vertex shader puts the channels right.
+    if ( program.nDiffuseAttrib >= 0 )
+    {
+        if ( layout.bHasDiffuse )
+        {
+            glEnableVertexAttribArray( program.nDiffuseAttrib );
+            glVertexAttribPointer( program.nDiffuseAttrib, 4, GL_UNSIGNED_BYTE,
+                                   GL_TRUE, nStride,
+                                   (const void *)(size_t)( nBaseOffset + layout.nDiffuseOffset ) );
+        }
+        else
+        {
+            glDisableVertexAttribArray( program.nDiffuseAttrib );
+            glVertexAttrib4f( program.nDiffuseAttrib, 1.0f, 1.0f, 1.0f, 1.0f );
+        }
+    }
+
+    if ( program.nSpecularAttrib >= 0 )
+    {
+        if ( layout.bHasSpecular )
+        {
+            glEnableVertexAttribArray( program.nSpecularAttrib );
+            glVertexAttribPointer( program.nSpecularAttrib, 4, GL_UNSIGNED_BYTE,
+                                   GL_TRUE, nStride,
+                                   (const void *)(size_t)( nBaseOffset + layout.nSpecularOffset ) );
+        }
+        else
+        {
+            glDisableVertexAttribArray( program.nSpecularAttrib );
+            glVertexAttrib4f( program.nSpecularAttrib, 0.0f, 0.0f, 0.0f, 0.0f );
+        }
+    }
+
+    for ( int i = 0; i < MAX_TEXTURE_UNITS; ++i )
+    {
+        if ( program.nTexCoordAttrib[i] < 0 )
+            continue;
+        // Which coordinate set a stage reads is its own state, not its index.
+        const int nSet = (int)( stages[i].dwTexCoordIndex & 7 );
+        if ( nSet < layout.nTexCoords && layout.nTexCoordOffset[nSet] >= 0 )
+        {
+            glEnableVertexAttribArray( program.nTexCoordAttrib[i] );
+            glVertexAttribPointer( program.nTexCoordAttrib[i], 2, GL_FLOAT, GL_FALSE,
+                                   nStride,
+                                   (const void *)(size_t)( nBaseOffset +
+                                                           layout.nTexCoordOffset[nSet] ) );
+        }
+        else
+        {
+            glDisableVertexAttribArray( program.nTexCoordAttrib[i] );
+            glVertexAttrib2f( program.nTexCoordAttrib[i], 0.0f, 0.0f );
+        }
+    }
+
+    glUniform1i( program.nTransformedUniform, layout.bTransformed ? 1 : 0 );
+}
+
+HRESULT STDCALL SDevice::DrawPrimitive( D3DPRIMITIVETYPE type, UINT nStartVertex,
+                                        UINT nPrimitiveCount )
+{
+    EnsureProgram();
+    if ( program.nProgram == 0 || pStream == 0 )
+        return D3DERR_INVALIDCALL;
+
+    ApplyState();
+    glBindVertexArray( nVertexArray );
+    pStream->EnsureUploaded();
+
+    const SVertexLayout layout = LayoutFromFVF( dwFVF != 0 ? dwFVF : pStream->dwFVF );
+    const int nStride = (int)( nStreamStride != 0 ? nStreamStride : (UINT)layout.nStride );
+    BindVertexLayout( layout, (int)nStartVertex * nStride );
+
+    glDrawArrays( PrimitiveMode( type ), 0, (GLsizei)VertexCount( type, nPrimitiveCount ) );
+    return D3D_OK;
+}
+
+HRESULT STDCALL SDevice::DrawIndexedPrimitive( D3DPRIMITIVETYPE type, UINT,
+                                               UINT, UINT nStartIndex,
+                                               UINT nPrimitiveCount )
+{
+    EnsureProgram();
+    if ( program.nProgram == 0 || pStream == 0 || pIndices == 0 )
+        return D3DERR_INVALIDCALL;
+
+    ApplyState();
+    glBindVertexArray( nVertexArray );
+    pStream->EnsureUploaded();
+    pIndices->EnsureUploaded();
+
+    const SVertexLayout layout = LayoutFromFVF( dwFVF != 0 ? dwFVF : pStream->dwFVF );
+    const int nStride = (int)( nStreamStride != 0 ? nStreamStride : (UINT)layout.nStride );
+    // Direct3D adds the base vertex index to every index; GLES has no such
+    // offset before 3.2, so it is folded into the attribute pointers.
+    BindVertexLayout( layout, (int)nBaseVertexIndex * nStride );
+
+    const bool bWide = ( pIndices->format == D3DFMT_INDEX32 );
+    const size_t nIndexSize = bWide ? 4 : 2;
+    glDrawElements( PrimitiveMode( type ), (GLsizei)VertexCount( type, nPrimitiveCount ),
+                    bWide ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
+                    (const void *)( (size_t)nStartIndex * nIndexSize ) );
+    return D3D_OK;
+}
+
+// ---------------------------------------------------------------------------
+// The factory
+// ---------------------------------------------------------------------------
+struct SDirect3D : public IDirect3D8
+{
+    LONG nRefCount;
+
+    SDirect3D() : nRefCount( 1 ) {}
+
+    HRESULT STDCALL QueryInterface( REFIID, void **ppvObject ) override
+    {
+        if ( ppvObject == 0 )
+            return E_INVALIDARG;
+        *ppvObject = this;
+        ++nRefCount;
+        return S_OK;
+    }
+    ULONG STDCALL AddRef() override { return (ULONG)++nRefCount; }
+    ULONG STDCALL Release() override
+    {
+        const LONG n = --nRefCount;
+        if ( n <= 0 )
+            delete this;
+        return (ULONG)n;
+    }
+
+    UINT STDCALL GetAdapterCount() override { return 1; }
+
+    HRESULT STDCALL GetAdapterIdentifier( UINT, DWORD,
+                                          D3DADAPTER_IDENTIFIER8 *pIdentifier ) override
+    {
+        if ( pIdentifier == 0 )
+            return D3DERR_INVALIDCALL;
+        memset( pIdentifier, 0, sizeof( *pIdentifier ) );
+        const char *pszRenderer = (const char *)glGetString( GL_RENDERER );
+        snprintf( pIdentifier->Description, sizeof( pIdentifier->Description ), "%s",
+                  pszRenderer != 0 ? pszRenderer : "OpenGL ES" );
+        snprintf( pIdentifier->Driver, sizeof( pIdentifier->Driver ), "OpenGL ES" );
+        return D3D_OK;
+    }
+
+    // One mode, which is the surface the activity gave us.
+    UINT STDCALL GetAdapterModeCount( UINT ) override { return 1; }
+
+    HRESULT STDCALL EnumAdapterModes( UINT, UINT nMode, D3DDISPLAYMODE *pMode ) override
+    {
+        if ( pMode == 0 || nMode > 0 )
+            return D3DERR_INVALIDCALL;
+        return GetAdapterDisplayMode( 0, pMode );
+    }
+
+    HRESULT STDCALL GetAdapterDisplayMode( UINT, D3DDISPLAYMODE *pMode ) override
+    {
+        if ( pMode == 0 )
+            return D3DERR_INVALIDCALL;
+        int nWidth = 0, nHeight = 0;
+        Bk1GetClientSize( &nWidth, &nHeight );
+        pMode->Width = (UINT)nWidth;
+        pMode->Height = (UINT)nHeight;
+        pMode->RefreshRate = 60;
+        pMode->Format = D3DFMT_X8R8G8B8;
+        return D3D_OK;
+    }
+
+    HRESULT STDCALL CheckDeviceType( UINT, D3DDEVTYPE, D3DFORMAT, D3DFORMAT,
+                                     BOOL ) override
+    {
+        return D3D_OK;
+    }
+
+    HRESULT STDCALL CheckDeviceFormat( UINT, D3DDEVTYPE, D3DFORMAT, DWORD,
+                                       DWORD, D3DFORMAT checkFormat ) override
+    {
+        // The formats the texture path can take, compressed or expanded.
+        switch ( checkFormat )
+        {
+        case D3DFMT_A8R8G8B8:
+        case D3DFMT_X8R8G8B8:
+        case D3DFMT_R8G8B8:
+        case D3DFMT_R5G6B5:
+        case D3DFMT_A1R5G5B5:
+        case D3DFMT_X1R5G5B5:
+        case D3DFMT_A4R4G4B4:
+        case D3DFMT_X4R4G4B4:
+        case D3DFMT_A8:
+        case D3DFMT_L8:
+        case D3DFMT_DXT1:
+        case D3DFMT_DXT2:
+        case D3DFMT_DXT3:
+        case D3DFMT_DXT4:
+        case D3DFMT_DXT5:
+        case D3DFMT_D16:
+        case D3DFMT_D24S8:
+        case D3DFMT_D24X8:
+        case D3DFMT_INDEX16:
+        case D3DFMT_INDEX32:
+            return D3D_OK;
+        default:
+            return D3DERR_NOTAVAILABLE;
+        }
+    }
+
+    HRESULT STDCALL CheckDepthStencilMatch( UINT, D3DDEVTYPE, D3DFORMAT, D3DFORMAT,
+                                            D3DFORMAT ) override
+    {
+        return D3D_OK;
+    }
+
+    HRESULT STDCALL GetDeviceCaps( UINT, D3DDEVTYPE, D3DCAPS8 *pCaps ) override;
+
+    HRESULT STDCALL CreateDevice( UINT, D3DDEVTYPE, HWND, DWORD,
+                                  D3DPRESENT_PARAMETERS *pParameters,
+                                  IDirect3DDevice8 **ppDevice ) override
+    {
+        if ( ppDevice == 0 )
+            return D3DERR_INVALIDCALL;
+        SDevice *pDevice = new SDevice();
+        if ( pParameters != 0 )
+        {
+            pDevice->present = *pParameters;
+            if ( pParameters->BackBufferWidth != 0 && pParameters->BackBufferHeight != 0 )
+                Bk1SetClientSize( (int)pParameters->BackBufferWidth,
+                                  (int)pParameters->BackBufferHeight );
+        }
+        *ppDevice = pDevice;
+        return D3D_OK;
+    }
+};
+
+HRESULT STDCALL SDirect3D::GetDeviceCaps( UINT, D3DDEVTYPE, D3DCAPS8 *pCaps )
+{
+    if ( pCaps == 0 )
+        return D3DERR_INVALIDCALL;
+    memset( pCaps, 0, sizeof( *pCaps ) );
+
+    pCaps->DeviceType = D3DDEVTYPE_HAL;
+    pCaps->Caps2 = D3DCAPS2_FULLSCREENGAMMA;
+    pCaps->DevCaps = D3DDEVCAPS_HWRASTERIZATION | D3DDEVCAPS_HWTRANSFORMANDLIGHT |
+                     D3DDEVCAPS_TEXTUREVIDEOMEMORY;
+    pCaps->PresentationIntervals = D3DPRESENT_INTERVAL_ONE | D3DPRESENT_INTERVAL_IMMEDIATE;
+
+    // What the engine asks about before choosing a path.
+    pCaps->TextureCaps = D3DPTEXTURECAPS_NONPOW2CONDITIONAL;
+    pCaps->TextureFilterCaps = D3DPTFILTERCAPS_MINFLINEAR | D3DPTFILTERCAPS_MAGFLINEAR;
+    pCaps->TextureOpCaps = D3DTEXOPCAPS_MODULATE | D3DTEXOPCAPS_ADD;
+    pCaps->SrcBlendCaps = D3DPBLENDCAPS_SRCALPHA;
+    pCaps->DestBlendCaps = D3DPBLENDCAPS_SRCALPHA;
+    pCaps->MaxTextureBlendStages = MAX_STAGES;
+    pCaps->MaxSimultaneousTextures = MAX_TEXTURE_UNITS;
+    pCaps->MaxStreams = 1;
+
+    GLint nMaxTexture = 2048;
+    glGetIntegerv( GL_MAX_TEXTURE_SIZE, &nMaxTexture );
+    pCaps->MaxTextureWidth = (DWORD)nMaxTexture;
+    pCaps->MaxTextureHeight = (DWORD)nMaxTexture;
+    pCaps->MaxTextureAspectRatio = (DWORD)nMaxTexture;
+    pCaps->MaxPrimitiveCount = 0xFFFF;
+    pCaps->MaxVertexIndex = 0xFFFF;
+    pCaps->MaxActiveLights = 8;
+
+    // No programmable shaders are claimed, because the engine has none and
+    // asking would only make it look for a path that does not exist.
+    pCaps->VertexShaderVersion = 0;
+    pCaps->PixelShaderVersion = 0;
+    return D3D_OK;
+}
+
+}   // anonymous namespace
+}   // namespace NBk1D3D
+
+extern "C" IDirect3D8 *Direct3DCreate8( UINT )
+{
+    return new NBk1D3D::SDirect3D();
+}

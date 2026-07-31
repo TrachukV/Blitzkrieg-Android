@@ -8,7 +8,9 @@
 template <class TBase>
 class CTObjVisObj : public TBase
 {
+public:
 	typedef CTObjVisObj<TBase> CObjVisObj;
+private:
 	//
 	DWORD dwGameType;											// object game type
 	CVec3 vPos;														// unit's position
@@ -55,7 +57,7 @@ public:
 	//
 	// placement
 	//
-	virtual void STDCALL SetPlacement( const CVec3 &_vPos, const int _nDir ) { SetPosition( _vPos ); SetDirection( _nDir ); }
+	virtual void STDCALL SetPlacement( const CVec3 &_vPos, const int _nDir ) { this->SetPosition( _vPos ); this->SetDirection( _nDir ); }
 	virtual const CVec3& STDCALL GetPosition() const { return vPos; }
 	virtual int STDCALL GetDirection() const { return nDirection; }
 	// 

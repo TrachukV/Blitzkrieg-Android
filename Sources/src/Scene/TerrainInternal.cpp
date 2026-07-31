@@ -341,7 +341,7 @@ template <class TVertex>
 void AddVertices( const std::vector<TVertex> &src, std::vector<TVertex> &dst, 
 								  std::vector<WORD> &indices, const CTRect<float> &rcScreen )
 {
-	for ( std::vector<TVertex>::const_iterator vertex = src.begin(); vertex != src.end(); vertex += 4 )
+	for ( typename std::vector<TVertex>::const_iterator vertex = src.begin(); vertex != src.end(); vertex += 4 )
 	{
 		const TVertex &v0 = *vertex;
 		const TVertex &v1 = *(vertex + 1);

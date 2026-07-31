@@ -255,3 +255,4 @@ typedef struct _EXCEPTION_POINTERS {
 #include "bk1_win32_registry.h"
 #include "bk1_win32_process.h"
 #include "bk1_win32_openfile.h"
+#include "bk1_win32_window.h"

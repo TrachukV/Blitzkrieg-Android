@@ -23,17 +23,17 @@ private:
 	void AddTo( int nX, int nY, TYPE *pObj )
 	{
 		CDataList &data = (*this)[nY][nX];
-		CDataList::const_iterator pos = std::find_if( data.begin(), data.end(), CObjEqualFunctional(pObj) );
+		typename CDataList::const_iterator pos = std::find_if( data.begin(), data.end(), CObjEqualFunctional(pObj) );
 		if ( pos == data.end() )
 			data.push_back( pObj );
 	}
 	// remove object from the (nX, nY) cell
 	void RemoveFrom( int nX, int nY, TYPE *pObj )
 	{
-		if ( (nX < 0) || (nX >= GetSizeX()) || (nY < 0) || (nY >= GetSizeY()) )
+		if ( (nX < 0) || (nX >= this->GetSizeX()) || (nY < 0) || (nY >= this->GetSizeY()) )
 			return;
 		CDataList &data = (*this)[nY][nX];
-		CDataList::iterator pos = std::find_if( data.begin(), data.end(), CObjEqualFunctional(pObj) );
+		typename CDataList::iterator pos = std::find_if( data.begin(), data.end(), CObjEqualFunctional(pObj) );
 		if ( pos != data.end() )
 			data.erase( pos );
 	}
@@ -95,7 +95,7 @@ public:
 	//
 	const bool IsInArea( const TPosition &vPos ) const
 	{
-		return ( vPos.x >= 0 ) && (vPos.y >= 0) && (vPos.x < GetSizeX()*tCellSize) && (vPos.y < GetSizeY()*tCellSize);
+		return ( vPos.x >= 0 ) && (vPos.y >= 0) && (vPos.x < this->GetSizeX()*tCellSize) && (vPos.y < this->GetSizeY()*tCellSize);
 	}
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,14 +120,14 @@ private:
 	void AddTo( int nX, int nY, const TYPE &obj )
 	{
 		CDataList &data = (*this)[nY][nX];
-		CDataList::const_iterator pos = std::find_if( data.begin(), data.end(), TComparator(obj) );
+		typename CDataList::const_iterator pos = std::find_if( data.begin(), data.end(), TComparator(obj) );
 		if ( pos == data.end() )
 			data.push_back( obj );
 	}
 	// remove object from the (nX, nY) cell
 	void RemoveFrom( int nX, int nY, const TYPE &obj )
 	{
-		if ( (nX < 0) || (nX >= GetSizeX()) || (nY < 0) || (nY >= GetSizeY()) )
+		if ( (nX < 0) || (nX >= this->GetSizeX()) || (nY < 0) || (nY >= this->GetSizeY()) )
 			return;
 		CDataList &data = (*this)[nY][nX];
 		CDataList::iterator pos = std::find_if( data.begin(), data.end(), TComparator(obj) );
@@ -192,7 +192,7 @@ public:
 	//
 	const bool IsInArea( const TPosition &vPos ) const
 	{
-		return ( vPos.x >= 0 ) && (vPos.y >= 0) && (vPos.x < GetSizeX()*tCellSize) && (vPos.y < GetSizeY()*tCellSize);
+		return ( vPos.x >= 0 ) && (vPos.y >= 0) && (vPos.x < this->GetSizeX()*tCellSize) && (vPos.y < this->GetSizeY()*tCellSize);
 	}
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

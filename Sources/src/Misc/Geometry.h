@@ -27,7 +27,12 @@ public:
     struct { float u, v; };             // for texture coord
   };
 public:
+#if defined( _MSC_VER )
   CVec2() {  }
+#else
+  // trivial, so the vertex unions that hold one stay constructible
+  CVec2() = default;
+#endif
   CVec2( const float _x, const float _y ) : x( _x ), y( _y ) {  }
   // setup
   void Set( const float _x, const float _y ) { x = _x; y = _y; }
@@ -87,7 +92,12 @@ public:
     struct { float u, v, q; };          // for texture coord
   };
 public:
+#if defined( _MSC_VER )
   CVec3() {  }
+#else
+  // trivial, so the vertex unions that hold one stay constructible
+  CVec3() = default;
+#endif
   CVec3( const float _x, const float _y, const float _z = 0.0f ) : x( _x ), y( _y ), z( _z ) {  }
   CVec3( const CVec2 &v2, const float _z ) : x( v2.x ), y( v2.y ), z( _z ) {  }
   // cross-vector assignment
@@ -155,7 +165,12 @@ public:
     struct { float u, v, q; };						// for texture coord ('w' is the one above)
   };
 public:
+#if defined( _MSC_VER )
   CVec4() {  }
+#else
+  // trivial, so the vertex unions that hold one stay constructible
+  CVec4() = default;
+#endif
   CVec4( const float _x, const float _y, const float _z = 0.0f, const float _w = 0.0f ) : x( _x ), y( _y ), z( _z ), w( _w ) {  }
   CVec4( const CVec2 &v2, const float _z = 0.0f, const float _w = 0.0f ) : x( v2.x ), y( v2.y ), z( _z ), w( _w ) {  }
   CVec4( const CVec3 &v3, const float _w = 0.0f ) : x( v3.x ), y( v3.y ), z( v3.z ), w( _w ) {  }

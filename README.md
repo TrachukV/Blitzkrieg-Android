@@ -32,21 +32,38 @@ so a finger arrives where the engine looks for a mouse. That is the whole design
 of the touch layer: the engine keeps its own input model and a finger fills it
 in, so its bindings, double-click and drag handling need no changes.
 
-| Module | Translation units building for arm64 |
-| --- | --- |
-| `Misc`, `StreamIO`, `Formats`, `Image`, `Anim`, `Common` | complete |
-| `zlib`, `GameSpy`, `LuaLib`, `RandomMapGen` | complete |
-| `Net` | 11 / 15 |
-| `Scene` | 29 / 50 |
-| `UI` | 12 / 33 |
-| `GFX` | 16 / 17 |
-| `Input` | 6 / 7 |
-| **Total** | **~286** |
+Fifteen modules build for arm64 with nothing failing:
 
-Still ahead: FMOD (`SFX`), and the `AILogic`, `Main`, `GameTT` and `Game`
-modules, which have not been started. Direct3D 8 and DirectInput are written --
-a sprite and quad renderer on OpenGL ES 3, and a buffered input device that
-touch fills in -- but nothing has asked them to draw a frame yet.
+| Module | Units | Module | Units |
+| --- | --- | --- | --- |
+| `Scene` | 50 / 50 | `Common` | 15 / 15 |
+| `UI` | 33 / 33 | `Net` | 15 / 15 |
+| `RandomMapGen` | 29 / 29 | `zlib` | 15 / 15 |
+| `GameSpy` | 25 / 25 | `Misc` | 12 / 12 |
+| `StreamIO` | 21 / 21 | `Formats` | 12 / 12 |
+| `LuaLib` | 18 / 18 | `Image` | 11 / 11 |
+| `GFX` | 17 / 17 | `Anim` | 8 / 8 |
+| `Input` | 7 / 7 | **Total** | **288** |
+
+Not started, and this is the bulk of what is left:
+
+| Module | Files | Lines |
+| --- | --- | --- |
+| `AILogic` | 170 | 89,209 |
+| `GameTT` | 65 | 27,741 |
+| `Main` | 39 | 23,887 |
+| `SFX` (FMOD → Oboe) | 9 | 2,119 |
+| `Game` | 6 | 1,766 |
+
+Direct3D 8 and DirectInput are written -- a sprite and quad renderer on OpenGL
+ES 3, and a buffered input device that touch fills in -- but until `Main` is
+ported nothing asks them to draw, which is why the surface is still empty.
+
+A note on measuring this tree, because it cost real time: the sources are
+ISO-8859-1 and carry high bytes, which makes macOS `grep` treat 744 of the
+2,055 files as binary and print *nothing* -- no match, no warning, and `-c`
+gives no output rather than zero. `LC_ALL=C` does not fix it; `-a` does. Any
+count here taken without both is unsound.
 
 ```bash
 android/build_apk.sh                        # an installable APK, SDK and NDK only

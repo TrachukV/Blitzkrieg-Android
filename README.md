@@ -68,3 +68,14 @@ terms. It is not affiliated with or endorsed by Nival.
 Blitzkrieg is still sold on
 [Steam](https://store.steampowered.com/app/313480/Blitzkrieg_Anthology/) and
 [GOG](https://www.gog.com/en/game/blitzkrieg_anthology).
+
+## One file this repository cannot carry
+
+`Versions/Current/Data/Movies/intro.bik` is stored in the upstream repository
+through Git LFS, and that repository's LFS budget is exhausted — the object
+cannot be fetched from it by anyone, including this fork. Rather than publish a
+pointer to a file that will not download and a clone that fails, the port drops
+it.
+
+It is the introduction movie and nothing depends on it. To restore it, copy the
+file from a retail installation of the game into that path.

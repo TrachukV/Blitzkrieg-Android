@@ -133,6 +133,98 @@ typedef struct tagRECT {
 } RECT, *PRECT, *LPRECT;
 typedef const RECT* LPCRECT;
 
+#ifdef __cplusplus
+// The GDI rectangle helpers. They are pure arithmetic on the structure above,
+// which is why they live here rather than behind a graphics layer.
+inline BOOL SetRect( RECT *pRect, int nLeft, int nTop, int nRight, int nBottom )
+{
+    if ( pRect == 0 )
+        return FALSE;
+    pRect->left = nLeft;
+    pRect->top = nTop;
+    pRect->right = nRight;
+    pRect->bottom = nBottom;
+    return TRUE;
+}
+
+inline BOOL SetRectEmpty( RECT *pRect ) { return SetRect( pRect, 0, 0, 0, 0 ); }
+
+inline BOOL IsRectEmpty( const RECT *pRect )
+{
+    return ( pRect == 0 || pRect->right <= pRect->left ||
+             pRect->bottom <= pRect->top ) ? TRUE : FALSE;
+}
+
+inline BOOL PtInRect( const RECT *pRect, POINT pt )
+{
+    return ( pRect != 0 && pt.x >= pRect->left && pt.x < pRect->right &&
+             pt.y >= pRect->top && pt.y < pRect->bottom ) ? TRUE : FALSE;
+}
+
+inline BOOL OffsetRect( RECT *pRect, int dx, int dy )
+{
+    if ( pRect == 0 )
+        return FALSE;
+    pRect->left += dx;
+    pRect->right += dx;
+    pRect->top += dy;
+    pRect->bottom += dy;
+    return TRUE;
+}
+
+inline BOOL InflateRect( RECT *pRect, int dx, int dy )
+{
+    if ( pRect == 0 )
+        return FALSE;
+    pRect->left -= dx;
+    pRect->right += dx;
+    pRect->top -= dy;
+    pRect->bottom += dy;
+    return TRUE;
+}
+
+inline BOOL CopyRect( RECT *pDst, const RECT *pSrc )
+{
+    if ( pDst == 0 || pSrc == 0 )
+        return FALSE;
+    *pDst = *pSrc;
+    return TRUE;
+}
+
+inline BOOL IntersectRect( RECT *pDst, const RECT *pA, const RECT *pB )
+{
+    if ( pDst == 0 || pA == 0 || pB == 0 )
+        return FALSE;
+    const LONG nLeft = pA->left > pB->left ? pA->left : pB->left;
+    const LONG nTop = pA->top > pB->top ? pA->top : pB->top;
+    const LONG nRight = pA->right < pB->right ? pA->right : pB->right;
+    const LONG nBottom = pA->bottom < pB->bottom ? pA->bottom : pB->bottom;
+    if ( nRight <= nLeft || nBottom <= nTop )
+    {
+        SetRectEmpty( pDst );
+        return FALSE;
+    }
+    pDst->left = nLeft;
+    pDst->top = nTop;
+    pDst->right = nRight;
+    pDst->bottom = nBottom;
+    return TRUE;
+}
+
+inline BOOL UnionRect( RECT *pDst, const RECT *pA, const RECT *pB )
+{
+    if ( pDst == 0 || pA == 0 || pB == 0 )
+        return FALSE;
+    if ( IsRectEmpty( pA ) ) { *pDst = *pB; return !IsRectEmpty( pDst ); }
+    if ( IsRectEmpty( pB ) ) { *pDst = *pA; return !IsRectEmpty( pDst ); }
+    pDst->left = pA->left < pB->left ? pA->left : pB->left;
+    pDst->top = pA->top < pB->top ? pA->top : pB->top;
+    pDst->right = pA->right > pB->right ? pA->right : pB->right;
+    pDst->bottom = pA->bottom > pB->bottom ? pA->bottom : pB->bottom;
+    return TRUE;
+}
+#endif   // __cplusplus
+
 // BugSlayer's entry points take the structured-exception record by pointer and
 // never look inside it off Windows.
 struct EXCEPTION_RECORD;

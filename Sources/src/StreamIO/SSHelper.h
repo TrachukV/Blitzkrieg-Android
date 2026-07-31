@@ -410,6 +410,12 @@ public:
 		: pSS( accessor.pSS ) {  }
 	CSaverAccessor( IStructureSaver *_pSS ) 
 		: pSS( _pSS ) {  }
+	// A smart pointer converts to the raw one and the raw one constructs this,
+	// but only one user-defined conversion is applied in an implicit sequence,
+	// so the two steps are spelled as one here. MSVC 6 accepted the pair.
+	template <class TUserObj, class TRefFunc>
+		CSaverAccessor( const CPtrBase<TUserObj, TRefFunc> &ptr )
+		: pSS( ptr.GetPtr() ) {  }
 	// stream assigning and extracting
 	const CSaverAccessor& operator=( IStructureSaver *_pSS ) { pSS = _pSS; return *this; }
 	const CSaverAccessor& operator=( const CSaverAccessor &accessor ) { pSS = accessor.pSS; return *this; }

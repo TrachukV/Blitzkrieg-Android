@@ -656,6 +656,12 @@ public:
 		: pSS( accessor.pSS ) {  }
 	CTreeAccessor( IDataTree *_pSS ) 
 		: pSS( _pSS ) {  }
+	// A smart pointer converts to the raw one and the raw one constructs this,
+	// but only one user-defined conversion is applied in an implicit sequence,
+	// so the two steps are spelled as one here. MSVC 6 accepted the pair.
+	template <class TUserObj, class TRefFunc>
+		CTreeAccessor( const CPtrBase<TUserObj, TRefFunc> &ptr )
+		: pSS( ptr.GetPtr() ) {  }
 	// stream assigning and extracting
 	const CTreeAccessor& operator=( IDataTree *_pSS ) { pSS = _pSS; return *this; }
 	const CTreeAccessor& operator=( const CTreeAccessor &accessor ) { pSS = accessor.pSS; return *this; }

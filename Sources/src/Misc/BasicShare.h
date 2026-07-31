@@ -63,7 +63,7 @@ public:
 	//
 	TValue* Get( const TKey &key )
 	{
-		CDataHash::iterator pos = data.find( key );
+		typename CDataHash::iterator pos = data.find( key );
 		if ( (pos == data.end()) || (pos->second == 0) )
 		{
 			TValue *pRes = Create( key );
@@ -99,7 +99,7 @@ public:
 			if ( eSerialMode == SDSM_REPLACE )
 			{
 				saver.Add( GetID(), &data );
-				for ( CDataHash::const_iterator i = data.begin(); i != data.end(); ++i )
+				for ( typename CDataHash::const_iterator i = data.begin(); i != data.end(); ++i )
 				{
 					if ( i->second == 0 )
 						continue;
@@ -112,11 +112,11 @@ public:
 				CDataHash holder = data;
 				//
 				saver.Add( GetID(), &data );
-				for ( CDataHash::const_iterator i = data.begin(); i != data.end(); ++i )
+				for ( typename CDataHash::const_iterator i = data.begin(); i != data.end(); ++i )
 				{
 					if ( i->second == 0 )
 						continue;
-					CDataHash::iterator pos = holder.find( i->first );
+					typename CDataHash::iterator pos = holder.find( i->first );
 					if ( pos == holder.end() )
 					{
 						i->second->SetSharedResourceName( i->first );
@@ -134,11 +134,11 @@ public:
 				CDataHash holder;
 				//
 				saver.Add( GetID(), &holder );
-				for ( CDataHash::const_iterator i = holder.begin(); i != holder.end(); ++i )
+				for ( typename CDataHash::const_iterator i = holder.begin(); i != holder.end(); ++i )
 				{
 					if ( i->second == 0 )
 						continue;
-					CDataHash::iterator pos = data.find( i->first );
+					typename CDataHash::iterator pos = data.find( i->first );
 					if ( pos == data.end() )			// load new data
 					{
 						i->second->SetSharedResourceName( i->first );
@@ -168,13 +168,13 @@ public:
 	{
 		std::list<TKey> keys;
 		// form 'candidates-to-delete' list
-		for ( CDataHash::const_iterator it = data.begin(); it != data.end(); ++it )
+		for ( typename CDataHash::const_iterator it = data.begin(); it != data.end(); ++it )
 		{
 			if ( (it->second->GetRefCounter() & 0x00ffffff) == NRefCount::REF_ADD_OBJ )
 				keys.push_back( it->first );
 		}
 		// delete all candidates from the list
-		for ( std::list<TKey>::const_iterator it = keys.begin(); it != keys.end(); ++it )
+		for ( typename std::list<TKey>::const_iterator it = keys.begin(); it != keys.end(); ++it )
 			data.erase( *it );
 	}
 	// return freed amount of resources

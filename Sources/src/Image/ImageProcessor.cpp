@@ -150,7 +150,7 @@ IDDSImage* CompressRGBA( const IImage *pImage, EGFXPixelFormat format )
 			pci.InitMaskInfo( 0x00000000, 0x0000f800, 0x000007e0, 0x0000001f );
 			break;
 		default:
-			return false;
+			return 0;
 	}
 	//
 	int nSizeX = pImage->GetSizeX();

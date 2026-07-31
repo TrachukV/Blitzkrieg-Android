@@ -782,8 +782,9 @@ IImage* CSpritesPackBuilder::Pack( SSpritesPack *pSpritesPack, const CPackParame
 					shift.y -= actualSquareRect.miny;
 
 					//переписываем квадрат
+					const RECT rcActualSquare = static_cast<RECT>( actualSquareRect );
 					pPackedImage->CopyFrom( packParameterIterator->pImage,
-																	&( static_cast<RECT>( actualSquareRect ) ),
+																	&rcActualSquare,
 																	squareIterator->rcMaps.minx * packedImageSize.x - shift.x,
 																	squareIterator->rcMaps.miny * packedImageSize.y - shift.y );
 
@@ -1064,7 +1065,8 @@ IImage* CSpritesPackBuilder::Unpack( SSpritesPack *pSpritesPack, IImage *pPacked
 			actualSquareRect.minx -= bounds.minx;
 			actualSquareRect.miny -= bounds.miny;
 
-			pOriginalImage->CopyFrom( pPackedImage, &( static_cast<RECT>( packedSquareRect ) ), actualSquareRect.minx, actualSquareRect.miny );
+			const RECT rcPackedSquare = static_cast<RECT>( packedSquareRect );
+			pOriginalImage->CopyFrom( pPackedImage, &rcPackedSquare, actualSquareRect.minx, actualSquareRect.miny );
 		}
 	}
 

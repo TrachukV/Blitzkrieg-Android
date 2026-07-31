@@ -42,6 +42,11 @@ class CUnsafeImageAccessor
 public:
 	CUnsafeImageAccessor() {  }
 	CUnsafeImageAccessor( IImage *_pImage ) { Set( _pImage ); }
+	// A smart pointer converts to the raw one and the raw one constructs this,
+	// but only one user-defined conversion is applied in an implicit sequence,
+	// so the two steps are spelled as one here. MSVC 6 accepted the pair.
+	template <class TUserObj, class TRefFunc>
+		CUnsafeImageAccessor( const CPtrBase<TUserObj, TRefFunc> &ptr ) { Set( ptr.GetPtr() ); }
 	// image assigning and extracting
 	const CUnsafeImageAccessor& operator=( IImage *_pImage ) { Set( _pImage ); return *this; }
 	const CUnsafeImageAccessor& operator=( const CUnsafeImageAccessor &accessor ) { Set( accessor.pImage ); return *this; }

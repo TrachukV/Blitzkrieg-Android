@@ -164,6 +164,11 @@ class CTImageAccessor
 public:
 	CTImageAccessor() {  }
 	CTImageAccessor( TImage *_pImage ) { Set(_pImage); }
+	// A smart pointer converts to the raw one and the raw one constructs this,
+	// but only one user-defined conversion is applied in an implicit sequence,
+	// so the two steps are spelled as one here. MSVC 6 accepted the pair.
+	template <class TUserObj, class TRefFunc>
+		CTImageAccessor( const CPtrBase<TUserObj, TRefFunc> &ptr ) { Set( ptr.GetPtr() ); }
 	// image assigning and extracting
 	const CTImageAccessor& operator=( TImage *_pImage ) { Set( _pImage ); return *this; }
 	const CTImageAccessor& operator=( const CTImageAccessor &accessor ) { Set( accessor.pImage ); return *this; }

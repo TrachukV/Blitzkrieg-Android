@@ -1320,7 +1320,7 @@ bool SRMContext::IsValid( int nLevelsCount, int nPlayersCount )
 																				nLevelIndex,
 																				nPlayerIndex,
 																				nUnitsTableEntriesCount,
-																				SRMTemplateUnitsTable::UNIT_RPG_TYPE_COUNT ), );
+																				SRMTemplateUnitsTable::UNIT_RPG_TYPE_COUNT ) );
 					bValid = false;
 				}
 				if ( unitsIterator->second.size() <= 0 )

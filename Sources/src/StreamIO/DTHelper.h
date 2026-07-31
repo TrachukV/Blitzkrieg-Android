@@ -311,7 +311,7 @@ class CTreeAccessor
 			// hash_set => list
 			if ( !IsReading() )
 			{
-				for ( std::set<T1, T2, T3>::iterator it = pData->begin(); it != pData->end(); ++it )
+				for ( typename std::set<T1, T2, T3>::iterator it = pData->begin(); it != pData->end(); ++it )
 					elements.push_back( *it );
 			}
 			// add container
@@ -320,7 +320,7 @@ class CTreeAccessor
 			if ( IsReading() )
 			{
 				pData->clear();
-				for ( std::list<T1>::iterator it = elements.begin(); it != elements.end(); ++it )
+				for ( typename std::list<T1>::iterator it = elements.begin(); it != elements.end(); ++it )
 					pData->insert( *it );
 			}
 		}

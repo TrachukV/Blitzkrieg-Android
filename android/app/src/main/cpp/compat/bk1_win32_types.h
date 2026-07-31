@@ -28,6 +28,13 @@ typedef char*               LPTSTR;
 typedef const char*         LPCTSTR;
 typedef char                TCHAR;
 
+// The message-parameter types. They are pointer-sized on Windows, and the
+// engine stores handles and pointers in them, so they are pointer-sized here.
+typedef intptr_t            LPARAM;
+typedef uintptr_t           WPARAM;
+typedef intptr_t            LRESULT;
+typedef unsigned int        ATOM;
+
 // Handles are opaque everywhere the engine touches them; keeping them
 // pointer-sized is what matters on arm64.
 typedef void*               HANDLE;
@@ -61,6 +68,9 @@ typedef long                HRESULT;
 #define HIWORD(l) ((WORD)(((DWORD)(l) >> 16) & 0xffff))
 #define LOBYTE(w) ((BYTE)((DWORD)(w) & 0xff))
 #define HIBYTE(w) ((BYTE)(((DWORD)(w) >> 8) & 0xff))
+#define MAKELPARAM(l, h) ((LPARAM)(DWORD)MAKELONG(l, h))
+#define MAKEWPARAM(l, h) ((WPARAM)(DWORD)MAKELONG(l, h))
+#define MAKELRESULT(l, h) ((LRESULT)(DWORD)MAKELONG(l, h))
 
 #define SUCCEEDED(hr) (((HRESULT)(hr)) >= 0)
 #define FAILED(hr)    (((HRESULT)(hr)) < 0)
@@ -242,4 +252,6 @@ typedef struct _EXCEPTION_POINTERS {
 #include "bk1_win32_files.h"
 #include "bk1_win32_fileio.h"
 #include "bk1_com_stream.h"
+#include "bk1_win32_registry.h"
+#include "bk1_win32_process.h"
 #include "bk1_win32_openfile.h"

@@ -183,7 +183,8 @@ static void IndentFile(FILE* file, unsigned int indentLevel)
 {
 	// Write out indentation.
 	char spaces[500];
-	for (unsigned int i = 0; i < indentLevel; ++i)
+	unsigned int i = 0;
+	for (; i < indentLevel; ++i)
 		spaces[i] = ' ';
 	spaces[i] = 0;
 	fputs(spaces, file);
@@ -206,7 +207,7 @@ static void WriteObject(Script& script, FILE* file, const char* name,
 		return;
 	}
 
-	using Script::Object;
+	typedef Script::Object Object;
 
 	// Indent the line the number of spaces for the current indentation level.
 	const unsigned int INDENT_SIZE = 4;

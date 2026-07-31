@@ -35,13 +35,14 @@ module_sources() {
   local dsp
   dsp=$(ls "$moddir"/*.dsp 2>/dev/null | head -1)
   if [ -n "$dsp" ]; then
-    # SOURCE=.\Name.cpp -- take the basename, keep only .cpp
+    # SOURCE=.\Name.cpp or .\sub\Name.cpp -- keep the path relative to the
+    # module, since some projects carry their sources in subdirectories
     LC_ALL=C grep -a "^SOURCE=" "$dsp" \
-      | sed 's/^SOURCE=//; s/\r$//; s/.*[\\\/]//' \
-      | grep -i '\.cpp$' \
+      | sed 's/^SOURCE=//; s/\r$//; s/^\.[\\\/]//; s/\\/\//g; s/"//g' \
+      | grep -iE '\.(cpp|c)$' \
       | sort -u
   else
-    ls "$moddir" | grep -i '\.cpp$' | sort -u
+    ls "$moddir" | grep -iE '\.(cpp|c)$' | sort -u
   fi
 }
 
@@ -60,6 +61,18 @@ for module in "$@"; do
     fi
     name="$module/$base"
     obj="$OUT/$(echo "$name" | tr '/' '_').o"
+    case "$base" in
+      *.c|*.C)
+        # a C source: the C++ flags and the force-included C++ shim do not apply
+        if "$NDK/aarch64-linux-android24-clang" -I"$COMPAT" -I"$SRC" -I"$moddir" \
+             -ferror-limit=0 -c "$f" -o "$obj" 2>"$obj.log"; then
+          pass=$((pass+1))
+        else
+          fail=$((fail+1)); failed+=("$name")
+        fi
+        continue
+        ;;
+    esac
     if "$CXX" "${FLAGS[@]}" -I"$moddir" -c "$f" -o "$obj" 2>"$obj.log"; then
       pass=$((pass+1))
     else

@@ -332,6 +332,83 @@ int Bk1Utf16ToAnsi( UINT nCodePage, const unsigned short *pSrc, int nSrcLen,
     return nWritten;
 }
 
+// ---------------------------------------------------------------------------
+// Case-insensitive comparison
+// ---------------------------------------------------------------------------
+// ASCII folding only. The engine compares file names, control identifiers and
+// option keys with these, all of which are ASCII; folding a code page's own
+// letters would need that page's rules and the engine never asks for it.
+namespace {
+
+inline int FoldAscii( unsigned int c )
+{
+    return ( c >= 'A' && c <= 'Z' ) ? (int)( c - 'A' + 'a' ) : (int)c;
+}
+
+}   // anonymous namespace
+
+extern "C" int _stricmp( const char *pszA, const char *pszB )
+{
+    if ( pszA == 0 || pszB == 0 )
+        return ( pszA == pszB ) ? 0 : ( pszA == 0 ? -1 : 1 );
+    for ( ;; )
+    {
+        const int a = FoldAscii( (unsigned char)*pszA++ );
+        const int b = FoldAscii( (unsigned char)*pszB++ );
+        if ( a != b )
+            return a - b;
+        if ( a == 0 )
+            return 0;
+    }
+}
+
+extern "C" int _strnicmp( const char *pszA, const char *pszB, size_t nCount )
+{
+    if ( pszA == 0 || pszB == 0 )
+        return ( pszA == pszB ) ? 0 : ( pszA == 0 ? -1 : 1 );
+    for ( size_t i = 0; i < nCount; ++i )
+    {
+        const int a = FoldAscii( (unsigned char)pszA[i] );
+        const int b = FoldAscii( (unsigned char)pszB[i] );
+        if ( a != b )
+            return a - b;
+        if ( a == 0 )
+            return 0;
+    }
+    return 0;
+}
+
+extern "C" int _wcsicmp( const wchar_t *pszA, const wchar_t *pszB )
+{
+    if ( pszA == 0 || pszB == 0 )
+        return ( pszA == pszB ) ? 0 : ( pszA == 0 ? -1 : 1 );
+    for ( ;; )
+    {
+        const int a = FoldAscii( (unsigned int)*pszA++ );
+        const int b = FoldAscii( (unsigned int)*pszB++ );
+        if ( a != b )
+            return a - b;
+        if ( a == 0 )
+            return 0;
+    }
+}
+
+extern "C" int _wcsnicmp( const wchar_t *pszA, const wchar_t *pszB, size_t nCount )
+{
+    if ( pszA == 0 || pszB == 0 )
+        return ( pszA == pszB ) ? 0 : ( pszA == 0 ? -1 : 1 );
+    for ( size_t i = 0; i < nCount; ++i )
+    {
+        const int a = FoldAscii( (unsigned int)pszA[i] );
+        const int b = FoldAscii( (unsigned int)pszB[i] );
+        if ( a != b )
+            return a - b;
+        if ( a == 0 )
+            return 0;
+    }
+    return 0;
+}
+
 void OutputDebugStringA( const char *pszText )
 {
 #if defined( __ANDROID__ )

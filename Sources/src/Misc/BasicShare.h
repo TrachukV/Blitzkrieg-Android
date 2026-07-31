@@ -156,7 +156,7 @@ public:
 	//
 	const TKey* GetKey( TValue *pValue )
 	{
-		for ( CDataHash::const_iterator it = data.begin(); it != data.end(); ++it )
+		for ( typename CDataHash::const_iterator it = data.begin(); it != data.end(); ++it )
 		{
 			if ( it->second == pValue )
 				return &( it->first );

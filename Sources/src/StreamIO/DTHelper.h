@@ -98,7 +98,7 @@ class CTreeAccessor
 		void __cdecl CallObjectSerialize( const DTChunkID idChunk, T *pData, SGenericNumber<1> *pp )
 		{
 			NI_ASSERT_T( sizeof(T) <= 4, NStr::Format("Complex object of type \"%s\" have no serialization operator", typeid(*pData).name()) );
-			AddRawData( idChunk, pData, sizeof(T) );
+			AddRawData( idChunk, const_cast<void*>( static_cast<const void*>( pData ) ), sizeof(T) );
 		}
 	// simple built-in data specialization
 	template <> 

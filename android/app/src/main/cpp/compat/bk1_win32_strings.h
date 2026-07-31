@@ -47,6 +47,13 @@ void OutputDebugStringA( const char *pszText );
 #define OutputDebugString OutputDebugStringA
 
 char *_itoa( int nValue, char *pszBuffer, int nRadix );
+
+// MSVC's case-insensitive comparisons. The wide ones fold only ASCII, which is
+// what the engine compares with them -- file names and control identifiers.
+int _stricmp( const char *pszA, const char *pszB );
+int _strnicmp( const char *pszA, const char *pszB, size_t nCount );
+int _wcsicmp( const wchar_t *pszA, const wchar_t *pszB );
+int _wcsnicmp( const wchar_t *pszA, const wchar_t *pszB, size_t nCount );
 char *_ltoa( long nValue, char *pszBuffer, int nRadix );
 
 #ifdef __cplusplus

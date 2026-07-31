@@ -2,6 +2,7 @@
 #pragma once
 
 extern "C" {
+#include <string>
 #include "LuaSrc\Lua.h"
 #include "LuaSrc\luadebug.h"
 }
@@ -56,6 +57,8 @@ public:
 		float GetNumber() const				{  return (float)lua_tonumber(GetState(), m_stackIndex);  }
 		const char* GetString() const		{  return lua_tostring(GetState(), m_stackIndex);  }
 		operator const char *() const		{ return GetString(); }
+		// so that 'std::string s = obj' works, which the UI writes
+		operator std::string() const		{ const char *psz = GetString(); return psz != 0 ? std::string( psz ) : std::string(); }
 		int StrLen() const					{  return lua_strlen(GetState(), m_stackIndex);  }
 		CFunction GetCFunction() const		{  return lua_tocfunction(GetState(), m_stackIndex);  }
 		void* GetUserData() const			{  return lua_touserdata(GetState(), m_stackIndex);  }

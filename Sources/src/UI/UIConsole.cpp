@@ -713,7 +713,7 @@ int Exec( struct lua_State *state )
 	nPos = szFileName.rfind( '\\' );
 	if ( nPos != std::string::npos )
 		szFileName = szFileName.substr( 0, nPos + 1 );
-	szFileName += script.GetObject( 1 );
+	szFileName += script.GetObject( 1 ).GetString();
 //	IStream *pStream = OpenFileStream( szFileName, STREAM_ACCESS_READ );
 	
 	FILE *pFile = fopen( szFileName.c_str(), "r" );

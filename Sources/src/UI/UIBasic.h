@@ -189,7 +189,9 @@ class CMultipleWindow : public CSimpleWindow
 	CPtr<IUIElement> pRPushed;					//окно с нажатой правой кнопкой мыши
 	CPtr<IUIElement> pFocused;					//окно с фокусом, при снятии фокуса для edit box например снимается TEXT_MODE
 	
+protected:
 	typedef std::list< SUIMessage > CMessageList;
+private:
 	CMessageList messageList;
 
 	//постоянная для mouse wheel support

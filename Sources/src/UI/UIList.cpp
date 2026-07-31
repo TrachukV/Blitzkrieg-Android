@@ -390,7 +390,9 @@ void CUIList::Reposition( const CTRect<float> &rcParent )
 	{
 		CVec2 size;
 		pScrollBar->GetWindowPlacement( 0, &size, 0 );
-		pScrollBar->SetWindowPlacement( &CVec2(0, 0), &CVec2(size.x, rect.Height()) );
+		const CVec2 vOrigin( 0, 0 );
+		const CVec2 vSize( size.x, rect.Height() );
+		pScrollBar->SetWindowPlacement( &vOrigin, &vSize );
 	}
 
 	//перемещаем заголовки

@@ -247,6 +247,13 @@ public:
 
     const char *operator*() const { return narrow_.c_str(); }
     operator const char *() const { return narrow_.c_str(); }
+    // 'std::string sz = someBstr' is how the engine reads it, and going
+    // through 'const char*' would be two user conversions, which C++ does not
+    // apply in one step.
+    operator std::string() const { return narrow_; }
+    // The engine's wide text is UTF-16 and so is a BSTR; the two are the
+    // same width here and differ only in spelling.
+    operator const wchar_t *() const { return reinterpret_cast<const wchar_t *>( bstr_ ); }
     operator BSTR() const { return bstr_; }
     operator std::wstring() const
     {

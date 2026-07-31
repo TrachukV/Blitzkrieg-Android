@@ -68,9 +68,9 @@ void CUIScrollTextBox::AppendText( const wchar_t *pszText )
 
 	IText *pText = states[nCurrentState].pGfxText->GetText();
 	std::wstring wszTemp = pText->GetString();
-	wszTemp += Bk1AsWide( pszText );
+	wszTemp += pszText;
 	
-	SetWindowText( nCurrentState, Bk1AsUtf16( wszTemp.c_str() ) );
+	SetWindowText( nCurrentState, wszTemp.c_str() );
 	
 	//обновим позицию ScrollBar, если это необходимо
 	if ( bNeedScrollToEnd )

@@ -3,7 +3,7 @@
 #include "UIColorTextScroll.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-CUIColorTextScroll::CColorTextEntry::operator&( IStructureSaver &ss )
+int CUIColorTextScroll::CColorTextEntry::operator&( IStructureSaver &ss )
 {
 	CSaverAccessor saver = &ss;
 	saver.Add( 1, &nHeight );

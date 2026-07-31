@@ -1,0 +1,19 @@
+#pragma once
+// Counterpart to the hash_map stand-in; same reasoning.
+#include <unordered_set>
+#include <functional>
+#include "hash_map"
+
+template <
+        class Key,
+        class HashFcn = hash<Key>,
+        class EqualKey = std::equal_to<Key>,
+        class Alloc = std::allocator<Key> >
+using hash_set = std::unordered_set<Key, HashFcn, EqualKey, Alloc>;
+
+template <
+        class Key,
+        class HashFcn = hash<Key>,
+        class EqualKey = std::equal_to<Key>,
+        class Alloc = std::allocator<Key> >
+using hash_multiset = std::unordered_multiset<Key, HashFcn, EqualKey, Alloc>;

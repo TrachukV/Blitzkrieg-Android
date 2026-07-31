@@ -81,7 +81,7 @@ void CInterfaceMPChat::StartInterface()
 //IWhisper
 const WORD * CInterfaceMPChat::GetDestinationName()
 {
-	return playerList.GetCurInfo()->szName.c_str();
+	return Bk1AsUtf16( playerList.GetCurInfo()->szName.c_str() );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CInterfaceMPChat::ProcessMPCommand( SToUICommand & cmd )
@@ -228,7 +228,7 @@ void CInterfaceMPChat::OnPlayerInfoOk()
 	IUIButton * pButtonRelation = checked_cast<IUIButton*>( pDialog->GetChildByID( E_DIALOG_BUTTON_RELATION ) );
 	if ( pCurEdittedInfo )
 	{
-		CPtr<SUIRelationNotify> pParam = new SUIRelationNotify( pCurEdittedInfo->szName.c_str(), static_cast<EPlayerRelation>(pButtonRelation->GetState()) );
+		CPtr<SUIRelationNotify> pParam = new SUIRelationNotify( Bk1AsUtf16( pCurEdittedInfo->szName.c_str() ), static_cast<EPlayerRelation>(pButtonRelation->GetState()) );
 
 		SFromUINotification notify( EUTMN_PLAYER_RELATION_CHANGED, pParam );
 		pCommandManager->AddNotificationFromUI( notify );
@@ -277,7 +277,7 @@ void CInterfaceMPChat::SendTextFromEditBox( const bool bWhisper )
 	IUIEditBox * pEdit = checked_cast<IUIEditBox*> ( pUIScreen->GetChildByID( E_CHAT_ENTRY_FEILD ) );
 	std::wstring wszText = pEdit->GetWindowText( 0 );
 
-	CPtr<SChatMessage> pMessage = new SChatMessage( wszText.c_str(), bWhisper );
+	CPtr<SChatMessage> pMessage = new SChatMessage( Bk1AsUtf16( wszText.c_str() ), bWhisper );
 	pCommandManager->AddChatMessageFromUI( pMessage );
 	pEdit->SetWindowText( 0, L"" );
 }

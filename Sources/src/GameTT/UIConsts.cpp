@@ -32,7 +32,7 @@ const WORD * CUIConsts::GetLocalPartyName( const char * pszPartyKey )
 
 	IText * pText = pTextM->GetDialog( szPath.c_str() );
 	NI_ASSERT_T( pText != 0, NStr::Format( "unknown party %s", szPath.c_str()) );
-	return pText->GetString();
+	return Bk1AsUtf16( pText->GetString() );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const WORD * CUIConsts::GetGamesListTitle( const enum EMultiplayerConnectionType eType )
@@ -54,7 +54,7 @@ const WORD * CUIConsts::GetGamesListTitle( const enum EMultiplayerConnectionType
 	}
 	
 	if ( pText ) 
-		return pText->GetString();
+		return Bk1AsUtf16( pText->GetString() );
 
 	return 0;
 }
@@ -205,7 +205,7 @@ const WORD * CUIConsts::GetMapTypeString( const int nGameType )
 		break;
 	}
 	if ( pText )
-		return pText->GetString();
+		return Bk1AsUtf16( pText->GetString() );
 	return 0;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

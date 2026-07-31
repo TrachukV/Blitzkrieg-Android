@@ -4,6 +4,7 @@
 #include "..\Main\IMain.h"
 #include "..\Input\Input.h"
 #include "..\Misc\TypeConvertor.h"
+#include "..\Misc\WideString.h"
 #include "iMission.h"
 #include "..\UI\UIMessages.h"
 #include "MissionInterfaceEscapeMenu.h"
@@ -48,10 +49,10 @@ bool CMessageAtomReactionSetWindowTextFromGlobalVar::Execute()
 	NStr::DebugTrace( "\t\t SetWindowTextFromGlobalVar \twnd =\t\"%s\"\t(%d), \ttext =\t\"%s\"\n", 
 										szWindowID.c_str(), 
 										nWindowID, 
-										NStr::ToAscii(GetGlobalWVar(szTextKey.c_str(), L"")).c_str() );
+										NStr::ToAscii(Bk1AsWide(GetGlobalWVar(szTextKey.c_str(), Bk1AsUtf16(L"")))).c_str() );
 #endif // #if !defined(_FINALRELEASE) && !defined(_BETARELEASE)
 	
-	GetSingleton<IMessageLinkContainer>()->SetWindowText( nWindowID, GetGlobalWVar(szTextKey.c_str(), L"") );
+	GetSingleton<IMessageLinkContainer>()->SetWindowText( nWindowID, Bk1AsWide(GetGlobalWVar(szTextKey.c_str(), Bk1AsUtf16(L""))) );
 	return true;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

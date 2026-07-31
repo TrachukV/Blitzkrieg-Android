@@ -200,7 +200,7 @@ void CInterfaceMPCreateGame::PrepareMapsList()
 			pMapName->SetWindowText( 0, pInfo->GetVisualName());
 			
 			IUIStatic *pGameType = checked_cast<IUIStatic*>( pRow->GetElement( 1 ) );
-			pGameType->SetWindowText( 0, CUIConsts::GetMapTypeString( pInfo->mapInfo.nType ) );
+			pGameType->SetWindowText( 0, Bk1AsWide( CUIConsts::GetMapTypeString( pInfo->mapInfo.nType ) ) );
 			
 			IUIStatic * pMaxPlayers = checked_cast<IUIStatic*>( pRow->GetElement( 2 ) );
 			pMaxPlayers->SetWindowText( 0, NStr::ToUnicode( NStr::Format( "%d", pInfo->mapInfo.playerParties.size() ) ).c_str() );

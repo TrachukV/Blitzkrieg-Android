@@ -178,7 +178,7 @@ bool CInterfaceMPStartingGame::ProcessMPCommand( const SToUICommand &cmd )
 	case EMTUC_START_GAME:
 		{
 			IText *pText = GetSingleton<ITextManager>()->GetString( "Textes\\UI\\Intermission\\Multiplayer\\StagingRoom\\immessage-game-started" );
-			chat.AddImportantText( pText->GetString() );
+			chat.AddImportantText( Bk1AsUtf16( pText->GetString() ) );
 			for ( int i = E_BUTTONS_VERY_BEGIN; i <= E_BUTTON_END; ++i )
 			{
 				IUIElement *pElement = pUIScreen->GetChildByID( i );
@@ -238,7 +238,7 @@ void CInterfaceMPStartingGame::PlayerLeft( const SUIPlayerInfo * pInfo )
 	if ( pText )
 	{
 		std::wstring wszText = pInfo->szName + NStr::ToUnicode(" ") + pText->GetString();
-		chat.AddImportantText( wszText.c_str() );
+		chat.AddImportantText( Bk1AsUtf16( wszText.c_str() ) );
 	}
 	DeletePlayer( pInfo );
 }
@@ -250,7 +250,7 @@ void CInterfaceMPStartingGame::PlayerKicked( const SUIPlayerInfo * pInfo )
 	if ( pText )
 	{
 		std::wstring wszText = pInfo->szName + NStr::ToUnicode(" ")+ pText->GetString();
-		chat.AddImportantText( wszText.c_str() );
+		chat.AddImportantText( Bk1AsUtf16( wszText.c_str() ) );
 	}
 	DeletePlayer( pInfo );
 }
@@ -277,7 +277,7 @@ void CInterfaceMPStartingGame::OnNewServerSettings( const SMultiplayerGameSettin
 		CPtr<ITextManager> pTextM = GetSingleton<ITextManager>();
 		IText * pText = pTextM->GetString( "Textes\\UI\\Intermission\\Multiplayer\\StagingRoom\\immessage-settings-changed" );
 		if ( pText )
-			chat.AddImportantText( pText->GetString() );
+			chat.AddImportantText( Bk1AsUtf16( pText->GetString() ) );
 		
 		if ( !pConfiguration->bServer )
 		{
@@ -339,7 +339,7 @@ void CInterfaceMPStartingGame::ConfigureStagingRoom( SUIStagingRoomConfigure *pI
 			pText = pTM->GetString( "Textes\\UI\\Intermission\\Multiplayer\\StagingRoom\\immessage-client" );
 
 		if ( pText )
-			chat.AddImportantText( pText->GetString() );
+			chat.AddImportantText( Bk1AsUtf16( pText->GetString() ) );
 	}
 }
 //////////////////////////////////////////////////////////////////////
@@ -353,7 +353,7 @@ const WORD * CInterfaceMPStartingGame::GetDestinationName()
 {
 	SUIPlayerInfo * pInfo = playerList.GetCurInfo();
 	if ( !pInfo ) return 0;
-	return pInfo->szName.c_str();
+	return Bk1AsUtf16( pInfo->szName.c_str() );
 }
 //////////////////////////////////////////////////////////////////////
 void CInterfaceMPStartingGame::DeletePlayer( const SUIPlayerInfo *pPlayerInfo )
@@ -387,7 +387,7 @@ void CInterfaceMPStartingGame::AddOrUpdatePlayer( SUIPlayerInfo *pPlayerInfo )
 	IUIStatic * pPlayerName = checked_cast<IUIStatic*>( pRow->GetElement( 1 ) );
 	pPlayerName->SetWindowText( 0, pPlayerInfo->szName.c_str() );
 
-	std::wstring szLocalParty = CUIConsts::GetLocalPartyName( pPlayerInfo->szSide.c_str() );
+	std::wstring szLocalParty = Bk1AsWide( CUIConsts::GetLocalPartyName( pPlayerInfo->szSide.c_str() ) );
 	
 	IUIStatic * pTeam = checked_cast<IUIStatic*>( pRow->GetElement( 2 ) );
 	pTeam->SetWindowText( 0, szLocalParty.c_str() );

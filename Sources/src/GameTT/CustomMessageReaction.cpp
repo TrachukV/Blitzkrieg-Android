@@ -33,9 +33,9 @@ void ConstructWhoWin( class CInterfaceScreenBase *_pInterface )
 			szMessage += pBefore->GetString();
 		
 		if ( nWinPartyName == 0 )
-			szMessage += CUIConsts::GetLocalPartyName( GetGlobalVar( "Multiplayer.Side0.Name", "" ) );
+			szMessage += Bk1AsWide( CUIConsts::GetLocalPartyName( GetGlobalVar( "Multiplayer.Side0.Name", "" ) ) );
 		else
-			szMessage += CUIConsts::GetLocalPartyName( GetGlobalVar( "Multiplayer.Side1.Name", "" ) );
+			szMessage += Bk1AsWide( CUIConsts::GetLocalPartyName( GetGlobalVar( "Multiplayer.Side1.Name", "" ) ) );
 
 		if ( pAfter )
 			szMessage += pAfter->GetString();
@@ -46,7 +46,7 @@ void ConstructWhoWin( class CInterfaceScreenBase *_pInterface )
 			szMessage += pText->GetString();
 	}
 
-	SetGlobalVar( "temp.Replay.WinMessage", szMessage.c_str() );
+	SetGlobalVar( "temp.Replay.WinMessage", Bk1AsUtf16( szMessage.c_str() ) );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ReactionSetMultiplayerTimeout( class CInterfaceScreenBase *_pInterface )

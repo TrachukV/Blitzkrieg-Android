@@ -25,10 +25,10 @@ void CChatWrapper::AddEditBoxText( const bool bWhisper )
 
 	if ( !wszTextTmp.empty() )
 	{
-		const unsigned int nPos = wszTextTmp.find_last_not_of( L" " );
+		const std::wstring::size_type nPos = wszTextTmp.find_last_not_of( L" " );
 		wszTextTmp.resize( Min(wszTextTmp.size(), nPos + 1 ) );
 		
-		const unsigned int nFirstNotSpace = wszTextTmp.find_first_not_of( L" " );
+		const std::wstring::size_type nFirstNotSpace = wszTextTmp.find_first_not_of( L" " );
 		
 		std::wstring wszText = wszTextTmp.c_str() + Min(nFirstNotSpace,wszTextTmp.size());
 		
@@ -36,7 +36,7 @@ void CChatWrapper::AddEditBoxText( const bool bWhisper )
 		{
 			// add editbox text to chat
 			CPtr<SChatMessage> pChatMessage = new SChatMessage( 
-				wszText.c_str(), ( bWhisper ? pWhisper->GetDestinationName(): L"" ), bWhisper );
+				Bk1AsUtf16( wszText.c_str() ), ( bWhisper ? pWhisper->GetDestinationName(): Bk1AsUtf16( L"" ) ), bWhisper );
 			pCommandManager->AddChatMessageFromUI( pChatMessage );
 			pChatEdit->SetWindowText( 0, L"" );
 		}
@@ -65,7 +65,7 @@ void CChatWrapper::Init( IUIColorTextScroll * _pChatText,
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CChatWrapper::AddImportantText( const WORD *wszMessage )
 {
-	pChatText->AppendMessage( 0, wszMessage, IUIColorTextScroll::E_COLOR_IMPORTANT );
+	pChatText->AppendMessage( 0, Bk1AsWide( wszMessage ), IUIColorTextScroll::E_COLOR_IMPORTANT );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CChatWrapper::ProcessMessage( const SGameMessage &msg )

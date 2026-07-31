@@ -3,6 +3,7 @@
 #include "IMTutorial.h"
 #include "iMission.h"
 #include "CommonId.h"
+#include "..\Misc\WideString.h"
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static const NInput::SRegisterCommandEntry commands[] = 
 {
@@ -42,7 +43,7 @@ void CInterfaceIMTutorial::StartInterface()
 
 	IUIDialog *pDialog = checked_cast<IUIDialog*> ( pUIScreen->GetChildByID( 100 ) );
 	IUIElement *pElement = pDialog->GetChildByID( 3000 );
-	pElement->SetWindowText( 0, pText );
+	pElement->SetWindowText( 0, Bk1AsWide( pText ) );
 	RemoveGlobalVar( "TutorialText" );
 
 	pScene->AddUIScreen( pUIScreen );

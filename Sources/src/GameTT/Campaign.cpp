@@ -97,7 +97,8 @@ void CInterfaceCampaign::StartInterface()
 	pMap->SetWindowTexture( pTexture );
 	CTRect<float> rc( 0.0f, 0.0f, pStats->mapImageRect.x2, pStats->mapImageRect.y2 );
 	pMap->SetWindowMap( rc );
-	pMap->SetWindowPlacement( 0, &CVec2( pStats->mapImageRect.x1, pStats->mapImageRect.y1 ) );
+	const CVec2 vMapSize( pStats->mapImageRect.x1, pStats->mapImageRect.y1 );
+	pMap->SetWindowPlacement( 0, &vMapSize );
 
 	std::string szCampaignName;
 

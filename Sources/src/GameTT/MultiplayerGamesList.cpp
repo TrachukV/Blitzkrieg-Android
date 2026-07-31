@@ -108,7 +108,7 @@ void CInterfaceMPGamesList::StartInterface()
 	IUIStatic *pCaption = checked_cast<IUIStatic *> ( pUIScreen->GetChildByID( E_CAPTION ) );
 	ITextManager *pTextM = GetSingleton<ITextManager>();
 	
-	pCaption->SetWindowText( 0, CUIConsts::GetGamesListTitle( pCommandManager->GetConnectionType() ) );
+	pCaption->SetWindowText( 0, Bk1AsWide( CUIConsts::GetGamesListTitle( pCommandManager->GetConnectionType() ) ) );
 	
 	serversList.SetListControl( checked_cast< IUIListControl *> ( pUIScreen->GetChildByID( E_SERVERS_LIST ) ) );
 	pDialog = checked_cast<IUIDialog*>( pUIScreen->GetChildByID( E_DIALOG_SETTINGS ) );
@@ -486,7 +486,7 @@ void CInterfaceMPGamesList::UpdateServerInfo( SUIServerInfo * pServerInfo )
 	
 	// game type
 	IUIStatic *pGameType = checked_cast<IUIStatic*>( pRow->GetElement( 5 ) );
-	pGameType->SetWindowText( 0, CUIConsts::GetMapTypeString( pServerInfo->eGameType ) );
+	pGameType->SetWindowText( 0, Bk1AsWide( CUIConsts::GetMapTypeString( pServerInfo->eGameType ) ) );
 
 	//set num of players
 	IUIStatic *pPlayersNum = checked_cast<IUIStatic*>( pRow->GetElement( 6 ) );

@@ -462,7 +462,7 @@ void CInterfaceMission::CPlayerLaggedDialog::ProcessMessage( const SGameMessage 
 		{
 			pState->RemovePlayer( msg.nParam, pUIScreen );
 			IPlayerScenarioInfo *pPlayer = GetSingleton<IScenarioTracker>()->GetPlayer( msg.nParam );
-			GetSingleton<ITransceiver>()->CommandClientDropPlayer( pPlayer->GetName().c_str() );
+			GetSingleton<ITransceiver>()->CommandClientDropPlayer( Bk1AsUtf16( pPlayer->GetName().c_str() ) );
 		}
 
 		break;
@@ -519,10 +519,10 @@ void CInterfaceMission::CMultiplayerScoresSmall::CReplayScoresState::Show( IUISc
 
 	//SET PARTY'S NAMES
 	IUIStatic *pParty1Name = checked_cast<IUIStatic*>( pDialog->GetChildByID( E_REPLAY_SS_TEAM_1_PARTYNAME ) );
-	pParty1Name->SetWindowText( 0, CUIConsts::GetLocalPartyName( GetGlobalVar( "Multiplayer.Side0.Name", "" ) ) );
+	pParty1Name->SetWindowText( 0, Bk1AsWide( CUIConsts::GetLocalPartyName( GetGlobalVar( "Multiplayer.Side0.Name", "" ) ) ) );
 
 	IUIStatic *pParty2Name = checked_cast<IUIStatic*>( pDialog->GetChildByID( E_REPLAY_SS_TEAM_2_PARTYNAME ) );
-	pParty2Name->SetWindowText( 0, CUIConsts::GetLocalPartyName( GetGlobalVar( "Multiplayer.Side1.Name", "" ) ) );
+	pParty2Name->SetWindowText( 0, Bk1AsWide( CUIConsts::GetLocalPartyName( GetGlobalVar( "Multiplayer.Side1.Name", "" ) ) ) );
 	
 	// show MOD info
 	if ( GetGlobalVar( "MOD.Active", 0 ) )

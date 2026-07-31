@@ -121,6 +121,22 @@ long long Bk1FileTimeToUnixTime( const FILETIME *pTime )
     return (long long)( nTicks / TICKS_PER_SECOND ) - EPOCH_DELTA;
 }
 
+LONG CompareFileTime( const FILETIME *pFirst, const FILETIME *pSecond )
+{
+    if ( pFirst == 0 || pSecond == 0 )
+        return 0;
+    // The pair is one unsigned 64-bit tick count, high word first.
+    const unsigned long long nFirst =
+        ( (unsigned long long)pFirst->dwHighDateTime << 32 ) | pFirst->dwLowDateTime;
+    const unsigned long long nSecond =
+        ( (unsigned long long)pSecond->dwHighDateTime << 32 ) | pSecond->dwLowDateTime;
+    if ( nFirst < nSecond )
+        return -1;
+    if ( nFirst > nSecond )
+        return 1;
+    return 0;
+}
+
 BOOL FileTimeToLocalFileTime( const FILETIME *pIn, FILETIME *pOut )
 {
     if ( pIn == 0 || pOut == 0 )
@@ -179,6 +195,27 @@ BOOL DosDateTimeToFileTime( WORD nFatDate, WORD nFatTime, FILETIME *pOut )
     if ( nUnix == (time_t)-1 )
         return FALSE;
     *pOut = Bk1UnixTimeToFileTime( (long long)nUnix );
+    return TRUE;
+}
+
+BOOL FileTimeToSystemTime( const FILETIME *pIn, SYSTEMTIME *pOut )
+{
+    if ( pIn == 0 || pOut == 0 )
+        return FALSE;
+    const time_t nUnix = (time_t)Bk1FileTimeToUnixTime( pIn );
+    struct tm t;
+    if ( gmtime_r( &nUnix, &t ) == 0 )
+        return FALSE;
+    const unsigned long long nTicks =
+        ( (unsigned long long)pIn->dwHighDateTime << 32 ) | pIn->dwLowDateTime;
+    pOut->wYear         = (WORD)( t.tm_year + 1900 );
+    pOut->wMonth        = (WORD)( t.tm_mon + 1 );
+    pOut->wDayOfWeek    = (WORD)t.tm_wday;
+    pOut->wDay          = (WORD)t.tm_mday;
+    pOut->wHour         = (WORD)t.tm_hour;
+    pOut->wMinute       = (WORD)t.tm_min;
+    pOut->wSecond       = (WORD)t.tm_sec;
+    pOut->wMilliseconds = (WORD)( ( nTicks % (unsigned long long)TICKS_PER_SECOND ) / 10000ull );
     return TRUE;
 }
 

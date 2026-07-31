@@ -586,7 +586,7 @@ void CWorldClient::Init( ISingleton *pSingleton )
 	RegisterAction( USER_ACTION_INSTALL, SActionDesc::INSTANT, &CWorldClient::ActionInstallMsg );
 	RegisterAction( USER_ACTION_UNINSTALL, SActionDesc::INSTANT, &CWorldClient::ActionUnInstallMsg );
 
-	RegisterAction( USER_ACTION_CAPTURE_ARTILLERY, SActionDesc::AUTO, ActionCaptureArtilleryMsg );
+	RegisterAction( USER_ACTION_CAPTURE_ARTILLERY, SActionDesc::AUTO, &CWorldClient::ActionCaptureArtilleryMsg );
 	RegisterAction( USER_ACTION_HOOK_ARTILLERY, SActionDesc::AUTO | SActionDesc::FORCED, &CWorldClient::ActionHookArtilleryMsg );
 	RegisterAction( USER_ACTION_DEPLOY_ARTILLERY, SActionDesc::FORCED, &CWorldClient::ActionDeployArtilleryMsg );
 

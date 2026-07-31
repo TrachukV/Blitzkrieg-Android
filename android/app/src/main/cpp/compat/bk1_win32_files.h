@@ -23,6 +23,19 @@ typedef struct _FILETIME {
     DWORD dwHighDateTime;
 } FILETIME, *PFILETIME, *LPFILETIME;
 
+// The broken-out calendar form of a file time. GameTT/Common.cpp reads the
+// fields by name, so the order and spelling match Windows.
+typedef struct _SYSTEMTIME {
+    WORD wYear;
+    WORD wMonth;
+    WORD wDayOfWeek;
+    WORD wDay;
+    WORD wHour;
+    WORD wMinute;
+    WORD wSecond;
+    WORD wMilliseconds;
+} SYSTEMTIME, *PSYSTEMTIME, *LPSYSTEMTIME;
+
 typedef struct _WIN32_FIND_DATAA {
     DWORD    dwFileAttributes;
     FILETIME ftCreationTime;
@@ -63,12 +76,21 @@ BOOL Bk1SetFileTimeByPath( const char *pszPath, const FILETIME *pCreation,
 FILETIME Bk1UnixTimeToFileTime( long long nUnixSeconds );
 long long Bk1FileTimeToUnixTime( const FILETIME *pTime );
 
+// Win32's three-way file time comparison: -1, 0 or +1 for the first time being
+// before, equal to, or after the second. GameTT/SaveLoadCommon.h orders saved
+// games by it, and MapEditor and buildversion compare timestamps with it too.
+LONG CompareFileTime( const FILETIME *pFirst, const FILETIME *pSecond );
+
 // StreamIO/FileAttribs.h converts between file times and the FAT date/time
 // pair the archive formats store.
 BOOL FileTimeToLocalFileTime( const FILETIME *pIn, FILETIME *pOut );
 BOOL LocalFileTimeToFileTime( const FILETIME *pIn, FILETIME *pOut );
 BOOL FileTimeToDosDateTime( const FILETIME *pIn, WORD *pFatDate, WORD *pFatTime );
 BOOL DosDateTimeToFileTime( WORD nFatDate, WORD nFatTime, FILETIME *pOut );
+
+// GameTT/Common.cpp formats a file's change stamp for display. It converts to
+// local time first, as on Windows, so this reads the value exactly as given.
+BOOL FileTimeToSystemTime( const FILETIME *pIn, SYSTEMTIME *pOut );
 
 #ifdef __cplusplus
 }

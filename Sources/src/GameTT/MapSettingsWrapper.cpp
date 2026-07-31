@@ -123,7 +123,7 @@ void CMapSettingsWrapper::Init( IUIListControl *_pList, IUIStatic *_pGameType )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CMapSettingsWrapper::SetGameType ( const int /*SQuickLoadMapInfo::EMultiplayerMapType*/ nGameType )
 {
-	pGameType->SetWindowText( 0, CUIConsts::GetMapTypeString( nGameType ) );
+	pGameType->SetWindowText( 0, Bk1AsWide( CUIConsts::GetMapTypeString( nGameType ) ) );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CMapSettingsWrapper::Apply()

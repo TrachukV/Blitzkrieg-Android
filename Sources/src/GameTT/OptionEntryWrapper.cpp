@@ -202,14 +202,14 @@ void CUIOption::ResetSlider()
 void CUIOption::SetTextOption( const WORD *pszEntry )
 {
 	pSubDialog = checked_cast<IUIDialog*>( pDialog->GetChildByID( E_SUBDIALOG_TEXTEDIT ) );
-	szInitialText = pszEntry;
+	szInitialText = Bk1AsWide( pszEntry );
 	ResetTextEntry();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CUIOption::SetTextGameSpyOption( const WORD *pszEntry )
 {
 	pSubDialog = checked_cast<IUIDialog*>( pDialog->GetChildByID( E_SUBDIALOG_TEXTEDIT_GAMESPY ) );
-	szInitialText = pszEntry;
+	szInitialText = Bk1AsWide( pszEntry );
 	ResetTextGameSpyEntry();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -272,13 +272,13 @@ const int CUIOption::GetTextNumericOption() const
 const WORD * CUIOption::GetTextGameSpyOption() const
 {
 	IUIEditBox * pStatic = checked_cast<IUIEditBox*>( pSubDialog->GetChildByID( E_EDITBOX ) );
-	return pStatic->GetWindowText( 0 );
+	return Bk1AsUtf16( pStatic->GetWindowText( 0 ) );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const WORD * CUIOption::GetTextOption () const
 {
 	IUIEditBox * pStatic = checked_cast<IUIEditBox*>( pSubDialog->GetChildByID( E_EDITBOX ) );
-	return pStatic->GetWindowText( 0 );
+	return Bk1AsUtf16( pStatic->GetWindowText( 0 ) );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -305,7 +305,7 @@ COptionsListWrapper::COptionsListWrapper( IUIListControl * _pList, OptionDescs &
 void COptionsListWrapper::InitList( const bool bDefault )
 {
 	std::vector< CPtr<IOption> > optionsToGive;
-	IOptionSystem * pSystem = pSetOptionSystem ? pSetOptionSystem : GetSingleton<IOptionSystem>();
+	IOptionSystem * pSystem = pSetOptionSystem ? pSetOptionSystem.GetPtr() : GetSingleton<IOptionSystem>();
 
 	for ( OptionDescs::const_iterator it = optionsDescs.begin(); it != optionsDescs.end(); ++it )
 	{
@@ -320,9 +320,9 @@ void COptionsListWrapper::InitList( const bool bDefault )
 				NI_ASSERT_T( pDesc->nDataType == VT_BSTR, "EOET_TEXT_ENTRY is allowed only for VT_BSTR type" );
 				variant_t val ;
 				if ( !bDefault && pSystem->Get( pDesc->szName, &val ) )
-					pOption = new COptionTextEntryGameSpyCharacters( pDesc->szName.c_str(), pDesc->bInstantApply, (wchar_t*)(_bstr_t)val );
+					pOption = new COptionTextEntryGameSpyCharacters( pDesc->szName.c_str(), pDesc->bInstantApply, (const WORD*)(_bstr_t)val );
 				else
-					pOption = new COptionTextEntryGameSpyCharacters( pDesc->szName.c_str(), pDesc->bInstantApply, (wchar_t*)(_bstr_t)pDesc->defaultValue );
+					pOption = new COptionTextEntryGameSpyCharacters( pDesc->szName.c_str(), pDesc->bInstantApply, (const WORD*)(_bstr_t)pDesc->defaultValue );
 			}
 
 			break;
@@ -331,9 +331,9 @@ void COptionsListWrapper::InitList( const bool bDefault )
 				NI_ASSERT_T( pDesc->nDataType == VT_BSTR, "EOET_TEXT_ENTRY is allowed only for VT_BSTR type" );
 				variant_t val ;
 				if ( !bDefault && pSystem->Get( pDesc->szName, &val ) )
-					pOption = new COptionTextEntry( pDesc->szName.c_str(), pDesc->bInstantApply, (wchar_t*)(_bstr_t)val );
+					pOption = new COptionTextEntry( pDesc->szName.c_str(), pDesc->bInstantApply, (const WORD*)(_bstr_t)val );
 				else
-					pOption = new COptionTextEntry( pDesc->szName.c_str(), pDesc->bInstantApply, (wchar_t*)(_bstr_t)pDesc->defaultValue );
+					pOption = new COptionTextEntry( pDesc->szName.c_str(), pDesc->bInstantApply, (const WORD*)(_bstr_t)pDesc->defaultValue );
 			}
 
 			break;
@@ -369,9 +369,9 @@ void COptionsListWrapper::InitList( const bool bDefault )
 				std::wstring szCurrent;
 				variant_t val;
 				if ( !bDefault && pSystem->Get( pDesc->szName, &val ) )
-					szCurrent = (wchar_t*)(_bstr_t)val;
+					szCurrent = Bk1AsWide( (const WORD*)(_bstr_t)val );
 				else
-					szCurrent = (wchar_t*)(_bstr_t)pDesc->defaultValue;
+					szCurrent = Bk1AsWide( (const WORD*)(_bstr_t)pDesc->defaultValue );
 				pOption = new COptionSelection( pDesc->szName.c_str(), pDesc->bInstantApply, values, NStr::ToAscii(szCurrent).c_str() );
 			}
 			break;

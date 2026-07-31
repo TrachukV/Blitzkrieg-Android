@@ -85,7 +85,7 @@ void CUINewGameState::Show()
 	const SOptionDesc * pDesc = pOptions->GetDesc( "GamePlay.PlayerName" );
 	variant_t varPlayerName;
 	pOptions->Get( "GamePlay.PlayerName", &varPlayerName );
-	const std::wstring szNameFromOptions = (wchar_t*)(bstr_t)varPlayerName;
+	const std::wstring szNameFromOptions = (const wchar_t*)(bstr_t)varPlayerName;
 	IText * pT = GetSingleton<ITextManager>()->GetDialog( "Textes\\PlayerName" );
 	const std::wstring szDefault = pT ? pT->GetString() : L"";
 

@@ -347,6 +347,7 @@ public:
         }
     }
 
+    operator unsigned char() const { return (unsigned char)AsDouble(); }
     operator int() const { return (int)AsDouble(); }
     operator long() const { return (long)AsDouble(); }
     operator short() const { return (short)AsDouble(); }

@@ -1,10 +1,11 @@
 #include "StdAfx.h"
+#include "..\Misc\WideString.h"
 #include "UIMessages.h"
 #include "UIScrollText.h"
 
 //const int GLAD = 20;			//для гладкого скроллирования
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CUIScrollTextBox::SetWindowText( int nState, const WORD *pszText )
+void CUIScrollTextBox::SetWindowText( int nState, const wchar_t *pszText )
 {
 	NI_ASSERT_T( nState < states.size(), NStr::Format("Can't set window text for %d stats (max %d)", nState, states.size()) );
 	IText *pText = states[nState].pGfxText->GetText();
@@ -61,15 +62,15 @@ void CUIScrollTextBox::	UpdateScrollBar( const int nMaxValue, const int nCurValu
 	pScrollBar->SetStep( 1 );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CUIScrollTextBox::AppendText( const WORD *pszText )
+void CUIScrollTextBox::AppendText( const wchar_t *pszText )
 {
 	bool bNeedScrollToEnd = pScrollBar->GetPosition() == pScrollBar->GetMaxValue();
 
 	IText *pText = states[nCurrentState].pGfxText->GetText();
 	std::wstring wszTemp = pText->GetString();
-	wszTemp += pszText;
+	wszTemp += Bk1AsWide( pszText );
 	
-	SetWindowText( nCurrentState, wszTemp.c_str() );
+	SetWindowText( nCurrentState, Bk1AsUtf16( wszTemp.c_str() ) );
 	
 	//обновим позицию ScrollBar, если это необходимо
 	if ( bNeedScrollToEnd )

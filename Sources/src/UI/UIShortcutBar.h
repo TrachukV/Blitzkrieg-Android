@@ -72,7 +72,7 @@ public:
 	//add item to the current bar (last added bar). If no bars are added then an error will occured.
 	virtual IUIElement* STDCALL AddItem();
 	virtual void STDCALL AddMultyItems( int nNum );
-	virtual IUIElement* STDCALL AddTextItem( const WORD *pszText );
+	virtual IUIElement* STDCALL AddTextItem( const wchar_t *pszText );
 	//initial update, call this function after all bars and items are added
 	virtual void STDCALL InitialUpdate();
 	virtual void STDCALL GetSelectionItem( int *pBar, int *pItem );
@@ -95,7 +95,7 @@ class CUIShortcutBarBridge : public IUIShortcutBar, public CUIShortcutBar
 	virtual IUIElement* STDCALL AddBar() { return CSuper::AddBar(); }
 	virtual IUIElement* STDCALL AddItem() { return CSuper::AddItem(); }
 	virtual void STDCALL AddMultyItems( int nNum ) { CSuper::AddMultyItems( nNum ); }
-	virtual IUIElement* STDCALL AddTextItem( const WORD *pszText ) { return CSuper::AddTextItem( pszText ); }
+	virtual IUIElement* STDCALL AddTextItem( const wchar_t *pszText ) { return CSuper::AddTextItem( pszText ); }
 	virtual void STDCALL InitialUpdate() { CSuper::InitialUpdate(); }
 	virtual void STDCALL GetSelectionItem( int *pBar, int *pItem ) { CSuper::GetSelectionItem( pBar, pItem ); }
 	virtual void STDCALL SetSelectionItem( int nBar, int nItem ) { CSuper::SetSelectionItem( nBar, nItem ); }

@@ -74,7 +74,7 @@ public:
 	virtual void STDCALL ProcessGameMessage( const SGameMessage &msg );
 	virtual bool STDCALL GetMessage( SGameMessage *pMsg );
 
-	virtual int STDCALL MessageBox( const WORD *pszText, int nType );
+	virtual int STDCALL MessageBox( const wchar_t *pszText, int nType );
 	
 	virtual bool STDCALL OnChar( int nAsciiCode, int nVirtualKey, bool bPressed, DWORD keyState );
 	virtual void STDCALL ClearStrings() { listOfAcks.clear(); }
@@ -87,7 +87,7 @@ class CUIScreenBridge : public IUIScreen, public CUIScreen
 	DECLARE_SUPER( CUIScreen );
 	DEFINE_UISCREEN_BRIDGE;
 	virtual bool STDCALL IsEmpty() { return CSuper::IsEmpty(); }
-	virtual int STDCALL MessageBox( const WORD *pszText, int nType ) { return CSuper::MessageBox( pszText, nType ); }
+	virtual int STDCALL MessageBox( const wchar_t *pszText, int nType ) { return CSuper::MessageBox( pszText, nType ); }
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif // __UISCREEN_H__

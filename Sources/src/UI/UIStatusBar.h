@@ -16,9 +16,9 @@ class CUIStatusBar : public CMultipleWindow
 
 public:
 	CUIStatusBar();
-	virtual void STDCALL OutputString( int nControl, const WORD *pszString );
+	virtual void STDCALL OutputString( int nControl, const wchar_t *pszString );
 	virtual void STDCALL OutputValue( int nControl, float fVal );
-	virtual void STDCALL SetUnitProperty( int nPropType, int nPropValue, const WORD *pszToolText );
+	virtual void STDCALL SetUnitProperty( int nPropType, int nPropValue, const wchar_t *pszToolText );
 	virtual void STDCALL SetUnitIcons( DWORD dwIcons );
 
 	// serializing...
@@ -31,9 +31,9 @@ class CUIStatusBarBridge : public IUIStatusBar, public CUIStatusBar
 	DECLARE_SUPER( CUIStatusBar );
 	DEFINE_UICONTAINER_BRIDGE;
 	//
-	virtual void STDCALL OutputString( int nControl, const WORD *pszText ) { CSuper::OutputString( nControl, pszText ); }
+	virtual void STDCALL OutputString( int nControl, const wchar_t *pszText ) { CSuper::OutputString( nControl, pszText ); }
 	virtual void STDCALL OutputValue( int nControl, float fVal ) { CSuper::OutputValue( nControl, fVal ); }
-	virtual void STDCALL SetUnitProperty( int nPropType, int nPropValue, const WORD *pszToolText ) { CSuper::SetUnitProperty( nPropType, nPropValue, pszToolText ); }
+	virtual void STDCALL SetUnitProperty( int nPropType, int nPropValue, const wchar_t *pszToolText ) { CSuper::SetUnitProperty( nPropType, nPropValue, pszToolText ); }
 	virtual void STDCALL SetUnitIcons( DWORD dwIcons ) { CSuper::SetUnitIcons( dwIcons ); }
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

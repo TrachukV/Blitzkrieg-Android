@@ -25,7 +25,7 @@ public:
 	virtual int STDCALL operator&( IDataTree &ss );
 	
 	void SetMessageBoxType( int nType );
-	virtual void STDCALL SetWindowText( int nState, const WORD *pszText );
+	virtual void STDCALL SetWindowText( int nState, const wchar_t *pszText );
 	
 	int GetResult() { return m_nResult; }
 };

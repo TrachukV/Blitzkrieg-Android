@@ -610,7 +610,7 @@ bool CMessageLinkContainer::ProcessMessage( const SGameMessage &msg )
 	return false;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CMessageLinkContainer::SetWindowText( const int nElementID, const WORD *pszText)
+void CMessageLinkContainer::SetWindowText( const int nElementID, const wchar_t *pszText)
 {
 	pInterface->SetWindowText( nElementID, pszText );
 }

@@ -387,7 +387,7 @@ public:
 
 	virtual int STDCALL CustomCheck( const int nCustomCheckKey, const CCustomCheckParams &checkParams  );
 	virtual void STDCALL CustomReaction( const std::string &szCustomReactionName );
-	virtual void STDCALL SetWindowText( const int nElementID, const WORD *pszText );
+	virtual void STDCALL SetWindowText( const int nElementID, const wchar_t *pszText );
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif // __MESSAGEREACTIONINTERNAL_H__

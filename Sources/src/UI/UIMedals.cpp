@@ -405,7 +405,7 @@ void CUIMedals::ClearMedals()
 	pScrollBar->SetPosition( 0 );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CUIMedals::AddMedal( IGFXTexture *pTexture, const CTRect<float> &mapImageRect, const WORD *pszMedalsName )
+void CUIMedals::AddMedal( IGFXTexture *pTexture, const CTRect<float> &mapImageRect, const wchar_t *pszMedalsName )
 {
 	IObjectFactory *pFactory = GetCommonFactory();
 	CPtr<CUIStaticBridge> pMedal = dynamic_cast<CUIStaticBridge*>( pFactory->CreateObject( UI_STATIC ) );

@@ -22,7 +22,7 @@ CUIStatusBar::CUIStatusBar() : dwActiveIcons( 0 )
 	idVectors[1].push_back( 42 );		//temp
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CUIStatusBar::OutputString( int nControl, const WORD *pszText )
+void CUIStatusBar::OutputString( int nControl, const wchar_t *pszText )
 {
 	IUIElement *pElement = GetChildByID( nControl );
 	NI_ASSERT_TF( pElement != 0, NStr::Format("Can't find child %d by ID", nControl), return );
@@ -36,7 +36,7 @@ void CUIStatusBar::OutputValue( int nControl, float fVal )
 	pNumIndicator->SetValue( fVal );
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CUIStatusBar::SetUnitProperty( int nPropType, int nPropValue, const WORD *pszToolText )
+void CUIStatusBar::SetUnitProperty( int nPropType, int nPropValue, const wchar_t *pszToolText )
 {
 	NI_ASSERT_T( nPropType < PROP_SIZE, "Invalid nPropType parameter in CUIStatusBar::SetUnitProperty()" );
 /*

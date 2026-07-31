@@ -24,14 +24,14 @@
 	virtual void STDCALL SetWindowID( int _nID ) { CSuper::SetWindowID( _nID ); }																\
 	virtual bool STDCALL OnChar( int nAsciiCode, int nVirtualKey, bool bPressed, DWORD keyState ) { return CSuper::OnChar( nAsciiCode, nVirtualKey, bPressed, keyState ); }	\
 	virtual int STDCALL  GetWindowID() { return CSuper::GetWindowID(); }																				\
-	virtual void STDCALL SetWindowText( int nState, const WORD *pszText ) { CSuper::SetWindowText( nState, pszText ); }		\
-	virtual const WORD* STDCALL GetWindowText( int nState ) { return CSuper::GetWindowText( nState ); }										\
+	virtual void STDCALL SetWindowText( int nState, const wchar_t *pszText ) { CSuper::SetWindowText( nState, pszText ); }		\
+	virtual const wchar_t * STDCALL GetWindowText( int nState ) { return CSuper::GetWindowText( nState ); }										\
 	virtual void STDCALL SetTextColor( DWORD dwColor ) { CSuper::SetTextColor( dwColor ); }											\
 	virtual void STDCALL SetBoundRect( const CTRect<float> &rc ) { CSuper::SetBoundRect( rc ); }								\
 	virtual int STDCALL GetWindowPlacement( CVec2 *pPos, CVec2 *pSize, CTRect<float> *pScreenRect ) { return CSuper::GetWindowPlacement( pPos, pSize, pScreenRect ); } \
 	virtual int STDCALL GetPositionFlag() { return CSuper::GetPositionFlag(); }																	\
 	virtual IText* STDCALL GetHelpContext( const CVec2 &vPos, CTRect<float> *pRect ) { return CSuper::GetHelpContext( vPos, pRect ); }		\
-	virtual void STDCALL SetHelpContext( int nState, const WORD *pszToolTipText ) { CSuper::SetHelpContext( nState, pszToolTipText ); }		\
+	virtual void STDCALL SetHelpContext( int nState, const wchar_t *pszToolTipText ) { CSuper::SetHelpContext( nState, pszToolTipText ); }		\
 	virtual void STDCALL SetParent( IUIContainer *pParent ) { CSuper::SetParent( pParent ); }										\
 	virtual IUIContainer* STDCALL GetParent() { return CSuper::GetParent(); }																		\
 	virtual IManipulator* STDCALL GetManipulator() { return CSuper::GetManipulator(); }													\

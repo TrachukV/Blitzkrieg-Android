@@ -574,7 +574,7 @@ void CUIScreen::UpdateChatString( int nAsciiCode, int nVirtualKey, bool bPressed
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int CUIScreen::MessageBox( const WORD *pszText, int nType )
+int CUIScreen::MessageBox( const wchar_t *pszText, int nType )
 {
 	IObjectFactory *pFactory = GetCommonFactory();
 	IRefCount *pObj = pFactory->CreateObject( UI_MESSAGE_BOX );

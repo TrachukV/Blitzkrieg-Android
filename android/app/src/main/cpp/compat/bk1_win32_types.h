@@ -11,6 +11,8 @@ typedef unsigned int        DWORD;
 typedef int                 BOOL;
 typedef int                 INT;
 typedef unsigned int        UINT;
+typedef short               SHORT;
+typedef unsigned short      USHORT;
 typedef long                LONG;
 typedef unsigned long       ULONG;
 typedef float               FLOAT;
@@ -263,3 +265,4 @@ typedef struct _EXCEPTION_POINTERS {
 #include "bk1_win32_process.h"
 #include "bk1_win32_openfile.h"
 #include "bk1_win32_window.h"
+#include "bk1_win32_keys.h"

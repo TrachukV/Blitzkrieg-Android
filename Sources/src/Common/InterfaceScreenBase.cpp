@@ -83,7 +83,7 @@ void CInterfaceScreenBase::Done()
 	pInput->SetTextMode( INPUT_TEXT_MODE_NOTEXT );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CInterfaceScreenBase::SetWindowText( const int nElementID, const WORD *pszText )
+void CInterfaceScreenBase::SetWindowText( const int nElementID, const wchar_t *pszText )
 {
 	IUIElement * pElement = pUIScreen->GetChildByID( nElementID );
 	if ( pElement )
@@ -94,7 +94,7 @@ void CInterfaceScreenBase::SetWindowText( const int nElementID, const WORD *pszT
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CInterfaceScreenBase::SetWindowText( const int nElementID, IText *pText )
 {
-	SetWindowText( nElementID, Bk1AsUtf16( pText->GetString() ) );
+	SetWindowText( nElementID, pText->GetString() );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CInterfaceScreenBase::SuspendAILogic( bool bSuspend )
@@ -491,10 +491,10 @@ bool CInterfaceScreenBase::ShowTutorial()
 	{
 		GetSingleton<IUserProfile>()->HelpCalled( GetCommonFactory()->GetObjectTypeID( this ), nHelpContextNumber );
 
-		const WORD *pText = pTutorial->GetWindowText( nHelpContextNumber );
+		const wchar_t *pText = pTutorial->GetWindowText( nHelpContextNumber );
 		if ( pText && pText[0] != 0 )
 		{
-			SetGlobalVar( "TutorialText", pText );
+			SetGlobalVar( "TutorialText", Bk1AsUtf16( pText ) );
 			GetSingleton<IMainLoop>()->Command( MISSION_COMMAND_IM_TUTORIAL, 0 );
 			return true;
 		}

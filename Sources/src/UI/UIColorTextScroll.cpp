@@ -110,7 +110,7 @@ void CUIColorTextScroll::Reposition( const CTRect<float> &rcParent )
 	// reposition entrys
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CUIColorTextScroll::SetWindowText( int nState, const WORD *pszText ) 
+void CUIColorTextScroll::SetWindowText( int nState, const wchar_t *pszText ) 
 { 
 	textEntrys.clear(); 
 	AppendMessage( pszText, 0, IUIColorTextScroll::E_COLOR_DEFAULT );
@@ -121,7 +121,7 @@ void CUIColorTextScroll::Draw( IGFX *pGFX )
 	NI_ASSERT_T( false, "wrong call" );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CUIColorTextScroll::AppendMessage( const WORD *pszCaption, const WORD *pszMessage,
+void CUIColorTextScroll::AppendMessage( const wchar_t *pszCaption, const wchar_t *pszMessage,
 																			const enum IUIColorTextScroll::EColorEntrys color )
 {
 	const int nColorIndex = int(color);

@@ -395,7 +395,7 @@ IText* CSimpleWindow::GetHelpContext( const CVec2 &vPos, CTRect<float> *pRect )
 	return states[nCurrentState].pToolText;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CSimpleWindow::SetHelpContext( int nState, const WORD *pszToolTipText )
+void CSimpleWindow::SetHelpContext( int nState, const wchar_t *pszToolTipText )
 {
 	states[nState].pToolText->SetText( pszToolTipText );
 }
@@ -430,7 +430,7 @@ void CSimpleWindow::InitText()
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CSimpleWindow::SetWindowText( int nState, const WORD *pszText )
+void CSimpleWindow::SetWindowText( int nState, const wchar_t *pszText )
 {
 	CTRect<float> textRC = wndRect;
 	if ( bBounded )
@@ -458,7 +458,7 @@ void CSimpleWindow::SetWindowText( int nState, const WORD *pszText )
 	states[nState].pGfxText->SetWidth( textRC.Width() );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const WORD* CSimpleWindow::GetWindowText( int nState )
+const wchar_t * CSimpleWindow::GetWindowText( int nState )
 {
 	NI_ASSERT_T( nState < states.size(), NStr::Format("Can't get text from state %d (max %d states)", nState, states.size()) );
 	IText *pText = states[nState].pGfxText->GetText();

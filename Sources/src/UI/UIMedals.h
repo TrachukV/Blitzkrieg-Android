@@ -34,7 +34,7 @@ public:
 	virtual void STDCALL ShowWindow( int _nCmdShow );
 	
 	void ClearMedals();
-	void AddMedal( IGFXTexture *pTexture, const CTRect<float> &mapImageRect, const WORD *pszMedalsName );
+	void AddMedal( IGFXTexture *pTexture, const CTRect<float> &mapImageRect, const wchar_t *pszMedalsName );
 	void UpdateMedals();
 	
 private:

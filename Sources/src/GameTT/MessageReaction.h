@@ -85,7 +85,7 @@ interface IMessageLinkContainer : public IRefCount
 	virtual void STDCALL CustomReaction( const std::string &szCustomReactionName ) = 0;
 	
 	// set text to desider window
-	virtual void STDCALL SetWindowText( const int nElementID, const WORD *pszText ) = 0;
+	virtual void STDCALL SetWindowText( const int nElementID, const wchar_t *pszText ) = 0;
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif // __MESSAGEREACTION_H__

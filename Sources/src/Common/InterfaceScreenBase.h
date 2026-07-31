@@ -135,7 +135,7 @@ public:
 	virtual int STDCALL FinishInterface( IInterfaceCommand *pCmdNextInterface );
 	virtual int STDCALL FinishInterface( const int nInterfaceCommandTypeID, const char *pszCommandConfig );
 	virtual void STDCALL SetWindowText( const int nElementID, IText *pText );
-	virtual void STDCALL SetWindowText( const int nElementID, const WORD *pszText );
+	virtual void STDCALL SetWindowText( const int nElementID, const wchar_t *pszText );
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif // __INTERFACESCREENBASE_H__

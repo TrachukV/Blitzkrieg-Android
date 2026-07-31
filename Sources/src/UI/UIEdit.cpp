@@ -701,7 +701,7 @@ void CUIEditBox::NotifyTextChanged()
 	GetParent()->ProcessMessage( msg );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CUIEditBox::SetWindowText( int nState, const WORD *pszText )
+void CUIEditBox::SetWindowText( int nState, const wchar_t *pszText )
 {
 	wszFullText = pszText;
 	nBeginText = 0;

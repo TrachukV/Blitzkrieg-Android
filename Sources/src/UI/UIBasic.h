@@ -103,13 +103,13 @@ public:
 	virtual void STDCALL Reposition( const CTRect<float> &rcParent );
 	
 	// text
-	virtual void STDCALL SetWindowText( int nState, const WORD *pszText );
-	virtual const WORD* STDCALL GetWindowText( int nState );
+	virtual void STDCALL SetWindowText( int nState, const wchar_t *pszText );
+	virtual const wchar_t * STDCALL GetWindowText( int nState );
 	virtual void STDCALL SetTextColor( DWORD dwColor );
 	
 	// tool tip functions
 	virtual IText* STDCALL GetHelpContext( const CVec2 &vPos, CTRect<float> *pRect );
-	virtual void STDCALL SetHelpContext( int nState, const WORD *pszToolTipText );
+	virtual void STDCALL SetHelpContext( int nState, const wchar_t *pszToolTipText );
 	
 	//CRAP set texture
 	virtual void STDCALL SetWindowTexture( IGFXTexture *pTexture );

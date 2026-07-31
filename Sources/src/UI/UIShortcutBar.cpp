@@ -204,7 +204,7 @@ void CUIShortcutBar::AddMultyItems( int nNum )
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-IUIElement* CUIShortcutBar::AddTextItem( const WORD *pszText )
+IUIElement* CUIShortcutBar::AddTextItem( const wchar_t *pszText )
 {
 	NI_ASSERT_T( bars.size() > 0, "CUIShortcutBar error: You need to add bar before adding items" );
 	SBar &bar = bars[bars.size() - 1];
@@ -373,7 +373,8 @@ void CUIShortcutBar::Reposition( const CTRect<float> &rcParent )
 	//обновим позицию скроллбара
 	CVec2 size;
 	pScrollBar->GetWindowPlacement( 0, &size, 0 );
-	pScrollBar->SetWindowPlacement( 0, &CVec2(size.x, wndRect.Height() ) );
+	const CVec2 vScrollBarSize( size.x, wndRect.Height() );
+	pScrollBar->SetWindowPlacement( 0, &vScrollBarSize );
 	CMultipleWindow::Reposition( rcParent );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

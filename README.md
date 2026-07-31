@@ -11,11 +11,26 @@ mouse and keyboard.
 This repository is a fork of [nival/Blitzkrieg](https://github.com/nival/Blitzkrieg);
 the original project README is kept as [README_Original.md](README_Original.md).
 
-## State: not playable yet
+## State: it builds, installs and runs. It is not the game yet.
 
-This is honest work in progress, and nothing runs. What exists is the
-compatibility layer, the platform replacements written so far, and the original
-sources brought to the point where the compiler accepts them.
+There is now an APK that installs on a device, opens a surface, holds 60 fps
+and routes touch into the engine's input. What it does not do is draw the game,
+because several engine modules are still unported and there is nothing yet to
+call.
+
+Measured on an arm64 emulator, not asserted:
+
+```
+surface 2700x1280, renderer Android Emulator OpenGL ES Translator
+60.0 fps, worst frame 19.3 ms
+touch reaches the engine: cursor at 900, 640
+```
+
+The last line is the one that matters. A tap was injected at 900,640 and the
+position read back through `GetCursorPos` -- the call the engine itself makes --
+so a finger arrives where the engine looks for a mouse. That is the whole design
+of the touch layer: the engine keeps its own input model and a finger fills it
+in, so its bindings, double-click and drag handling need no changes.
 
 | Module | Translation units building for arm64 |
 | --- | --- |
@@ -24,16 +39,25 @@ sources brought to the point where the compiler accepts them.
 | `Net` | 11 / 15 |
 | `Scene` | 29 / 50 |
 | `UI` | 12 / 33 |
-| **Total** | **~220** |
+| `GFX` | 16 / 17 |
+| `Input` | 6 / 7 |
+| **Total** | **~286** |
 
-Still ahead, and each is a replacement rather than a port: Direct3D 8 (`GFX`),
-DirectInput (`Input`), FMOD (`SFX`), and the `AILogic`, `Main`, `GameTT` and
-`Game` modules, which have not been started.
+Still ahead: FMOD (`SFX`), and the `AILogic`, `Main`, `GameTT` and `Game`
+modules, which have not been started. Direct3D 8 and DirectInput are written --
+a sprite and quad renderer on OpenGL ES 3, and a buffered input device that
+touch fills in -- but nothing has asked them to draw a frame yet.
 
 ```bash
+android/build_apk.sh                        # an installable APK, SDK and NDK only
 android/compile_check.sh Misc StreamIO      # what builds, per module
 android/tests/run_tests.sh                  # the tests that guard the rewritten parts
 ```
+
+Gradle works too and is the normal way in; `build_apk.sh` exists because it
+needs no network, no plugin download and no wrapper jar. Both produce the same
+package. The game's own data is not in this repository and never will be -- it
+belongs to whoever owns a copy of the game.
 
 ## What was replaced rather than ported
 

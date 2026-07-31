@@ -566,16 +566,16 @@ public:																																								\
 	TPtrName() {}																																				\
 	TPtrName( TUserObj *_ptr ): TBase( _ptr ) {  }																			\
 	TPtrName( const TPtrName &a ): TBase( a ) {  }																			\
-	TPtrName& operator=( TUserObj *_ptr ) { Set( _ptr ); return *this; }								\
-	TPtrName& operator=( const TPtrName &a ) { Set( a.GetPtr() ); return *this; }				\
-	bool operator==( const TPtrName &a ) const { return GetPtr() == a.GetPtr(); }				\
-	bool operator==( const TUserObj *a ) const { return GetPtr() == a; }								\
-	bool operator!=( const TPtrName &a ) const { return GetPtr() != a.GetPtr(); }				\
-	bool operator!=( const TUserObj *a ) const { return GetPtr() != a; }								\
-	bool operator< ( const TUserObj *a ) const { return GetPtr() < a; }									\
-	bool operator> ( const TUserObj *a ) const { return GetPtr() > a; }									\
-	bool operator<=( const TUserObj *a ) const { return GetPtr() <= a; }								\
-	bool operator>=( const TUserObj *a ) const { return GetPtr() >= a; }								\
+	TPtrName& operator=( TUserObj *_ptr ) { this->Set( _ptr ); return *this; }								\
+	TPtrName& operator=( const TPtrName &a ) { this->Set( a.GetPtr() ); return *this; }				\
+	bool operator==( const TPtrName &a ) const { return this->GetPtr() == a.GetPtr(); }				\
+	bool operator==( const TUserObj *a ) const { return this->GetPtr() == a; }								\
+	bool operator!=( const TPtrName &a ) const { return this->GetPtr() != a.GetPtr(); }				\
+	bool operator!=( const TUserObj *a ) const { return this->GetPtr() != a; }								\
+	bool operator< ( const TUserObj *a ) const { return this->GetPtr() < a; }									\
+	bool operator> ( const TUserObj *a ) const { return this->GetPtr() > a; }									\
+	bool operator<=( const TUserObj *a ) const { return this->GetPtr() <= a; }								\
+	bool operator>=( const TUserObj *a ) const { return this->GetPtr() >= a; }								\
 };
 // ptr specialization
 BASIC_PTR_DECLARE( CPtr, NRefCount::SRefPtrFunc );

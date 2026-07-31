@@ -127,7 +127,7 @@ class CSaverAccessor
 				data.insert( data.begin(), pSS->CountChunks( 1 ), T1() );
 			}
 			int i = 1;
-			for ( std::list<T1, T2>::iterator k = data.begin(); k != data.end(); ++k, ++i )
+			for ( typename std::list<T1, T2>::iterator k = data.begin(); k != data.end(); ++k, ++i )
 			{
 				pSS->SetChunkCounter( i );
 				Add( 1, &(*k) );
@@ -157,7 +157,7 @@ class CSaverAccessor
 			// hash_set => list
 			if ( !IsReading() )
 			{
-				for ( std::hash_set<T1, T2, T3, T4>::iterator it = pData->begin(); it != pData->end(); ++it )
+				for ( typename std::hash_set<T1, T2, T3, T4>::iterator it = pData->begin(); it != pData->end(); ++it )
 					elements.push_back( *it );
 			}
 			// add container
@@ -166,7 +166,7 @@ class CSaverAccessor
 			if ( IsReading() )
 			{
 				pData->clear();
-				for ( std::list<T1>::iterator it = elements.begin(); it != elements.end(); ++it )
+				for ( typename std::list<T1>::iterator it = elements.begin(); it != elements.end(); ++it )
 					pData->insert( *it );
 			}
 		}
@@ -177,7 +177,7 @@ class CSaverAccessor
 			// hash_set => list
 			if ( !IsReading() )
 			{
-				for ( std::set<T1, T2, T3>::iterator it = pData->begin(); it != pData->end(); ++it )
+				for ( typename std::set<T1, T2, T3>::iterator it = pData->begin(); it != pData->end(); ++it )
 					elements.push_back( *it );
 			}
 			// add container
@@ -186,7 +186,7 @@ class CSaverAccessor
 			if ( IsReading() )
 			{
 				pData->clear();
-				for ( std::list<T1>::iterator it = elements.begin(); it != elements.end(); ++it )
+				for ( typename std::list<T1>::iterator it = elements.begin(); it != elements.end(); ++it )
 					pData->insert( *it );
 			}
 		}
@@ -310,7 +310,7 @@ class CSaverAccessor
 			}
 			else
 			{
-				for ( std::hash_map<T1, T2, T3, T4, T5>::iterator pos = data.begin(); pos != data.end(); ++pos )
+				for ( typename std::hash_map<T1, T2, T3, T4, T5>::iterator pos = data.begin(); pos != data.end(); ++pos )
 				{
 					T1 idx = pos->first;
 					Add( 1, &idx );
@@ -341,7 +341,7 @@ class CSaverAccessor
 			}
 			else
 			{
-				for ( std::map<T1, T2, T3, T4>::iterator pos = data.begin(); pos != data.end(); ++pos )
+				for ( typename std::map<T1, T2, T3, T4>::iterator pos = data.begin(); pos != data.end(); ++pos )
 				{
 					T1 idx = pos->first;
 					Add( 1, &idx );
@@ -401,7 +401,7 @@ class CSaverAccessor
 			// serialize
 			Add( 1, &elements );
 			// vector => queue translation
-			for ( std::vector<T1>::iterator it = elements.begin(); it != elements.end(); ++it )
+			for ( typename std::vector<T1>::iterator it = elements.begin(); it != elements.end(); ++it )
 				data.push( *it );
 		}
 public:

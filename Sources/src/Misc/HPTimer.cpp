@@ -13,6 +13,7 @@ double NHPTimer::GetSeconds( const NHPTimer::STime &a )
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 static inline void GetCounter( int64 *pTime )
 {
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	__asm
 	{
 		rdtsc
@@ -20,6 +21,15 @@ static inline void GetCounter( int64 *pTime )
 		mov [esi], eax
 		mov [esi+4], edx
 	}
+#else
+	// There is no cycle counter available from user space on arm64, so the
+	// monotonic clock stands in and the counter's unit becomes the nanosecond.
+	// InitHPTimer sets the scale to match instead of calibrating against
+	// QueryPerformanceCounter.
+	const std::chrono::steady_clock::duration now =
+		std::chrono::steady_clock::now().time_since_epoch();
+	*pTime = std::chrono::duration_cast<std::chrono::nanoseconds>( now ).count();
+#endif
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 double NHPTimer::GetClockRate()
@@ -41,6 +51,12 @@ double NHPTimer::GetTimePassed( STime *pTime )
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 static void InitHPTimer()
 {
+#if !( defined( _MSC_VER ) && defined( _M_IX86 ) )
+	// GetCounter counts nanoseconds here, so the scale is known up front and
+	// the calibration loop below has nothing to measure.
+	fProcFreq1 = 1e-9;
+	return;
+#else
 	int64 freq, start, fin;
 	QueryPerformanceFrequency( (_LARGE_INTEGER*) &freq );
 	double fTStart, fTFinish, fPassed;
@@ -65,9 +81,10 @@ static void InitHPTimer()
 	double fProcFreq = (fPassed) * (static_cast<double>( freq )) / (fTFinish-fTStart);
 	fProcFreq1 = 1 / fProcFreq;
 	//cout << "freq = " << fpProcFreq / 1000000 <<  "Mhz" << endl;
+#endif
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// это вспомогательная структура для автоматической инициализации HP timer'а
+// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ HP timer'пїЅ
 struct SHPTimerInit
 {
 	SHPTimerInit() { InitHPTimer(); }

@@ -77,7 +77,7 @@ inline void SetGlobalVar( const char *pszValueName, int value ) { GetSingleton<I
 inline void SetGlobalVar( const char *pszValueName, float value ) { GetSingleton<IGlobalVars>()->SetVar( pszValueName, NStr::Format("%g", value) ); }
 inline void SetGlobalVar( const char *pszValueName, unsigned long value ) { GetSingleton<IGlobalVars>()->SetVar( pszValueName, NStr::Format("%ul", value) ); }
 inline void RemoveGlobalVar( const char *pszValueName ) { GetSingleton<IGlobalVars>()->RemoveVar( pszValueName ); }
-inline const WORD* GetGlobalWVar( const char *pszValueName, const WORD *defval = L"" ) { const WORD *pszVal = GetSingleton<IGlobalVars>()->GetWVar( pszValueName ); return pszVal == 0 ? defval : pszVal; }
+inline const WORD* GetGlobalWVar( const char *pszValueName, const WORD *defval = (const WORD *)L"" ) { const WORD *pszVal = GetSingleton<IGlobalVars>()->GetWVar( pszValueName ); return pszVal == 0 ? defval : pszVal; }
 inline void SetGlobalVar( const char *pszValueName, const WORD *pszValue ) { GetSingleton<IGlobalVars>()->SetVar( pszValueName, pszValue ); }
 inline void RemoveGlobalWVar( const char *pszValueName ) { GetSingleton<IGlobalVars>()->RemoveWVar( pszValueName ); }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

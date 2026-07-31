@@ -220,7 +220,7 @@ class CTreeAccessor
 				pData->insert( pData->begin(), nSize, T1() );
 			}
 			int i = 0;
-			for ( std::list<T1, T2>::iterator it = pData->begin(); it != pData->end(); ++it, ++i )
+			for ( typename std::list<T1, T2>::iterator it = pData->begin(); it != pData->end(); ++it, ++i )
 			{
 				pSS->SetChunkCounter( i );
 				Add( "", &(*it) );
@@ -539,7 +539,7 @@ class CTreeAccessor
 			else
 			{
 				int i = 0;
-				for ( std::hash_map<T1, T2, T3, T4, T5>::iterator it = data.begin(); it != data.end(); ++it, ++i )
+				for ( typename std::hash_map<T1, T2, T3, T4, T5>::iterator it = data.begin(); it != data.end(); ++it, ++i )
 				{
 					pSS->SetChunkCounter( i );
 					T1 idx = it->first;
@@ -663,9 +663,9 @@ public:
 	IDataTree* operator->() const { return pSS; }
 	// comparison operators
 	bool operator==( const CTreeAccessor &ptr ) const { return ( pSS == ptr.pSS ); }
-	bool operator==( IDataTree *pNewObject ) const { return ( pSS == pNewObject ); }
+	bool operator==( IDataTree *pNewObject ) const { return ( pSS.GetPtr() == pNewObject ); }
 	bool operator!=( const CTreeAccessor &ptr ) const { return ( pSS != ptr.pSS ); }
-	bool operator!=( IDataTree *pNewObject ) const { return ( pSS != pNewObject ); }
+	bool operator!=( IDataTree *pNewObject ) const { return ( pSS.GetPtr() != pNewObject ); }
 	// 
 	bool IsReading() const { return pSS->IsReading(); }
 	// add raw data of specified size (in bytes)

@@ -67,6 +67,33 @@ typedef long                HRESULT;
 #define S_OK          ((HRESULT)0)
 #define E_FAIL        ((HRESULT)0x80004005L)
 
+// IStream's seek origin, which StreamIO/StreamIO.h names in its own interface.
+typedef enum tagSTREAM_SEEK {
+    STREAM_SEEK_SET = 0,
+    STREAM_SEEK_CUR = 1,
+    STREAM_SEEK_END = 2
+} STREAM_SEEK;
+
+// GDI geometry structures. Misc/Geometry.h's GPoint and GRect convert to and
+// from these, so the member names and their order have to match Windows.
+typedef struct tagPOINT {
+    LONG x;
+    LONG y;
+} POINT, *PPOINT, *LPPOINT;
+
+typedef struct tagSIZE {
+    LONG cx;
+    LONG cy;
+} SIZE, *PSIZE, *LPSIZE;
+
+typedef struct tagRECT {
+    LONG left;
+    LONG top;
+    LONG right;
+    LONG bottom;
+} RECT, *PRECT, *LPRECT;
+typedef const RECT* LPCRECT;
+
 // BugSlayer's entry points take the structured-exception record by pointer and
 // never look inside it off Windows.
 struct EXCEPTION_RECORD;
@@ -75,3 +102,11 @@ typedef struct _EXCEPTION_POINTERS {
     struct EXCEPTION_RECORD* ExceptionRecord;
     struct CONTEXT*          ContextRecord;
 } EXCEPTION_POINTERS, *PEXCEPTION_POINTERS, *LPEXCEPTION_POINTERS;
+
+// Declared last, so the types above are in scope. The engine reaches these
+// through the force-included header rather than through <windows.h>, which
+// the game modules' StdAfx.h never includes.
+#include "bk1_win32_strings.h"
+#include "bk1_win32_platform.h"
+#include "bk1_win32_files.h"
+#include "bk1_win32_fileio.h"

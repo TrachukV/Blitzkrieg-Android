@@ -1,5 +1,7 @@
 #ifndef __TOOLS_H__
 #define __TOOLS_H__
+#include <math.h>
+#include <string.h>
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if _MSC_VER > 1000
 #pragma once
@@ -84,7 +86,7 @@ inline BYTE UnpackBYTE2( const DWORD value ) { return (value >> 16) & 0xff; }
 inline BYTE UnpackBYTE3( const DWORD value ) { return (value >> 24) & 0xff; }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
-// трюки с битами
+// пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 // ************************************************************************************************************************ //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Return the next power of 2 higher than the input
@@ -104,7 +106,7 @@ inline int GetNextPow2( DWORD n )
 }
 inline int GetNextPow2( int n ) { return GetNextPow2( DWORD(n) ); }
 
-// получить старший включенный бит
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 inline int GetMSB( DWORD n )
 {
   int k = 0;
@@ -136,7 +138,7 @@ inline int GetMSB( BYTE n )
 }
 inline int GetMSB( char n ) { return GetMSB( BYTE(n) ); }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// получить младший включенный бит
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 inline int GetLSB( DWORD n )
 {
   int k = 0;
@@ -168,7 +170,7 @@ inline int GetLSB( BYTE n )
 }
 inline int GetLSB( char n ) { return GetLSB( BYTE(n) ); }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// подсчёт колличества ненулевых бит в числе
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ
 // 0x49249249ul // = 0100_1001_0010_0100_1001_0010_0100_1001
 // 0x381c0e07ul // = 0011_1000_0001_1100_0000_1110_0000_0111
 inline int GetNumBits( DWORD v )
@@ -187,7 +189,7 @@ inline int GetNumBits( BYTE v )
 inline int GetNumBits( char v ) { return GetNumBits( BYTE(v) ); }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
-// обнуление памяти по типу переменной
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 // ************************************************************************************************************************ //
 template <class TYPE>
 inline void Zero( TYPE &val )
@@ -196,7 +198,7 @@ inline void Zero( TYPE &val )
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
-// побитовое приведение одного типа к другому
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 // ************************************************************************************************************************ //
 template <class TYPE_OUT, class TYPE_IN>
 inline TYPE_OUT bit_cast( const TYPE_IN &val )
@@ -222,7 +224,7 @@ inline TYPE triple( const TYPE x )
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
-// работа со знаком числа
+// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 // ************************************************************************************************************************ //
 // signum function
 template <class TYPE>
@@ -240,6 +242,7 @@ inline TYPE Sign( const TYPE x )
 template <>
 inline int Sign<int>( const int nVal )
 {
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	int nRes;
 	_asm
 	{
@@ -252,10 +255,14 @@ inline int Sign<int>( const int nVal )
 		mov nRes, eax
 	}
 	return nRes;
+#else
+	return ( nVal > 0 ) - ( nVal < 0 );
+#endif
 }
 template <>
 inline short int Sign<short int>( const short int nVal )
 {
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	short int nRes;
 	_asm
 	{
@@ -268,6 +275,9 @@ inline short int Sign<short int>( const short int nVal )
 		mov nRes, ax
 	}
 	return nRes;
+#else
+	return static_cast<short int>( ( nVal > 0 ) - ( nVal < 0 ) );
+#endif
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
@@ -305,10 +315,11 @@ inline float SignumNormalizeAngleInRadian( const float angle )
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
-// обнуление участка памяти, состоящего из DWORD'ов
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ DWORD'пїЅпїЅ
 // ************************************************************************************************************************ //
 inline void MemSetDWord( DWORD* lpData, const DWORD value, const int nCount )
 {
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		mov ecx, nCount
@@ -316,10 +327,15 @@ inline void MemSetDWord( DWORD* lpData, const DWORD value, const int nCount )
 		mov eax, value
 		rep stosd
 	}
+#else
+	for ( int i = 0; i < nCount; ++i )
+		lpData[i] = value;
+#endif
 }
 
 inline void MemSetInt( int* lpData, const int value, const int nCount )
 {
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		mov ecx, nCount
@@ -327,32 +343,43 @@ inline void MemSetInt( int* lpData, const int value, const int nCount )
 		mov eax, value
 		rep stosd
 	}
+#else
+	for ( int i = 0; i < nCount; ++i )
+		lpData[i] = value;
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
-// ** float-to-int преобразование с текущим состоянием процессора
+// ** float-to-int пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 // ************************************************************************************************************************ //
 // very fast float-to-int conversion. uses current FPU rounding state
 int __forceinline Float2Int( const float fpVar )
 {
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	int nRet;
-	__asm 
+	__asm
 	{
 		fld dword ptr fpVar
 		fistp nRet
 	}
 	return nRet;
+#else
+	// 'fistp' rounds according to the current FPU rounding mode rather than
+	// truncating; 'lrintf' is the portable operation with that same property.
+	return static_cast<int>( lrintf( fpVar ) );
+#endif
 }
 inline int MINT( const float f ) { return Float2Int(f); }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
-// ** всевозможные бастрые функции типа 'x' @ 'y' ? 'val1' : 'val2'
+// ** пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ 'x' @ 'y' ? 'val1' : 'val2'
 // ************************************************************************************************************************ //
 // very fast comparison: 'x' < 'y' ? val1 : val2
 inline float select_lt( const float x, const float y, const float val1, const float val2 )
 {
 	float z;
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		// loading 'x' and compare with 'y'
@@ -377,6 +404,9 @@ inline float select_lt( const float x, const float y, const float val1, const fl
 
 		mov					[z], ebx
 	}
+#else
+	z = ( x < y ) ? val1 : val2;
+#endif
 	return z;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -384,6 +414,7 @@ inline float select_lt( const float x, const float y, const float val1, const fl
 inline float select_gt( const float x, const float y, const float val1, const float val2 )
 {
 	float z;
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		// loading 'x' and compare with 'y'
@@ -409,6 +440,9 @@ inline float select_gt( const float x, const float y, const float val1, const fl
 
 		mov					[z], ebx
 	}
+#else
+	z = ( x > y ) ? val1 : val2;
+#endif
 	return z;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -416,6 +450,7 @@ inline float select_gt( const float x, const float y, const float val1, const fl
 inline float select_le( const float x, const float y, const float val1, const float val2 )
 {
 	float z;
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		// loading 'x' and compare with 'y'
@@ -441,6 +476,9 @@ inline float select_le( const float x, const float y, const float val1, const fl
 
 		mov					[z], ebx
 	}
+#else
+	z = ( x <= y ) ? val1 : val2;
+#endif
 	return z;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -448,6 +486,7 @@ inline float select_le( const float x, const float y, const float val1, const fl
 inline float select_ge( const float x, const float y, const float val1, const float val2 )
 {
 	float z;
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		// loading 'x' and compare with 'y'
@@ -473,6 +512,9 @@ inline float select_ge( const float x, const float y, const float val1, const fl
 
 		mov					[z], ebx
 	}
+#else
+	z = ( x >= y ) ? val1 : val2;
+#endif
 	return z;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -480,6 +522,7 @@ inline float select_ge( const float x, const float y, const float val1, const fl
 inline float select_eq( const float x, const float y, const float val1, const float val2 )
 {
 	float z;
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		// loading 'x' and compare with 'y'
@@ -502,6 +545,15 @@ inline float select_eq( const float x, const float y, const float val1, const fl
 
 		mov					[z], ebx
 	}
+#else
+	{
+		// the original compares the raw bit patterns rather than the float values
+		unsigned int nX, nY;
+		memcpy( &nX, &x, sizeof(nX) );
+		memcpy( &nY, &y, sizeof(nY) );
+		z = ( nX == nY ) ? val1 : val2;
+	}
+#endif
 	return z;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -509,6 +561,7 @@ inline float select_eq( const float x, const float y, const float val1, const fl
 inline float select_ne( const float x, const float y, const float val1, const float val2 )
 {
 	float z;
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		// loading 'x' and compare with 'y'
@@ -531,6 +584,15 @@ inline float select_ne( const float x, const float y, const float val1, const fl
 
 		mov					[z], ebx
 	}
+#else
+	{
+		// the original compares the raw bit patterns rather than the float values
+		unsigned int nX, nY;
+		memcpy( &nX, &x, sizeof(nX) );
+		memcpy( &nY, &y, sizeof(nY) );
+		z = ( nX != nY ) ? val1 : val2;
+	}
+#endif
 	return z;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -549,6 +611,7 @@ inline const BYTE CheckForViewingFrustum( float xp, float yp, const float zp, co
 	xp += wp;
 	yp += wp;
 
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
  		// xp <= 0, yp <= 0, zp <= 0
@@ -584,6 +647,21 @@ inline const BYTE CheckForViewingFrustum( float xp, float yp, const float zp, co
 		or 		eax, edx
 		mov [value], al
 	};
+#else
+	{
+		unsigned int nXP, nYP, nZP;
+		memcpy( &nXP, &xp, sizeof(nXP) );
+		memcpy( &nYP, &yp, sizeof(nYP) );
+		memcpy( &nZP, &zp, sizeof(nZP) );
+		value = static_cast<BYTE>(
+			( nXP >> 31 )                    |
+			( ( xp > wp2 ) ? 0x02u : 0u )    |
+			( ( nYP >> 31 ) << 2 )           |
+			( ( yp > wp2 ) ? 0x08u : 0u )    |
+			( ( nZP >> 31 ) << 4 )           |
+			( ( zp > wp ) ? 0x20u : 0u ) );
+	}
+#endif
 
 	return value;
 }
@@ -605,6 +683,7 @@ template<>
 inline const float Min<float>( const float a, const float b )
 {
 	float fpRet;
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		// comparing
@@ -621,6 +700,9 @@ inline const float Min<float>( const float a, const float b )
 		or			eax, ecx
 		mov			[fpRet], eax
 	}
+#else
+	fpRet = ( b < a ) ? b : a;
+#endif
 	return fpRet;
 }
 // returns minimum of two float values
@@ -628,6 +710,7 @@ template<>
 inline const float Max<float>( const float a, const float b )
 {
 	float fpRet;
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		// comparing
@@ -644,6 +727,9 @@ inline const float Max<float>( const float a, const float b )
 		or			eax, ecx
 		mov			[fpRet], eax
 	}
+#else
+	fpRet = ( a < b ) ? b : a;
+#endif
 	return fpRet;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -654,7 +740,7 @@ const TYPE Clamp( const TYPE &tVal, const TYPE &tMin, const TYPE &tMax )
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
-// получение модуля от разных величин
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 // ************************************************************************************************************************ //
 inline float fabs2( const float x, const float y, const float z, const float w )
 {
@@ -684,10 +770,14 @@ inline float fabs2( const float x )
 {
 	return x*x;
 }
+#if defined( _MSC_VER )
+// C++11 <cmath> declares this float overload itself, so it is only needed for
+// the MSVC 6-era headers the game was written against.
 inline float fabs( float x )
 {
 	return fabsf( x );
 }
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <class TYPE> 
 inline bool Normalize( TYPE &x, TYPE &y )
@@ -752,11 +842,16 @@ inline void GetLineEq( const float x1, const float y1, const float x2, const flo
 	*pC = tc * rcsq;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if defined( _MSC_VER )
+// As with 'fabs' above: C++11 <cmath> supplies these float overloads, and
+// redeclaring them collides with its using-declarations.
 inline float cos( float fVal ) { return static_cast<float>( cos( double(fVal) ) ); }
 inline float sin( float fVal ) { return static_cast<float>( sin( double(fVal) ) ); }
 inline float acos( float fVal ) { return static_cast<float>( acos( double(fVal) ) ); }
 inline float asin( float fVal ) { return static_cast<float>( asin( double(fVal) ) ); }
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 #define MINIMIZE_INT( nToMin, nHow )  \
 	_asm mov ecx, nToMin                \
 	_asm cmp ecx, nHow                  \
@@ -768,7 +863,11 @@ inline float asin( float fVal ) { return static_cast<float>( asin( double(fVal) 
 	_asm and eax, nHow                  \
 	_asm or ecx, eax                    \
 	_asm mov nToMin, ecx
+#else
+#define MINIMIZE_INT( nToMin, nHow )  do { if ( !((nToMin) < (nHow)) ) (nToMin) = (nHow); } while ( 0 );
+#endif
 
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 #define MINIMIZE_UINT( nToMin, nHow ) \
 	_asm mov ecx, nToMin                \
 	_asm cmp ecx, nHow                  \
@@ -780,9 +879,13 @@ inline float asin( float fVal ) { return static_cast<float>( asin( double(fVal) 
 	_asm and eax, nHow                  \
 	_asm or ecx, eax                    \
 	_asm mov nToMin, ecx
+#else
+#define MINIMIZE_UINT( nToMin, nHow ) do { if ( !((nToMin) < (nHow)) ) (nToMin) = (nHow); } while ( 0 );
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 inline void Copy8Bytes( void* fpDst, const void* fpSrc )
 {
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		mov ecx, [ fpSrc ]
@@ -790,10 +893,14 @@ inline void Copy8Bytes( void* fpDst, const void* fpSrc )
 		fild qword ptr [ ECX ]
 		fistp qword ptr [ EDX ]
 	}
+#else
+	memcpy( fpDst, fpSrc, 8 );
+#endif
 }
 
 inline void Copy16Bytes( void* fpDst, const void* fpSrc )
 {
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		mov ecx, [ fpSrc ]
@@ -803,10 +910,14 @@ inline void Copy16Bytes( void* fpDst, const void* fpSrc )
 		fild qword ptr [ ECX + 8 ]
 		fistp qword ptr [ EDX + 8 ]
 	}
+#else
+	memcpy( fpDst, fpSrc, 16 );
+#endif
 }
 
 inline void Copy32Bytes( void* fpDst, const void* fpSrc )
 {
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		mov ecx, [ fpSrc ]
@@ -820,6 +931,9 @@ inline void Copy32Bytes( void* fpDst, const void* fpSrc )
 		fild qword ptr [ ECX + 24 ]
 		fistp qword ptr [ EDX + 24 ]
 	}
+#else
+	memcpy( fpDst, fpSrc, 32 );
+#endif
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const DWORD CPUID_MMX_FEATURE_PRESENT = 0x00800000;
@@ -828,6 +942,7 @@ const DWORD CPUID_SSE_FEATURE_PRESENT = 0x02000000;
 inline DWORD GetCPUID()
 {
 	DWORD dwRes;
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 	_asm
 	{
 		pusha                               // keep compiler happy
@@ -848,6 +963,9 @@ inline DWORD GetCPUID()
 	q:
 		popa
 	}
+#else
+	dwRes = 0;   // no MMX/SSE outside x86
+#endif
 	return dwRes;
 }
 #undef GET_CPUID

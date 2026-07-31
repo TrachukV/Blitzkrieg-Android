@@ -222,7 +222,7 @@ private:
 		{
 			std::list<std::string> toRemove;
 			// find all vars to remove
-			for ( CVarsMap::const_iterator it = vars.begin(); it != vars.end(); ++it )
+			for ( typename CVarsMap::const_iterator it = vars.begin(); it != vars.end(); ++it )
 			{
 				if ( check(it->first) )
 					toRemove.push_back( it->first );
@@ -236,7 +236,7 @@ private:
 protected:
 	const TVar* GetVar( const std::string &szVarName ) const
 	{
-		CVarsMap::const_iterator pos = variables.find( szVarName );
+		typename CVarsMap::const_iterator pos = variables.find( szVarName );
 		if ( pos == variables.end() ) 
 			return 0;
 		return &( pos->second );
@@ -253,7 +253,7 @@ public:
 	// get/set variable by name
 	virtual bool STDCALL Get( const std::string &szVarName, variant_t *pVar ) const
 	{
-		CVarsMap::const_iterator pos = variables.find( szVarName );
+		typename CVarsMap::const_iterator pos = variables.find( szVarName );
 		if ( pos == variables.end() ) 
 			return false;
 		*pVar = pos->second.Get();
@@ -261,7 +261,7 @@ public:
 	}
 	virtual bool STDCALL Set( const std::string &szVarName, const variant_t &var )
 	{
-		CVarsMap::iterator pos = variables.find( szVarName );
+		typename CVarsMap::iterator pos = variables.find( szVarName );
 		if ( pos == variables.end() )
 		{
 			variables[szVarName].Set( var );
@@ -277,7 +277,7 @@ public:
 	// remove variable by name or by match
 	virtual bool STDCALL Remove( const std::string &szVarName )
 	{
-		CVarsMap::iterator pos = variables.find( szVarName );
+		typename CVarsMap::iterator pos = variables.find( szVarName );
 		if ( pos == variables.end() ) 
 			return false;
 		variables.erase( pos );
@@ -310,7 +310,7 @@ public:
 			// remove all 'include' and 'non-exclude' variables from vars map
 			RemoveVars( variables, CMatchInListFunctional(serialIncludes, serialExcludes) );
 			// add new vars
-			for ( CVarsMap::const_iterator it = newvars.begin(); it != newvars.end(); ++it )
+			for ( typename CVarsMap::const_iterator it = newvars.begin(); it != newvars.end(); ++it )
 				variables[it->first] = it->second;
 			bVarsChanged = false;
 		}
@@ -334,7 +334,7 @@ public:
 			// remove all 'include' and 'non-exclude' variables from vars map
 			RemoveVars( variables, CMatchInListFunctional(serialIncludes, serialExcludes) );
 			// add new vars
-			for ( std::list<SSerialVar>::const_iterator it = vars.begin(); it != vars.end(); ++it )
+			for ( typename std::list<SSerialVar>::const_iterator it = vars.begin(); it != vars.end(); ++it )
 				variables[it->szKeyName] = it->Get();
 			bVarsChanged = false;
 		}
@@ -346,7 +346,7 @@ public:
 			//
 			std::vector<SSerialVar> vars;
 			vars.reserve( temp.size() );
-			for ( CVarsMap::const_iterator it = temp.begin(); it != temp.end(); ++it )
+			for ( typename CVarsMap::const_iterator it = temp.begin(); it != temp.end(); ++it )
 			{
 				SSerialVar var;
 				var.Set( it->second );

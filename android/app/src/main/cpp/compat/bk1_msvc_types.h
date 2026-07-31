@@ -5,6 +5,11 @@
 // itself, so nothing is redefined here.
 #include <cstdint>
 #include <cstddef>
+#include <typeinfo>
 #include "bk1_win32_types.h"
+
+// MSVC 6's <typeinfo> left 'type_info' in the global namespace, and the
+// engine's object factory names it unqualified.
+using std::type_info;
 
 #define STDMETHODCALLTYPE

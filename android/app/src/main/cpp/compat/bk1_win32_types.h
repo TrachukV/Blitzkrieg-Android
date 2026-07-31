@@ -79,6 +79,16 @@ typedef long                HRESULT;
 #define FAR
 #define NEAR
 
+// The import decorations the SDK headers put on their declarations. The engine
+// repeats a few of them when it declares an entry point itself rather than
+// including the header for it -- IsDebuggerPresent is declared that way in
+// Input/InputAPI.cpp. Nothing here is imported from a DLL, so they expand to
+// nothing.
+#define WINBASEAPI
+#define WINUSERAPI
+#define WINGDIAPI
+#define WINADVAPI
+
 #define MAKEWORD(a, b) \
     ((WORD)(((BYTE)(a)) | ((WORD)((BYTE)(b))) << 8))
 #define MAKELONG(a, b) \

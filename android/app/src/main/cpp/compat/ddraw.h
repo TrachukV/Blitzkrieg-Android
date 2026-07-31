@@ -170,9 +170,35 @@ struct IDirectDraw : public IUnknown
                                                 DWORD *pdwFree ) = 0;
 };
 
+// The later interface versions. VideoCheck climbs them to work out which
+// DirectX is installed: it asks each one whether it exists and lets it go
+// again, concluding DX2 from IDirectDraw2, DX5 from IDirectDrawSurface3, DX6
+// from IDirectDrawSurface4, DX7 from IDirectDraw7. Nothing is drawn through
+// any of them, so they add methods only where something is actually called --
+// which is GetAvailableVidMem on the seventh, and nothing anywhere else.
+//
+// They chain by inheritance so that one implementation serves every version
+// and the addresses stay identical, which is what lets QueryInterface hand
+// back the same object.
+struct IDirectDraw2 : public IDirectDraw
+{
+};
+
+struct IDirectDraw7 : public IDirectDraw2
+{
+};
+
 struct IDirectDrawSurface : public IUnknown
 {
     virtual HRESULT STDCALL GetSurfaceDesc( DDSURFACEDESC *pDesc ) = 0;
+};
+
+struct IDirectDrawSurface3 : public IDirectDrawSurface
+{
+};
+
+struct IDirectDrawSurface4 : public IDirectDrawSurface3
+{
 };
 
 // The surface interface versions the probe asks a surface to become. Their
@@ -183,9 +209,19 @@ static const IID IID_IDirectDrawSurface4 =
     { 0x0b2b8630, 0xad35, 0x11d0, { 0x8e, 0xa6, 0x00, 0x60, 0x97, 0x97, 0xea, 0x5b } };
 static const IID IID_IDirectDrawSurface7 =
     { 0x06675a80, 0x3b9b, 0x11d2, { 0xb9, 0x2f, 0x00, 0x60, 0x97, 0x97, 0xea, 0x5b } };
+static const IID IID_IDirectDraw2 =
+    { 0xb3a6f3e0, 0x2b43, 0x11cf, { 0xa2, 0xde, 0x00, 0xaa, 0x00, 0xb9, 0x33, 0x56 } };
+static const IID IID_IDirectDraw4 =
+    { 0x9c59509a, 0x39bd, 0x11d1, { 0x8c, 0x4a, 0x00, 0xc0, 0x4f, 0xd9, 0x30, 0xc5 } };
+static const IID IID_IDirectDraw7 =
+    { 0x15e65ec0, 0x3b9c, 0x11d2, { 0xb9, 0x2f, 0x00, 0x60, 0x97, 0x97, 0xea, 0x5b } };
 
 typedef struct IDirectDraw *LPDIRECTDRAW;
+typedef struct IDirectDraw2 *LPDIRECTDRAW2;
+typedef struct IDirectDraw7 *LPDIRECTDRAW7;
 typedef struct IDirectDrawSurface *LPDIRECTDRAWSURFACE;
+typedef struct IDirectDrawSurface3 *LPDIRECTDRAWSURFACE3;
+typedef struct IDirectDrawSurface4 *LPDIRECTDRAWSURFACE4;
 
 #ifdef __cplusplus
 extern "C" {

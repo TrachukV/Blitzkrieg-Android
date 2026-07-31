@@ -223,6 +223,23 @@ typedef struct _DIMOUSESTATE2 {
 
 #define DI8DEVTYPE_MOUSE       0x12
 #define DI8DEVTYPE_KEYBOARD    0x13
+// The rest of the device types the engine switches on while enumerating. It
+// only ever compares them, to decide what to call a controller it found; a
+// touch screen is none of these, so on Android the enumeration finds nothing
+// and the switch is never reached.
+#define DI8DEVTYPE_JOYSTICK    0x14
+#define DI8DEVTYPE_GAMEPAD     0x15
+#define DI8DEVTYPE_DRIVING     0x16
+#define DI8DEVTYPE_FLIGHT      0x17
+#define DI8DEVTYPE_1STPERSON   0x18
+#define DI8DEVTYPE_DEVICECTRL  0x19
+#define DI8DEVTYPE_SCREENPOINTER 0x1A
+#define DI8DEVTYPE_REMOTE      0x1B
+#define DI8DEVTYPE_SUPPLEMENTAL 0x1C
+
+// The type is the low byte of dwDevType; the byte above it is the subtype.
+#define GET_DIDEVICE_TYPE( dwDevType )     ( LOBYTE( dwDevType ) )
+#define GET_DIDEVICE_SUBTYPE( dwDevType )  ( HIBYTE( dwDevType ) )
 
 #define DIDEVTYPE_MOUSE        2
 #define DIDEVTYPE_KEYBOARD     3
@@ -336,6 +353,20 @@ typedef struct _DIDEVICEOBJECTINSTANCEA {
     char  tszName[260];
 } DIDEVICEOBJECTINSTANCEA, DIDEVICEOBJECTINSTANCE;
 
+// Enumeration callbacks receive these by const pointer.
+typedef const DIDEVICEINSTANCE       *LPCDIDEVICEINSTANCE;
+typedef const DIDEVICEINSTANCEA      *LPCDIDEVICEINSTANCEA;
+typedef const DIDEVICEOBJECTINSTANCE *LPCDIDEVICEOBJECTINSTANCE;
+typedef const DIDEVICEOBJECTINSTANCEA *LPCDIDEVICEOBJECTINSTANCEA;
+
+// DIDEVCAPS::dwFlags. The engine tests these two to decide whether a device
+// has to be polled before its state can be read. Nothing here does -- touch
+// arrives as events and is buffered as it comes -- so neither is ever set.
+#define DIDC_ATTACHED           0x00000001
+#define DIDC_POLLEDDEVICE       0x00000002
+#define DIDC_EMULATED           0x00000004
+#define DIDC_POLLEDDATAFORMAT   0x00000008
+
 typedef struct _DIDEVCAPS {
     DWORD dwSize;
     DWORD dwFlags;
@@ -353,6 +384,11 @@ extern const GUID GUID_YAxis;
 extern const GUID GUID_ZAxis;
 extern const GUID GUID_Button;
 extern const GUID GUID_Key;
+extern const GUID GUID_RxAxis;
+extern const GUID GUID_RyAxis;
+extern const GUID GUID_RzAxis;
+extern const GUID GUID_Slider;
+extern const GUID GUID_POV;
 
 // The prepared data formats, as DirectInput publishes them.
 extern DIDATAFORMAT c_dfDIMouse;
@@ -361,6 +397,12 @@ extern DIDATAFORMAT c_dfDIKeyboard;
 
 struct IDirectInput8;
 struct IDirectInputDevice8;
+
+// The engine passes this to DirectInput8Create to say which interface version
+// it wants back. There is only one here, so the value is never compared -- but
+// it has to be a distinct, stable constant like the others in this layer.
+static const IID IID_IDirectInput8 =
+    { 0xbf798030, 0x483a, 0x4da2, { 0xaa, 0x99, 0x5d, 0x64, 0xed, 0x36, 0x97, 0x00 } };
 
 typedef IDirectInput8       *LPDIRECTINPUT8;
 // the version-7 spellings, which the machine probe names

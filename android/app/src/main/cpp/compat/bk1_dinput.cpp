@@ -407,6 +407,16 @@ const GUID GUID_YAxis       = MakeGuid( 4 );
 const GUID GUID_ZAxis       = MakeGuid( 5 );
 const GUID GUID_Button      = MakeGuid( 6 );
 const GUID GUID_Key         = MakeGuid( 7 );
+// The remaining object types the engine compares against while classifying the
+// axes of a controller it enumerated. Their values only have to differ from
+// one another: they are never matched against anything outside this port, and
+// on Android the enumeration finds no such device, so the comparisons that
+// read them are never reached.
+const GUID GUID_RxAxis      = MakeGuid( 8 );
+const GUID GUID_RyAxis      = MakeGuid( 9 );
+const GUID GUID_RzAxis      = MakeGuid( 10 );
+const GUID GUID_Slider      = MakeGuid( 11 );
+const GUID GUID_POV         = MakeGuid( 12 );
 
 DIDATAFORMAT c_dfDIMouse = {
     sizeof( DIDATAFORMAT ), sizeof( DIOBJECTDATAFORMAT ), DIDF_RELAXIS,

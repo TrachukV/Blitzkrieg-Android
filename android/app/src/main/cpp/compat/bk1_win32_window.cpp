@@ -10,6 +10,9 @@ namespace {
 // exists sees a sane viewport rather than a zero-sized one.
 int g_nClientWidth = 1024;
 int g_nClientHeight = 768;
+// Until the Android side reports the real one, the density that means "one
+// pixel is one density-independent pixel".
+int g_nDisplayDpi = 160;
 
 // Where the engine believes the mouse is. Starts centred, which is where a
 // freshly created window would leave it.
@@ -204,5 +207,80 @@ BOOL IsWindow( HWND hWnd ) { return ( hWnd != 0 ) ? TRUE : FALSE; }
 // The application is never minimised in the sense the engine tests for; it is
 // either running or stopped by the activity lifecycle.
 BOOL IsIconic( HWND ) { return FALSE; }
+
+// ---------------------------------------------------------------------------
+// System metrics
+// ---------------------------------------------------------------------------
+void Bk1SetDisplayDensity( int nDpi )
+{
+    if ( nDpi > 0 )
+        g_nDisplayDpi = nDpi;
+}
+
+int GetSystemMetrics( int nIndex )
+{
+    switch ( nIndex )
+    {
+    case SM_CXSCREEN:
+    case SM_CXFULLSCREEN:
+        return g_nClientWidth;
+    case SM_CYSCREEN:
+    case SM_CYFULLSCREEN:
+        return g_nClientHeight;
+
+    // How far apart two taps may land and still be one double-click. Windows
+    // answers with a few pixels, which is right for a mouse and wrong for a
+    // finger: a finger lands within its own contact patch, not on a point.
+    // Android's own figure for this is 100 density-independent pixels, so that
+    // is what is converted here -- otherwise the slop would mean one thing on
+    // a phone and another on a tablet.
+    case SM_CXDOUBLECLK:
+    case SM_CYDOUBLECLK:
+        return ( 100 * g_nDisplayDpi ) / 160;
+
+    case SM_CXCURSOR:
+    case SM_CYCURSOR:
+        return 32;
+
+    default:
+        return 0;
+    }
+}
+
+UINT GetDoubleClickTime( void )
+{
+    // Android's own double-tap timeout. Taking Windows' 500 ms here would make
+    // the engine wait longer than every other application on the device before
+    // deciding a second tap was separate.
+    return 300;
+}
+
+BOOL SystemParametersInfoA( UINT uAction, UINT uParam, void *pvParam, UINT )
+{
+    switch ( uAction )
+    {
+    // The repeat settings the engine reads to drive its text fields. These are
+    // the indices Windows uses, converted from Android's own repeat timings:
+    // 400 ms before the first repeat, then about 20 a second.
+    case SPI_GETKEYBOARDDELAY:
+        if ( pvParam != 0 )
+            *(int *)pvParam = 1;        // index 1 is 500 ms; the nearest step
+        return TRUE;
+    case SPI_GETKEYBOARDSPEED:
+        if ( pvParam != 0 )
+            *(int *)pvParam = 31;       // the fastest step, ~30 a second
+        return TRUE;
+
+    // Nothing on Android is settable from here, and the engine does not check
+    // whether the change took.
+    case SPI_SETKEYBOARDDELAY:
+    case SPI_SETKEYBOARDSPEED:
+        (void)uParam;
+        return TRUE;
+
+    default:
+        return FALSE;
+    }
+}
 
 }   // extern "C"

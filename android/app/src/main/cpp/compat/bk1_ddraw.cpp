@@ -13,19 +13,77 @@
 
 namespace {
 
-struct SDirectDraw : public IDirectDraw
+// The surface the probe creates so that it has something to ask for the later
+// interface versions. It is never drawn to -- the rendering is Direct3D's --
+// so it carries a description and nothing else.
+struct SDirectDrawSurface : public IDirectDrawSurface4
+{
+    LONG          nRefCount;
+    DDSURFACEDESC desc;
+
+    SDirectDrawSurface() : nRefCount( 1 ) { memset( &desc, 0, sizeof( desc ) ); }
+
+    HRESULT STDCALL QueryInterface( REFIID riid, void **ppvObject ) override
+    {
+        if ( ppvObject == 0 )
+            return E_INVALIDARG;
+        // Every version this thing was ever asked to become is a version whose
+        // capabilities are present here, so each one is granted -- which is
+        // what tells the probe it is looking at DirectX 6 or better.
+        if ( memcmp( &riid, &IID_IUnknown, sizeof( IID ) ) == 0 ||
+             memcmp( &riid, &IID_IDirectDrawSurface3, sizeof( IID ) ) == 0 ||
+             memcmp( &riid, &IID_IDirectDrawSurface4, sizeof( IID ) ) == 0 ||
+             memcmp( &riid, &IID_IDirectDrawSurface7, sizeof( IID ) ) == 0 )
+        {
+            *ppvObject = this;
+            ++nRefCount;
+            return S_OK;
+        }
+        *ppvObject = 0;
+        return E_NOINTERFACE;
+    }
+    ULONG STDCALL AddRef() override { return (ULONG)++nRefCount; }
+    ULONG STDCALL Release() override
+    {
+        const LONG n = --nRefCount;
+        if ( n <= 0 )
+            delete this;
+        return (ULONG)n;
+    }
+
+    HRESULT STDCALL GetSurfaceDesc( DDSURFACEDESC *pDesc ) override
+    {
+        if ( pDesc == 0 )
+            return E_INVALIDARG;
+        *pDesc = desc;
+        return S_OK;
+    }
+};
+
+struct SDirectDraw : public IDirectDraw7
 {
     LONG nRefCount;
 
     SDirectDraw() : nRefCount( 1 ) {}
 
-    HRESULT STDCALL QueryInterface( REFIID, void **ppvObject ) override
+    HRESULT STDCALL QueryInterface( REFIID riid, void **ppvObject ) override
     {
         if ( ppvObject == 0 )
             return E_INVALIDARG;
-        *ppvObject = this;
-        ++nRefCount;
-        return S_OK;
+        // As above: the probe reads a granted interface as a DirectX version,
+        // and there is no version of this API whose absence would mean
+        // anything here.
+        if ( memcmp( &riid, &IID_IUnknown, sizeof( IID ) ) == 0 ||
+             memcmp( &riid, &IID_IDirectDraw2, sizeof( IID ) ) == 0 ||
+             memcmp( &riid, &IID_IDirectDraw4, sizeof( IID ) ) == 0 ||
+             memcmp( &riid, &IID_IDirectDraw7, sizeof( IID ) ) == 0 )
+        {
+            *ppvObject = this;
+            ++nRefCount;
+            return S_OK;
+        }
+        *ppvObject = 0;
+        return E_NOINTERFACE;
     }
     ULONG STDCALL AddRef() override { return (ULONG)++nRefCount; }
     ULONG STDCALL Release() override
@@ -38,14 +96,20 @@ struct SDirectDraw : public IDirectDraw
 
     HRESULT STDCALL SetCooperativeLevel( HWND, DWORD ) override { return S_OK; }
 
-    // The engine only ever asks for a primary surface here and does not draw
-    // to it, so there is nothing to hand back.
-    HRESULT STDCALL CreateSurface( DDSURFACEDESC *, IDirectDrawSurface **ppSurface,
+    // The probe needs a surface in hand before it can ask for the later
+    // surface versions; refusing here would stop it early and have it report a
+    // DirectX older than anything this port provides.
+    HRESULT STDCALL CreateSurface( DDSURFACEDESC *pDesc,
+                                   IDirectDrawSurface **ppSurface,
                                    IUnknown * ) override
     {
-        if ( ppSurface != 0 )
-            *ppSurface = 0;
-        return E_FAIL;
+        if ( ppSurface == 0 )
+            return E_INVALIDARG;
+        SDirectDrawSurface *pNew = new SDirectDrawSurface();
+        if ( pDesc != 0 )
+            pNew->desc = *pDesc;
+        *ppSurface = pNew;
+        return S_OK;
     }
 
     HRESULT STDCALL GetAvailableVidMem( DDSCAPS2 *, DWORD *pdwTotal,

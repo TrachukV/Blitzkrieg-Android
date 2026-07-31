@@ -61,6 +61,40 @@ void Bk1GetClientSize( int *pnWidth, int *pnHeight );
 void Bk1SetCursorPos( int nX, int nY );
 // Which cursor the engine last asked for, so the renderer can draw it.
 HCURSOR Bk1GetCurrentCursor( void );
+// The display's density, in dots per inch, from the Android configuration. The
+// double-click distance below is derived from it, because a slop measured in
+// pixels means different things on a phone and a tablet.
+void Bk1SetDisplayDensity( int nDpi );
+
+// --- system metrics ---
+#define SM_CXSCREEN      0
+#define SM_CYSCREEN      1
+#define SM_CXDOUBLECLK   36
+#define SM_CYDOUBLECLK   37
+#define SM_CXCURSOR      13
+#define SM_CYCURSOR      14
+#define SM_CXFULLSCREEN  16
+#define SM_CYFULLSCREEN  17
+
+int GetSystemMetrics( int nIndex );
+
+// How long two taps may be apart and still count as one double-click. The
+// engine asks so that its own detection matches the system's; on Android the
+// answer comes from the platform's own figure rather than Windows'.
+UINT GetDoubleClickTime( void );
+
+// --- SystemParametersInfo ---
+// The engine reads the keyboard repeat settings through this to drive its
+// text fields.
+#define SPI_GETKEYBOARDDELAY  0x0016
+#define SPI_GETKEYBOARDSPEED  0x000A
+#define SPI_SETKEYBOARDDELAY  0x0017
+#define SPI_SETKEYBOARDSPEED  0x000B
+
+BOOL SystemParametersInfoA( UINT uAction, UINT uParam, void *pvParam, UINT fWinIni );
+#ifndef SystemParametersInfo
+#define SystemParametersInfo SystemParametersInfoA
+#endif
 
 // --- what the engine calls ---
 BOOL GetClientRect( HWND hWnd, RECT *pRect );

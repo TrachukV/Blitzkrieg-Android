@@ -118,6 +118,43 @@ void Bk1ClearKeyStates( void );
 SHORT GetAsyncKeyState( int nVirtualKey );
 SHORT GetKeyState( int nVirtualKey );
 
+// The whole key state at once, in the form Windows hands it over: the high bit
+// of each byte says the key is down, the low bit says a toggle key is lit.
+BOOL GetKeyboardState( BYTE *pKeyState );
+BOOL SetKeyboardState( BYTE *pKeyState );
+
+// The engine turns key presses into typed characters through these three, and
+// text entry -- player names, saved games, chat -- goes through that path.
+//
+// There is one layout on Android, so the handle is a token rather than a
+// selection; what matters is that the same one comes back every time, because
+// the engine holds on to it across calls.
+typedef void *HKL;
+
+HKL  GetKeyboardLayout( DWORD dwThreadId );
+
+// MapVirtualKey's translation directions. The engine asks for the second one.
+#define MAPVK_VK_TO_VSC     0
+#define MAPVK_VSC_TO_VK     1
+#define MAPVK_VK_TO_CHAR    2
+#define MAPVK_VSC_TO_VK_EX  3
+
+UINT MapVirtualKeyA( UINT uCode, UINT uMapType );
+UINT MapVirtualKeyExA( UINT uCode, UINT uMapType, HKL hkl );
+#ifndef MapVirtualKey
+#define MapVirtualKey   MapVirtualKeyA
+#endif
+#ifndef MapVirtualKeyEx
+#define MapVirtualKeyEx MapVirtualKeyExA
+#endif
+
+// Virtual key plus the shift state to the character it produces. Returns the
+// number of characters written, as Windows does.
+int ToAscii( UINT uVirtKey, UINT uScanCode, const BYTE *pKeyState,
+             WORD *pwChar, UINT uFlags );
+int ToAsciiEx( UINT uVirtKey, UINT uScanCode, const BYTE *pKeyState,
+               WORD *pwChar, UINT uFlags, HKL hkl );
+
 #ifdef __cplusplus
 }
 #endif

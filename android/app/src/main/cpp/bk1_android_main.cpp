@@ -149,6 +149,19 @@ bool CreateSurface( SAppState *pState )
     // answer, and it is what the pre-transformed vertex path maps against.
     Bk1SetClientSize( pState->nWidth, pState->nHeight );
 
+    // And how dense the display is, which is what turns the double-tap
+    // distance into pixels. Without it the slop would be a phone's on a
+    // tablet.
+    if ( pState->pApp->config != 0 )
+    {
+        const int32_t nDensity = AConfiguration_getDensity( pState->pApp->config );
+        if ( nDensity > 0 && nDensity != ACONFIGURATION_DENSITY_ANY &&
+             nDensity != ACONFIGURATION_DENSITY_NONE )
+        {
+            Bk1SetDisplayDensity( nDensity );
+        }
+    }
+
     // Present on the display's own rhythm. The game's frame pacing is its own,
     // and asking for one swap an interval is what keeps it at the refresh rate
     // rather than ahead of it.

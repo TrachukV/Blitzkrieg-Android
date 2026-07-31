@@ -39,7 +39,7 @@ bool CGSServersListDriver::Init( const APPLICATION_ID nApplicationID, int _nGame
 	
 	serverList = ServerListNew( 
 		GetGlobalVar("GameSpyGameName"), GetGlobalVar("GameSpyEngineName"),
-		szSecretKey.c_str(), 10, ListCallBack, GCALLBACK_FUNCTION, this
+		szSecretKey.c_str(), 10, reinterpret_cast<void*>( ListCallBack ), GCALLBACK_FUNCTION, this
 	);
 
 	endOfLastUpdate = 0;

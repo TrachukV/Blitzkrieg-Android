@@ -55,7 +55,7 @@ CLoginSupport::SAcceptedLogin& CLoginSupport::GetAcceptedLogin( const CNodeAddre
 			return *i;
 		}
 	}
-	SAcceptedLogin &a = *acceptedList.insert( acceptedList.end() );
+	SAcceptedLogin &a = *acceptedList.insert( acceptedList.end(), SAcceptedLogin() );
 	a.addr = addr;
 	a.fTimeLeft = F_KEEP_ACCEPTED_TIME;
 	a.nLoginAttempt = info.nLoginAttempt;

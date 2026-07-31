@@ -152,19 +152,19 @@ void CStreamTracker::Rollback( const std::vector<PACKET_ID> &pkts )
 	for ( int i = 0; i < pkts.size(); ++i )
 	{
 		PACKET_ID nPkt = pkts[i];
-		SChannelBlockList::iterator i;
-		for ( i = channelOutFlyList.begin(); i != channelOutFlyList.end(); )
+		SChannelBlockList::iterator itBlock;
+		for ( itBlock = channelOutFlyList.begin(); itBlock != channelOutFlyList.end(); )
 		{
-			if ( i->nPkt == nPkt )
+			if ( itBlock->nPkt == nPkt )
 			{
 #ifdef LOG
 				cout << "ROLLBACK pkt" << nPkt << endl;
 #endif
-				channelOutList.splice( channelOutList.end(), channelOutFlyList, i );
+				channelOutList.splice( channelOutList.end(), channelOutFlyList, itBlock );
 				break;
 			}
 			else
-				++i;
+				++itBlock;
 		}
 	}
 }

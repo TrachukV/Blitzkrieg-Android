@@ -200,7 +200,7 @@ void CP2PTracker::ReceiveBroadcast( SPeer *pWho, CMemoryStream &data, int nID )
 	cout << "RECV broadcast from " << pWho->addr.GetFastName() << " msg " << nID << endl;
 #endif
 	// add to pending list
-	pWho->Bk1PushBackDefault( messages );
+	Bk1PushBackDefault( pWho->messages );
 	SQMessage &b = pWho->messages.back();
 	b.msg = data;
 	b.nID = nID;
@@ -270,7 +270,7 @@ void CP2PTracker::ReceiveAck( SPeer *pFrom, int nID, PEER_ID id )
 			// if sender is inactive no messages from him will be received and ack is useless
 			if ( pSender->IsActive() ) 
 			{
-				pFrom->Bk1PushBackDefault( fastacks );
+				Bk1PushBackDefault( pFrom->fastacks );
 				SFastAck &b = pFrom->fastacks.back();
 				b.addr = addr;
 				b.nID = nID;

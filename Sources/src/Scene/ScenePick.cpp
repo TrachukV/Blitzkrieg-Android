@@ -40,7 +40,7 @@ template <class TAreaMap>
 void Pick( const CVec2 &pos2, int nCellX, int nCellY, const SHMatrix &matrix, 
 					 CPickedObjectsList *pPickedObjects, const TAreaMap &area )
 {
-	TAreaMap::CDataList &data = area[nCellY][nCellX];
+	typename TAreaMap::CDataList &data = area[nCellY][nCellX];
 	for ( typename TAreaMap::CDataList::iterator it = data.begin(); it != data.end(); ++it )
 	{
 		CVec2 shift;

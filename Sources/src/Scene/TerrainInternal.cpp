@@ -235,7 +235,7 @@ void CTerrain::SetAIMarker( SAIPassabilityInfo *infos, int nNumPoints )
 void CTerrain::SetWarFog( SAIVisInfo *vises, int nNumVises )
 {
 	visibilities.clear();
-	visibilities.resize( nNumVises );
+	visibilities.rehash( nNumVises );
 	//
 	for ( const SAIVisInfo *pVis = vises; pVis != vises + nNumVises; ++pVis )
 	{

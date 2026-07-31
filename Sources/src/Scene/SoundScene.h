@@ -559,14 +559,14 @@ private:
 	static NTimer::STime curTime;					// чтобы не передавать всюду
 
 	// helper functions
-	CSoundCell * GetSoundCell( const CSoundScene::SIntPair &vCell );
+	CSoundCell * GetSoundCell( const SIntPair &vCell );
 
 	void AddSound( const SIntPair &vCell, CSound *s );
 	void To2DSoundPos( const CVec3 &vPos, CVec3 *pv2DPos );
 	// ordinary update
 	void UpdatePHSMap( const SIntPair &vCell, const int nFormerRadius, const int nNewRadius );
 
-	void UpdateCombatMap( const CSoundScene::SIntPair &vCell, CSoundScene::CSound *pSound );
+	void UpdateCombatMap( const SIntPair &vCell, CSoundScene::CSound *pSound );
 	void CalcVolNPan( float *fVolume, float *fPan, const CVec3 &vSound, const float fMaxHear );
 	void MuteSounds( CSoundsList	* muteSounds );
 

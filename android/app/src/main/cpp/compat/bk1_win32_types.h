@@ -54,6 +54,13 @@ typedef long                HRESULT;
 #define FALSE 0
 #endif
 
+// The reasons DllMain is called with. The engine's modules were DLLs; here
+// they are linked in, and the entry point runs at load.
+#define DLL_PROCESS_DETACH 0
+#define DLL_PROCESS_ATTACH 1
+#define DLL_THREAD_ATTACH  2
+#define DLL_THREAD_DETACH  3
+
 #define WINAPI
 #define CALLBACK
 #define APIENTRY

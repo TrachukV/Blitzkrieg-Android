@@ -324,7 +324,7 @@ public:
 #define BEGIN_PROPERTIES_MAP( classname )	\
 	if ( DoWeNeedFillProps() )							\
 	{																				\
-		typedef SProperty<##classname##Manipulator> ##classname##Property;
+		typedef SProperty<classname##Manipulator> classname##Property;
 
 #define END_PROPERTIES_MAP }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

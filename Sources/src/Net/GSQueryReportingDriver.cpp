@@ -172,7 +172,7 @@ void CGSQueryReportingDriver::QRRulesCallBack( char *pszOutBuf, int nMaxLen )
 		const std::string szFormatString = 
 			NStr::Format( "\\flagscorelimit\\%d\\killscorelimit\\%d\\timelimit\\%d\\timetocapture\\%d\\gamespeed\\%s",
 										settings.nFlagScoreLimit, settings.nKillScoreLimit, settings.nTimeLimit, 
-										settings.nTimeToCapture, settings.szGameSpeed );
+										settings.nTimeToCapture, settings.szGameSpeed.c_str() );
 
 		strcpy( pszOutBuf, szFormatString.c_str() );
 	}

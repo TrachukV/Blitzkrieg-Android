@@ -345,7 +345,7 @@ char * goastrdup(const char *src);
 
 #ifndef _WIN32
 	typedef struct sockaddr SOCKADDR;
-	typedef struct SOCKADDR* PSOCKADDR;
+	typedef SOCKADDR* PSOCKADDR;
 	typedef struct sockaddr_in SOCKADDR_IN;
 	typedef struct in_addr IN_ADDR;
 	typedef struct hostent HOSTENT;

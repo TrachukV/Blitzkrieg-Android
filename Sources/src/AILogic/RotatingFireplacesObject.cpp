@@ -14,7 +14,7 @@ void CRotatingFireplacesObject::AddUnit( CSoldier *pSoldier, const int nFireplac
 
 	if ( iter == units.end() )
 	{
-		units.push_back();
+		Bk1PushBackDefault( units );
 		iter = units.end();
 		--iter;
 	}

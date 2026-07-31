@@ -33,7 +33,7 @@ IMultiplayerMessage* CServersList::GetMessage()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CServersList::AddServer( INetNodeAddress *pAddress, const float fPing, const INetDriver::SGameInfo &gameInfo, const bool bSameVersion )
 {
-	servers.push_back();
+	Bk1PushBackDefault( servers );
 	SServerInfo &info = servers.back();
 
 	info.bUpdated = true;

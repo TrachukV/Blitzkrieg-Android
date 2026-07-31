@@ -859,7 +859,7 @@ std::string CScenarioTracker2::GetBestPersonalName( const std::string &szRPGStat
 					std::list<SNameUsageStats> usages;
 					for ( std::vector<std::string>::const_iterator name = it->names.begin(); name != it->names.end(); ++name )
 					{
-						usages.push_back();
+						Bk1PushBackDefault( usages );
 						usages.back().szName = *name;
 						CNamesUsageMap::const_iterator posNameUsage = personalNamesUsage.find( *name );
 						if ( posNameUsage != personalNamesUsage.end() ) 

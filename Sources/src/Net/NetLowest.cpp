@@ -24,14 +24,14 @@ bool CNodeAddress::SetInetName( const char *pszHost, int nDefaultPort )
 		szAddr = string( szAddr, 0, nIdx );
 	}
 	// determine host
-	nameRemote.sin_addr.S_un.S_addr = inet_addr( szAddr.c_str() ); 
-	if( nameRemote.sin_addr.S_un.S_addr == INADDR_NONE )  // not resolved?
+	nameRemote.sin_addr.s_addr = inet_addr( szAddr.c_str() ); 
+	if( nameRemote.sin_addr.s_addr == INADDR_NONE )  // not resolved?
 	{
 		hostent *he;
 		he = gethostbyname( szAddr.c_str() ); // m.b. it is string comp.domain
 		if( he == NULL )
 			return false;
-		nameRemote.sin_addr.S_un.S_addr = *( unsigned long* )( he->h_addr_list[0] );
+		nameRemote.sin_addr.s_addr = *( unsigned long* )( he->h_addr_list[0] );
 	}
 	nameRemote.sin_port = htons( nPort );
 	return true;
@@ -49,10 +49,10 @@ string CNodeAddress::GetName( bool bResolve ) const
 	{
 		in_addr &ia = nameRemote.sin_addr;
 		sprintf( szBuf, "%i.%i.%i.%i:%i", 
-			(int) ia.S_un.S_un_b.s_b1,
-			(int) ia.S_un.S_un_b.s_b2,
-			(int) ia.S_un.S_un_b.s_b3,
-			(int) ia.S_un.S_un_b.s_b4,
+			(int) ( (unsigned char *)&ia.s_addr )[0],
+			(int) ( (unsigned char *)&ia.s_addr )[1],
+			(int) ( (unsigned char *)&ia.s_addr )[2],
+			(int) ( (unsigned char *)&ia.s_addr )[3],
 			(int) ntohs( nameRemote.sin_port ) );
 	}
 	else
@@ -72,7 +72,7 @@ bool CNodeAddressSet::GetAddress( int n, CNodeAddress *pRes ) const
 	sockaddr_in *p = (sockaddr_in*)pRes->GetSockAddr();
 	p->sin_family = AF_INET;
 	p->sin_port = nPort;
-	p->sin_addr.S_un.S_addr = ips[n];
+	p->sin_addr.s_addr = ips[n];
 	return true;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -109,21 +109,21 @@ CLinksManager::CLinksManager()
 	unsigned long *pAddr = (unsigned long*)( he->h_addr_list[0] );
 	//for ( ; *pAddr; pAddr++ )
 	{
-		name.sin_addr.S_un.S_addr = pAddr[0];
-		unsigned char bClass = name.sin_addr.S_un.S_un_b.s_b1;
+		name.sin_addr.s_addr = pAddr[0];
+		unsigned char bClass = ( (unsigned char *)&name.sin_addr.s_addr )[0];
 		if ( bClass >= 1 && bClass <= 126 )
 		{
-			name.sin_addr.S_un.S_un_b.s_b2 = 255;
-			name.sin_addr.S_un.S_un_b.s_b3 = 255;
-			name.sin_addr.S_un.S_un_b.s_b4 = 255;
+			( (unsigned char *)&name.sin_addr.s_addr )[1] = 255;
+			( (unsigned char *)&name.sin_addr.s_addr )[2] = 255;
+			( (unsigned char *)&name.sin_addr.s_addr )[3] = 255;
 		}
 		if ( bClass >= 128 && bClass <= 191 )
 		{
-			name.sin_addr.S_un.S_un_b.s_b3 = 255;
-			name.sin_addr.S_un.S_un_b.s_b4 = 255;
+			( (unsigned char *)&name.sin_addr.s_addr )[2] = 255;
+			( (unsigned char *)&name.sin_addr.s_addr )[3] = 255;
 		}
 		if ( bClass >= 192 && bClass <= 223 )
-			name.sin_addr.S_un.S_un_b.s_b4 = 255;
+			( (unsigned char *)&name.sin_addr.s_addr )[3] = 255;
 		broadcastAddr = addr;
 	}
 }
@@ -143,11 +143,11 @@ bool CLinksManager::Start( int nPort )
 	sockaddr_in name;
 	memset( &name, 0, sizeof(name) );
 	name.sin_family = AF_INET;
-	name.sin_addr.S_un.S_addr = INADDR_ANY;
+	name.sin_addr.s_addr = INADDR_ANY;
 	name.sin_port = htons( nPort );
 	if ( nPort > 0 )
 	{
-		if ( bind( s, (sockaddr*)&name, sizeof( name ) ) != 0 )
+		if ( ::bind( s, (sockaddr*)&name, sizeof( name ) ) != 0 )
 		{
 			closesocket( s );
 			s = INVALID_SOCKET;
@@ -178,14 +178,14 @@ bool CLinksManager::MakeBroadcastAddr( CNodeAddress *pRes, int nPort ) const
 bool CLinksManager::IsLocalAddr( const CNodeAddress &test ) const
 {
 	const sockaddr_in &nt = *(sockaddr_in*)&test.addr;
-	if ( nt.sin_addr.S_un.S_addr == 0x0100007f )
+	if ( nt.sin_addr.s_addr == 0x0100007f )
 		return true;
 	//for ( int i = 0; i < broadcastAddr.size(); ++i )
 	{
 		const CNodeAddress &broad = broadcastAddr;//[ i ];
 	  const sockaddr_in &nb = *(sockaddr_in*)&broad.addr;
-		DWORD dwB = nb.sin_addr.S_un.S_addr;
-		DWORD dwT = nt.sin_addr.S_un.S_addr;
+		DWORD dwB = nb.sin_addr.s_addr;
+		DWORD dwT = nt.sin_addr.s_addr;
 		DWORD dwMask = 0;
 		for ( int k = 3; k >= 0; k-- )
 		{
@@ -225,7 +225,7 @@ bool CLinksManager::Send( const CNodeAddress &dst, CMemoryStream &pkt ) const
 	{
 		if ( rand() <= RAND_MAX * fLostRate )
 			return true;
-		pktQueue.push_back();
+		Bk1PushBackDefault( pktQueue );
 		pktQueue.back().addr = dst;
 		pktQueue.back().pkt = pkt;
 		while ( pktQueue.size() > 3 )

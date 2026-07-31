@@ -316,7 +316,7 @@ PACKET_ID CAckTracker::WrtieAcks( CBitStream *pBits, int nPktSize )
 #ifdef LOG
 	cout << "SEND, pkts left=" << fWindow - nFlyPackets << endl;
 #endif
-	sentUpdates.push_back();
+	Bk1PushBackDefault( sentUpdates );
 	// current packet number
 	// const unsigned char *pStart = bits.GetCurrentPtr();
 	PACKET_ID nPktCurrent = nPktSent++;

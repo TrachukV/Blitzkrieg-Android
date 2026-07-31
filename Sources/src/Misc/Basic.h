@@ -557,6 +557,15 @@ public:
 	IRefCount* GetBarePtr() const { return CastToRefCount( pObj ); }
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// STLport's sequence containers had a push_back() taking nothing, which
+// appended a default-constructed element. The standard ones want the
+// element, and this names it so the call sites do not have to.
+template <class TContainer>
+	inline void Bk1PushBackDefault( TContainer &container )
+{
+	container.push_back( typename TContainer::value_type() );
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #define BASIC_PTR_DECLARE( TPtrName, TRefFunc )																				\
 template <class TUserObj>																															\
 class TPtrName: public CPtrBase<TUserObj, TRefFunc>																		\

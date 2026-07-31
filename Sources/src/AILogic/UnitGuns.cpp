@@ -97,7 +97,7 @@ bool CUnitGuns::FindTimeToGo( CAIUnit *pUnit, CAIUnit *pEnemy, std::list< CUnitG
 		return false;
 	else
 	{
-		pPathInfo->push_back();
+		Bk1PushBackDefault( *pPathInfo );
 		pPathInfo->back().fRadius = fFireRangeMax;
 		pPathInfo->back().time = pPath->GetLength() * SConsts::TILE_SIZE * pUnit->GetStats()->fSpeed;
 		pPathInfo->back().pStaticPath = pPath;
@@ -159,7 +159,7 @@ bool CUnitGuns::FindTimeToStatObjGo( CAIUnit *pUnit, CStaticObject *pObj, std::l
 		return false;
 	else
 	{
-		pPathInfo->push_back();
+		Bk1PushBackDefault( *pPathInfo );
 		pPathInfo->back().fRadius = fFireRangeMax;
 		pPathInfo->back().time = pPath->GetLength() * SConsts::TILE_SIZE * pUnit->GetStats()->fSpeed;
 		pPathInfo->back().pStaticPath = pPath;

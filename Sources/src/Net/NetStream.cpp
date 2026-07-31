@@ -47,7 +47,7 @@ void CStreamTracker::WriteMsg( PACKET_ID nPkt, CBitStream *pBits, int nSizeLimit
 		}
 		else
 		{
-			channelOutFlyList.push_back();
+			Bk1PushBackDefault( channelOutFlyList );
 			SChannelBlock *pMSVCSuck = 0;
 			int nMaxSize = nSizeLimit - pMSVCSuck->GetHeaderSize();
 			nMaxSize = Min( nMaxSize, 255 );

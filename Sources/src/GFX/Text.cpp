@@ -43,7 +43,8 @@ int CGFXText::GetWidth( int nNumCharacters ) const
 	if ( nStrLen == 0 ) 
 		return 1;
 	nNumCharacters = nNumCharacters < 0 ? nStrLen : Min( nNumCharacters, nStrLen );
-	return VisitText( pszStringBegin, pszStringBegin + nNumCharacters, 0, 0, CTextWidthVisitor() );
+	CTextWidthVisitor widthVisitor;
+	return VisitText( pszStringBegin, pszStringBegin + nNumCharacters, 0, 0, widthVisitor );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // text pre-formatting
@@ -543,7 +544,7 @@ bool CGFXText::FillGeometryDataLeft( const SPreFormattedText::SLine &line, float
     sx += GetRedLine();
   //
 	CTRect<float> rcClipRect = rect;
-  FillGeometryDataPtr pfnFillGeometryData = dwClipFlags == 0 ? FillGeometryDataNoClip : FillGeometryDataClip;
+  FillGeometryDataPtr pfnFillGeometryData = dwClipFlags == 0 ? &CGFXText::FillGeometryDataNoClip : &CGFXText::FillGeometryDataClip;
   //
   if ( line.nNumWords == 1 )						// do not need spacing
 	{
@@ -576,7 +577,7 @@ bool CGFXText::FillGeometryDataRight( const SPreFormattedText::SLine &line, floa
     sx += GetRedLine();
   //
 	CTRect<float> rcClipRect = rect;
-  FillGeometryDataPtr pfnFillGeometryData = dwClipFlags == 0 ? FillGeometryDataNoClip : FillGeometryDataClip;
+  FillGeometryDataPtr pfnFillGeometryData = dwClipFlags == 0 ? &CGFXText::FillGeometryDataNoClip : &CGFXText::FillGeometryDataClip;
   //
   if ( line.nNumWords == 1 )           // do not need spacing
   {
@@ -611,7 +612,7 @@ bool CGFXText::FillGeometryDataCenter( const SPreFormattedText::SLine &line, flo
     sx += GetRedLine();
   //
 	CTRect<float> rcClipRect = rect;
-  FillGeometryDataPtr pfnFillGeometryData = dwClipFlags == 0 ? FillGeometryDataNoClip : FillGeometryDataClip;
+  FillGeometryDataPtr pfnFillGeometryData = dwClipFlags == 0 ? &CGFXText::FillGeometryDataNoClip : &CGFXText::FillGeometryDataClip;
   //
   if ( line.nNumWords == 1 )						// do not need spacing
   {
@@ -646,7 +647,7 @@ bool CGFXText::FillGeometryDataJustify( const SPreFormattedText::SLine &line, fl
     sx += GetRedLine();
   //
 	CTRect<float> rcClipRect = rect;
-  FillGeometryDataPtr pfnFillGeometryData = dwClipFlags == 0 ? FillGeometryDataNoClip : FillGeometryDataClip;
+  FillGeometryDataPtr pfnFillGeometryData = dwClipFlags == 0 ? &CGFXText::FillGeometryDataNoClip : &CGFXText::FillGeometryDataClip;
   //
   if ( line.nNumWords == 1 )           // do not need spacing
 	{

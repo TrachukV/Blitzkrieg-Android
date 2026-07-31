@@ -182,15 +182,15 @@ public:
 	{
 		// form 'candidates-to-delete' list. use std::map to sort elements
 		std::multimap<int, TValue*> keys;
-		for ( CDataHash::const_iterator it = data.begin(); it != data.end(); ++it )
+		for ( typename CDataHash::const_iterator it = data.begin(); it != data.end(); ++it )
 		{
 			const int nLastUsage = it->second->GetSharedResourceLastUsage();
 			if ( (nLastUsage < nUsage) && (it->second->GetResourceConsumption() > 0) ) 
-				keys.insert( std::multimap<int, TValue*>::value_type(nLastUsage, it->second) );
+				keys.insert( typename std::multimap<int, TValue*>::value_type(nLastUsage, it->second) );
 		}
 		// clear selected elements containers
 		int nFreedResources = 0;
-		for ( std::multimap<int, TValue*>::const_iterator it = keys.begin(); it != keys.end() && nFreedResources < nAmount; ++it )
+		for ( typename std::multimap<int, TValue*>::const_iterator it = keys.begin(); it != keys.end() && nFreedResources < nAmount; ++it )
 		{
 			nFreedResources += it->second->GetResourceConsumption();
 			it->second->ClearInternalContainer();
@@ -200,7 +200,7 @@ public:
 	// 
 	void ClearContainers()
 	{
-		for ( CDataHash::const_iterator i = data.begin(); i != data.end(); ++i )
+		for ( typename CDataHash::const_iterator i = data.begin(); i != data.end(); ++i )
 		{
 			if ( i->second != 0 )
 				i->second->ClearInternalContainer();
@@ -209,7 +209,7 @@ public:
 	//
 	void ReloadAllData()
 	{
-		for ( CDataHash::const_iterator i = data.begin(); i != data.end(); ++i )
+		for ( typename CDataHash::const_iterator i = data.begin(); i != data.end(); ++i )
 		{
 			if ( i->second == 0 )
 				continue;

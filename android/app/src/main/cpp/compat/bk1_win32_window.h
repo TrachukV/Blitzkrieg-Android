@@ -29,9 +29,28 @@
 #define IDC_NO          ( (const char *)32648 )
 #define IDC_HAND        ( (const char *)32649 )
 
+// SetWindowPos' arguments. The surface is the whole screen and its stacking
+// is the activity's business, so the call is answered rather than acted on --
+// but the engine names these when it asks.
+#define HWND_TOP        ( (HWND)0 )
+#define HWND_BOTTOM     ( (HWND)1 )
+#define HWND_TOPMOST    ( (HWND)-1 )
+#define HWND_NOTOPMOST  ( (HWND)-2 )
+
+#define SWP_NOSIZE          0x0001
+#define SWP_NOMOVE          0x0002
+#define SWP_NOZORDER        0x0004
+#define SWP_NOACTIVATE      0x0010
+#define SWP_SHOWWINDOW      0x0040
+#define SWP_HIDEWINDOW      0x0080
+#define SWP_FRAMECHANGED    0x0020
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+BOOL SetWindowPos( HWND hWnd, HWND hWndInsertAfter, int nX, int nY,
+                   int nWidth, int nHeight, UINT uFlags );
 
 // --- driven by the Android side ---
 // The size of the rendering surface, which is the window's client area.

@@ -22,6 +22,7 @@ typedef const char*         LPCSTR;
 typedef char*               LPSTR;
 typedef const wchar_t*      LPCWSTR;
 typedef wchar_t*            LPWSTR;
+typedef void                VOID;
 typedef void*               LPVOID;
 typedef const void*         LPCVOID;
 typedef UINT*               LPUINT;
@@ -32,6 +33,8 @@ typedef char                TCHAR;
 
 // The message-parameter types. They are pointer-sized on Windows, and the
 // engine stores handles and pointers in them, so they are pointer-sized here.
+typedef uintptr_t           UINT_PTR;
+typedef intptr_t            INT_PTR;
 typedef intptr_t            LPARAM;
 typedef uintptr_t           WPARAM;
 typedef intptr_t            LRESULT;
@@ -46,6 +49,7 @@ typedef void*               HMODULE;
 typedef void*               HDC;
 typedef void*               HBITMAP;
 typedef void*               HCURSOR;
+typedef void*               HKL;
 typedef void*               HICON;
 typedef long                HRESULT;
 
@@ -62,6 +66,12 @@ typedef long                HRESULT;
 #define DLL_PROCESS_ATTACH 1
 #define DLL_THREAD_ATTACH  2
 #define DLL_THREAD_DETACH  3
+
+// The memory helpers the engine spells the Windows way.
+#define ZeroMemory( pDest, nLength )       __builtin_memset( ( pDest ), 0, ( nLength ) )
+#define CopyMemory( pDest, pSrc, nLength ) __builtin_memcpy( ( pDest ), ( pSrc ), ( nLength ) )
+#define MoveMemory( pDest, pSrc, nLength ) __builtin_memmove( ( pDest ), ( pSrc ), ( nLength ) )
+#define FillMemory( pDest, nLength, ch )   __builtin_memset( ( pDest ), ( ch ), ( nLength ) )
 
 #define WINAPI
 #define CALLBACK
@@ -89,6 +99,7 @@ typedef long                HRESULT;
 #define E_NOINTERFACE ((HRESULT)0x80004002L)
 #define E_INVALIDARG  ((HRESULT)0x80070057L)
 #define E_OUTOFMEMORY ((HRESULT)0x8007000EL)
+#define REGDB_E_CLASSNOTREG ((HRESULT)0x80040154L)
 
 // The structured-storage results StreamIO's stream implementations return.
 #define STG_E_INVALIDFUNCTION ((HRESULT)0x80030001L)

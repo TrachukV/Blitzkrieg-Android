@@ -42,7 +42,8 @@ class CFont : public IGFXFont
 	template <class TChar>
 		const float GetTextWidthLocal( const TChar *pszString, int nCounter ) const
 		{
-			return VisitText( pszString, pszString + nCounter, 0, 0, CTextWidthVisitor() );
+			CTextWidthVisitor widthVisitor;
+			return VisitText( pszString, pszString + nCounter, 0, 0, widthVisitor );
 		}
 public:
 	CFont() {  }

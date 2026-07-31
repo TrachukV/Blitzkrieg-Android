@@ -187,14 +187,19 @@ struct IDirect3D8 : public IUnknown
                                           IDirect3DDevice8 **ppReturnedDeviceInterface ) = 0;
 };
 
-// The resource type codes CheckDeviceFormat takes.
-#define D3DRTYPE_SURFACE       1
-#define D3DRTYPE_VOLUME        2
-#define D3DRTYPE_TEXTURE       3
-#define D3DRTYPE_VOLUMETEXTURE 4
-#define D3DRTYPE_CUBETEXTURE   5
-#define D3DRTYPE_VERTEXBUFFER  6
-#define D3DRTYPE_INDEXBUFFER   7
+// The resource kinds. CheckDeviceFormat takes one, and the engine's texture
+// classes declare GetType as returning this, so it is an enumeration rather
+// than a set of constants.
+typedef enum _D3DRESOURCETYPE {
+    D3DRTYPE_SURFACE       = 1,
+    D3DRTYPE_VOLUME        = 2,
+    D3DRTYPE_TEXTURE       = 3,
+    D3DRTYPE_VOLUMETEXTURE = 4,
+    D3DRTYPE_CUBETEXTURE   = 5,
+    D3DRTYPE_VERTEXBUFFER  = 6,
+    D3DRTYPE_INDEXBUFFER   = 7,
+    D3DRTYPE_FORCE_DWORD   = 0x7fffffff
+} D3DRESOURCETYPE;
 
 #ifdef __cplusplus
 extern "C" {

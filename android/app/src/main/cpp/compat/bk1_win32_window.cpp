@@ -189,6 +189,14 @@ HCURSOR LoadCursorA( HINSTANCE, const char *pszCursorName )
 // ---------------------------------------------------------------------------
 // Window state
 // ---------------------------------------------------------------------------
+// The surface fills the screen and the activity owns its stacking, so a move
+// or a resize request is accepted and has nothing to do. A size change that
+// matters arrives through Bk1SetClientSize instead.
+BOOL SetWindowPos( HWND, HWND, int, int, int, int, UINT )
+{
+    return TRUE;
+}
+
 HWND GetActiveWindow( void ) { return TheWindow(); }
 HWND GetForegroundWindow( void ) { return TheWindow(); }
 BOOL IsWindow( HWND hWnd ) { return ( hWnd != 0 ) ? TRUE : FALSE; }

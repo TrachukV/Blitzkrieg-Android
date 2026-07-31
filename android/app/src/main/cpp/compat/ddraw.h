@@ -145,3 +145,56 @@ typedef struct _DDSURFACEDESC2 {
     DDSCAPS2      ddsCaps;
     DWORD         dwTextureStage;
 } DDSURFACEDESC2, *LPDDSURFACEDESC2;
+
+// The interface VideoCheck asks the machine for while probing. It only checks
+// that creating one succeeds and then sets a cooperative level, so the shape
+// is all that is needed.
+#define DDSCL_NORMAL        0x00000008L
+#define DDSCL_FULLSCREEN    0x00000001L
+#define DDSCL_EXCLUSIVE     0x00000010L
+
+#include "bk1_com_stream.h"
+
+struct IDirectDrawSurface;
+
+// VideoCheck creates one of these while probing the machine, asks how much
+// video memory is free, and lets it go. Nothing is drawn through it -- the
+// rendering is Direct3D's -- so these are the five entry points it touches.
+struct IDirectDraw : public IUnknown
+{
+    virtual HRESULT STDCALL SetCooperativeLevel( HWND hWnd, DWORD dwFlags ) = 0;
+    virtual HRESULT STDCALL CreateSurface( DDSURFACEDESC *pDesc,
+                                           IDirectDrawSurface **ppSurface,
+                                           IUnknown *pUnkOuter ) = 0;
+    virtual HRESULT STDCALL GetAvailableVidMem( DDSCAPS2 *pCaps, DWORD *pdwTotal,
+                                                DWORD *pdwFree ) = 0;
+};
+
+struct IDirectDrawSurface : public IUnknown
+{
+    virtual HRESULT STDCALL GetSurfaceDesc( DDSURFACEDESC *pDesc ) = 0;
+};
+
+// The surface interface versions the probe asks a surface to become. Their
+// values are compared, never interpreted.
+static const IID IID_IDirectDrawSurface3 =
+    { 0xda044e00, 0x69b2, 0x11d0, { 0xa1, 0xd5, 0x00, 0xaa, 0x00, 0xb8, 0xdf, 0xbb } };
+static const IID IID_IDirectDrawSurface4 =
+    { 0x0b2b8630, 0xad35, 0x11d0, { 0x8e, 0xa6, 0x00, 0x60, 0x97, 0x97, 0xea, 0x5b } };
+static const IID IID_IDirectDrawSurface7 =
+    { 0x06675a80, 0x3b9b, 0x11d2, { 0xb9, 0x2f, 0x00, 0x60, 0x97, 0x97, 0xea, 0x5b } };
+
+typedef struct IDirectDraw *LPDIRECTDRAW;
+typedef struct IDirectDrawSurface *LPDIRECTDRAWSURFACE;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+HRESULT DirectDrawCreate( GUID *pGuid, IDirectDraw **ppDD, IUnknown *pUnkOuter );
+HRESULT DirectDrawCreateEx( GUID *pGuid, void **ppDD, const GUID &iid,
+                            IUnknown *pUnkOuter );
+
+#ifdef __cplusplus
+}
+#endif

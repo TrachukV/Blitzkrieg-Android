@@ -136,7 +136,7 @@ interface IGFXFont : public ISharedResource
 	//
 	virtual const struct SFontFormat& STDCALL GetFormat() const = 0;
   virtual int STDCALL GetTextWidth( const char *pszString, int nCounter = 2000000000 ) const = 0;
-  virtual int STDCALL GetTextWidth( const WORD *pszString, int nCounter = 2000000000 ) const = 0;
+  virtual int STDCALL GetTextWidth( const wchar_t *pszString, int nCounter = 2000000000 ) const = 0;
 };
 interface IGFXText : public IRefCount
 {

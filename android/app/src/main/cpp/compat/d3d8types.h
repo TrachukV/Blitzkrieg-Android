@@ -156,6 +156,18 @@ typedef enum _D3DTEXTUREOP {
 #define D3DTA_COMPLEMENT  0x00000010
 #define D3DTA_ALPHAREPLICATE 0x00000020
 
+// What D3DTSS_TEXTURETRANSFORMFLAGS takes: how many components of the texture
+// coordinate the stage's transform produces, or none at all.
+typedef enum _D3DTEXTURETRANSFORMFLAGS {
+    D3DTTFF_DISABLE     = 0,
+    D3DTTFF_COUNT1      = 1,
+    D3DTTFF_COUNT2      = 2,
+    D3DTTFF_COUNT3      = 3,
+    D3DTTFF_COUNT4      = 4,
+    D3DTTFF_PROJECTED   = 256,
+    D3DTTFF_FORCE_DWORD = 0x7fffffff
+} D3DTEXTURETRANSFORMFLAGS;
+
 typedef enum _D3DTEXTUREFILTERTYPE {
     D3DTEXF_NONE        = 0,
     D3DTEXF_POINT       = 1,
@@ -308,6 +320,7 @@ typedef enum _D3DPOOL {
 #define D3DUSAGE_DEPTHSTENCIL   0x00000002L
 #define D3DUSAGE_WRITEONLY      0x00000008L
 #define D3DUSAGE_DYNAMIC        0x00000200L
+#define D3DUSAGE_SOFTWAREPROCESSING 0x00000010L
 
 #define D3DLOCK_READONLY            0x00000010L
 #define D3DLOCK_NOSYSLOCK           0x00000800L
@@ -333,6 +346,15 @@ typedef struct _D3DMATRIX {
         float m[4][4];
     };
 } D3DMATRIX;
+
+// The rectangle Clear takes. It is not the GDI RECT: its members are named
+// for the edges as coordinates rather than as a bounding box.
+typedef struct _D3DRECT {
+    LONG x1;
+    LONG y1;
+    LONG x2;
+    LONG y2;
+} D3DRECT;
 
 typedef struct _D3DVIEWPORT8 {
     DWORD X;
@@ -419,6 +441,10 @@ typedef struct _D3DPRESENT_PARAMETERS_ {
     UINT                FullScreen_PresentationInterval;
 } D3DPRESENT_PARAMETERS;
 
+// SetGammaRamp's flags: whether the ramp is to be calibrated for the display.
+#define D3DSGR_NO_CALIBRATION  0x00000000L
+#define D3DSGR_CALIBRATE       0x00000001L
+
 #define D3DPRESENT_INTERVAL_DEFAULT 0x00000000L
 #define D3DPRESENT_INTERVAL_ONE     0x00000001L
 #define D3DPRESENT_INTERVAL_IMMEDIATE 0x80000000L
@@ -473,6 +499,8 @@ typedef enum _D3DDEVTYPE {
 #define D3DENUM_NO_WHQL_LEVEL               0x00000002L
 
 // The capability bits the engine tests before choosing a path.
+#define D3DCAPS2_CANCALIBRATEGAMMA      0x00100000L
+#define D3DCAPS2_FULLSCREENGAMMA        0x00020000L
 #define D3DPTEXTURECAPS_POW2            0x00000002L
 #define D3DPTEXTURECAPS_SQUAREONLY      0x00000020L
 #define D3DPTEXTURECAPS_NONPOW2CONDITIONAL 0x00000100L
@@ -483,6 +511,10 @@ typedef enum _D3DDEVTYPE {
 #define D3DPBLENDCAPS_SRCALPHA          0x00000010L
 #define D3DPRASTERCAPS_FOGTABLE         0x00000100L
 #define D3DDEVCAPS_HWTRANSFORMANDLIGHT  0x00010000L
+#define D3DDEVCAPS_TEXTUREVIDEOMEMORY   0x00000200L
+#define D3DDEVCAPS_TEXTURESYSTEMMEMORY  0x00000100L
+#define D3DDEVCAPS_HWRASTERIZATION      0x00080000L
+#define D3DDEVCAPS_TEXTURENONLOCALVIDMEM 0x00000400L
 #define D3DPRESENT_RATE_DEFAULT         0x00000000
 
 typedef struct _D3DCAPS8 {

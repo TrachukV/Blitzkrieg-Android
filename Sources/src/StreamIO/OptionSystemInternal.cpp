@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "..\Misc\WideString.h"
 
 #include "OptionsConvert.h"
 #include "OptionSystemInternal.h"
@@ -161,7 +162,7 @@ bool COptionSystem::Set( const std::string &szVarName, const variant_t &_var )
 	if ( var.vt == VT_BSTR )
 	{
 		// cut string for allowable lenght
-		std::wstring szStr = (const WORD*)bstr_t(var);
+		bk1_wstring szStr = (const WORD*)bstr_t(var);
 		if ( szStr.size() > 12 )
 		{
 			szStr.resize( 8 );
@@ -173,7 +174,7 @@ bool COptionSystem::Set( const std::string &szVarName, const variant_t &_var )
 	//CRAP{ FOR LOCAL PLAYER NAME
 	if ( szVarName == "GamePlay.PlayerName" )
 	{
-		std::wstring szPlayerName = (const WORD*)bstr_t(var);
+		bk1_wstring szPlayerName = (const WORD*)bstr_t(var);
 		if ( szPlayerName.empty() )
 		{
 			IText * pT = GetSingleton<ITextManager>()->GetDialog( "Textes\\PlayerName" );

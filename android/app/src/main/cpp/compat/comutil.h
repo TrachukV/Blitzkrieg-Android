@@ -204,19 +204,26 @@ public:
         Build();
     }
 
-    // Misc/VarSystemInternal.h wraps a VARIANT's BSTR to hand it to
-    // std::wstring, which is a transcode here rather than a copy.
-    _bstr_t( BSTR bstr ) : bstr_( 0 )
+    // Takes any NUL-terminated UTF-16 string, not just a real BSTR: callers
+    // pass bk1_wstring::c_str() too, which has no length prefix to read. The
+    // length is scanned, which is what _bstr_t( const wchar_t* ) does on
+    // Windows.
+    _bstr_t( const OLECHAR *psz ) : bstr_( 0 )
     {
-        const std::wstring wide = Bk1Utf16ToWide( bstr, SysStringLen( bstr ) );
+        UINT nLen = 0;
+        if ( psz != 0 )
+        {
+            while ( psz[nLen] != 0 )
+                ++nLen;
+        }
+        const std::wstring wide = Bk1Utf16ToWide( psz, nLen );
         narrow_.reserve( wide.size() );
         for ( size_t i = 0; i < wide.size(); ++i )
         {
             const unsigned int cp = (unsigned int)wide[i];
             narrow_.push_back( cp < 0x100 ? (char)cp : '?' );
         }
-        bstr_ = SysAllocStringByteLen( (const char *)bstr,
-                                       SysStringByteLen( bstr ) );
+        bstr_ = SysAllocStringByteLen( (const char *)psz, nLen * 2 );
     }
 
     _bstr_t( const _bstr_t &other ) : narrow_( other.narrow_ ) { Build(); }

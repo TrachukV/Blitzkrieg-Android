@@ -12,7 +12,12 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include <string>
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#if defined( _MSC_VER ) && !defined( _NATIVE_WCHAR_T_DEFINED )
+// The test is the width of wchar_t, not the name of the compiler: MSVC 6
+// made it 16 bits, and the Android build asks for the same with
+// -fshort-wchar, so in both of those std::wstring already is the UTF-16
+// storage this names.
+#if ( defined( __SIZEOF_WCHAR_T__ ) && __SIZEOF_WCHAR_T__ == 2 ) || \
+    ( defined( _MSC_VER ) && !defined( _NATIVE_WCHAR_T_DEFINED ) )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 typedef std::wstring bk1_wstring;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,5 +95,37 @@ struct SBk1Utf16Traits
 typedef std::basic_string<WORD, SBk1Utf16Traits> bk1_wstring;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The engine spells the same UTF-16 string two ways -- 'const WORD*' at some
+// of its interfaces and 'const wchar_t*' at others -- because MSVC 6 made
+// those one type. They are one width here too, but not one type, so the few
+// places where the two meet say so through these rather than through a bare
+// cast that no one can audit later.
+//
+// The assertion is the point: if the wchar_t decision is ever revisited and
+// the widths stop matching, every one of these stops compiling instead of
+// quietly reinterpreting half a string.
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if !defined( _MSC_VER )
+static_assert( sizeof( wchar_t ) == sizeof( WORD ),
+               "the engine's wide strings are UTF-16; build with -fshort-wchar" );
+#endif
+
+inline const wchar_t* Bk1AsWide( const WORD *pszText )
+{
+	return reinterpret_cast<const wchar_t*>( pszText );
+}
+inline wchar_t* Bk1AsWide( WORD *pszText )
+{
+	return reinterpret_cast<wchar_t*>( pszText );
+}
+inline const WORD* Bk1AsUtf16( const wchar_t *pszText )
+{
+	return reinterpret_cast<const WORD*>( pszText );
+}
+inline WORD* Bk1AsUtf16( wchar_t *pszText )
+{
+	return reinterpret_cast<WORD*>( pszText );
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #endif // __WIDESTRING_H__

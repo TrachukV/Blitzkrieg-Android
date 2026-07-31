@@ -94,13 +94,13 @@ public:
 	//
 	virtual void STDCALL SetVar( const char *pszValueName, const WORD *pszValue )
 	{
-		wValues[pszValueName] = pszValue;
+		wValues[pszValueName] = Bk1AsWide( pszValue );
 	}
 
 	virtual const WORD* STDCALL GetWVar( const char *pszValueName ) const
 	{
 		CWValuesMap::const_iterator pos = wValues.find( pszValueName );
-		return pos == wValues.end() ? 0 : pos->second.c_str();
+		return pos == wValues.end() ? 0 : Bk1AsUtf16( pos->second.c_str() );
 	}
 
 	virtual void STDCALL RemoveWVar( const char *pszValueName )

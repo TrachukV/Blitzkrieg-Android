@@ -74,7 +74,7 @@ interface IDataTree : public IRefCount
 	virtual int STDCALL GetChunkSize() = 0;
 	virtual bool STDCALL RawData( void *pData, int nSize ) = 0;
 	virtual bool STDCALL StringData( char *pData ) = 0;
-	virtual bool STDCALL StringData( WORD *pData ) = 0;
+	virtual bool STDCALL StringData( wchar_t *pData ) = 0;
 	virtual bool STDCALL DataChunk( DTChunkID idChunk, int *pData ) = 0;
 	virtual bool STDCALL DataChunk( DTChunkID idChunk, double *pData ) = 0;
 	// array data serialization (special case)

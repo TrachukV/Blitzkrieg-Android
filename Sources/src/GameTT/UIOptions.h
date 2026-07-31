@@ -145,17 +145,17 @@ class COptionTextEntry : public COption
 	bk1_wstring szText;
 public:
 	COptionTextEntry() {  }
-	COptionTextEntry( const char *pszName, const bool _bInstant, const WORD *_pszText)	: COption( pszName, _bInstant ), szText( _pszText ) {  }
+	COptionTextEntry( const char *pszName, const bool _bInstant, const WORD *_pszText)	: COption( pszName, _bInstant ), szText( Bk1AsWide( _pszText ) ) {  }
 	virtual void STDCALL Set( interface IUISetOptionsToUI *pSet )
-		{ pSet->SetTextOption( szText.c_str() ); }
+		{ pSet->SetTextOption( Bk1AsUtf16( szText.c_str() ) ); }
 	virtual void STDCALL Get( interface IUIGetOptionsFromUI *pGet )
-		{ szText = pGet->GetTextOption(); }
+		{ szText = Bk1AsWide( pGet->GetTextOption() ); }
 	virtual EOptionsType STDCALL GetType() const { return EOT_TEXTENTRY; }
 	virtual void STDCALL CancelChanges( interface IUISetOptionsToUI *pSet )
 		{ pSet->ResetTextEntry(); }
 	virtual void STDCALL Apply() 
 	{
-		GetOptionSystem()->Set( GetName(), szText.c_str() );
+		GetOptionSystem()->Set( GetName(), Bk1AsUtf16( szText.c_str() ) );
 	}
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -165,17 +165,17 @@ class COptionTextEntryGameSpyCharacters : public COption
 	bk1_wstring szText;
 public:
 	COptionTextEntryGameSpyCharacters() {  }
-	COptionTextEntryGameSpyCharacters( const char *pszName, const bool _bInstant, const WORD *_pszText )	: COption( pszName, _bInstant ), szText( _pszText ) {  }
+	COptionTextEntryGameSpyCharacters( const char *pszName, const bool _bInstant, const WORD *_pszText )	: COption( pszName, _bInstant ), szText( Bk1AsWide( _pszText ) ) {  }
 	virtual void STDCALL Set( interface IUISetOptionsToUI *pSet )
-		{ pSet->SetTextGameSpyOption( szText.c_str() ); }
+		{ pSet->SetTextGameSpyOption( Bk1AsUtf16( szText.c_str() ) ); }
 	virtual void STDCALL Get( interface IUIGetOptionsFromUI *pGet )
-		{ szText = pGet->GetTextGameSpyOption(); }
+		{ szText = Bk1AsWide( pGet->GetTextGameSpyOption() ); }
 	virtual EOptionsType STDCALL GetType() const { return EOT_GAMESPY_TEXTENTRY; }
 	virtual void STDCALL CancelChanges( interface IUISetOptionsToUI *pSet )
 		{ pSet->ResetTextGameSpyEntry(); }
 	virtual void STDCALL Apply() 
 	{
-		GetOptionSystem()->Set( GetName(), szText.c_str() );
+		GetOptionSystem()->Set( GetName(), Bk1AsUtf16( szText.c_str() ) );
 	}
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

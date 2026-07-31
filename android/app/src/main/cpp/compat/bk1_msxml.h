@@ -331,6 +331,12 @@ struct SNode
     // The engine writes its wide strings out through this one; the text is
     // stored in the document's own encoding, as MSXML would have written it.
     CBk1XmlNodePtr createTextNode( const unsigned short *pwzText );
+    // wchar_t is the same width here but a distinct type, and the engine's
+    // wide strings arrive spelled both ways.
+    CBk1XmlNodePtr createTextNode( const wchar_t *pwzText )
+    {
+        return createTextNode( reinterpret_cast<const unsigned short *>( pwzText ) );
+    }
     CBk1XmlNodePtr createProcessingInstruction( const char *pszTarget,
                                                 const char *pszData );
 

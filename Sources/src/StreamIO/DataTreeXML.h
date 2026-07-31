@@ -75,7 +75,7 @@ public:
 	virtual int STDCALL GetChunkSize();
 	virtual bool STDCALL RawData( void *pData, int nSize );
 	virtual bool STDCALL StringData( char *pData );
-	virtual bool STDCALL StringData( WORD *pData );
+	virtual bool STDCALL StringData( wchar_t *pData );
 	virtual bool STDCALL DataChunk( DTChunkID idChunk, int *pData );
 	virtual bool STDCALL DataChunk( DTChunkID idChunk, double *pData );
 	// array data serialization (special case)

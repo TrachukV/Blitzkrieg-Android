@@ -12,6 +12,10 @@ CXX="${CXX:-clang++}"
 mkdir -p "$OUT"
 rc=0
 
+echo "=== wchar_t ABI ==="
+"$ROOT/android/tests/check_wchar_abi.sh" || rc=1
+
+echo
 echo "=== DXT codec ==="
 "$CXX" -std=c++17 -O2 -I"$COMPAT" \
   "$ROOT/android/tests/dxt_codec_test.cpp" "$COMPAT/bk1_s3tc.cpp" \

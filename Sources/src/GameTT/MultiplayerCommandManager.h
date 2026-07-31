@@ -18,12 +18,7 @@ enum EPlayerChatState
 	EPCS_NONE,
 };
 // relation to player
-enum EPlayerRelation
-{
-	EPR_NORMAL,
-	EPR_FRIEND,
-	EPR_IGNORED,
-};
+// EPlayerRelation now lives in MuliplayerToUIConsts.h, which Main shares.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct SMultiplayerGameSettings
 {

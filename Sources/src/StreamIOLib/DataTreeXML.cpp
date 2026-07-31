@@ -280,7 +280,7 @@ bool CDataTreeXML::StringData( char *pData )
 	return false;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool CDataTreeXML::StringData( WORD *pData )
+bool CDataTreeXML::StringData( wchar_t *pData )
 {
 	if ( IsReading() )
 	{

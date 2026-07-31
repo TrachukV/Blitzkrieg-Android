@@ -24,6 +24,7 @@ FLAGS=(
   -fdelayed-template-parsing   # MSVC-style two-phase lookup in templates
   -Wno-reserved-user-defined-literal
   -D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES   # ptr_fun, auto_ptr and friends
+  -fshort-wchar                # wchar_t is UTF-16, as it was under MSVC 6
   -ferror-limit=0
   -include "$COMPAT/bk1_msvc_types.h"
   -I"$COMPAT" -I"$SRC"

@@ -87,11 +87,11 @@ struct SSerialVariantT : public variant_t
 						SysFreeString( bstrVal );
 					bk1_wstring str;
 					saver.Add( "Var", &str );
-					bstrVal = SysAllocString( str.c_str() );
+					bstrVal = SysAllocString( Bk1AsUtf16( str.c_str() ) );
 				}
 				else
 				{
-					bk1_wstring str( bstrVal );
+					bk1_wstring str( Bk1AsWide( bstrVal ) );
 					NI_ASSERT_T( str.size() == SysStringLen(bstrVal), "Unsupported BSTR value" );
 					saver.Add( "Var", &str );
 				}

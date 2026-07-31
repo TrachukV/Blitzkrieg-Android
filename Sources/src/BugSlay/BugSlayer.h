@@ -104,7 +104,11 @@ extern void __stl_debug_message( const char *pszFormat, ... );
 extern void __stl_debug_terminate();
 #endif // defined( __STL_DEBUG_TERMINATE )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#if defined( _MSC_VER ) && defined( _M_IX86 )
 #define DEBUG_BREAK { _asm { int 3 } }
+#else
+#define DEBUG_BREAK { __builtin_trap(); }
+#endif
 // macros for retrieving 5 callstack addresses for further use with 'GetSourceLine()' function
 // here we are using macro due to we need an 'clear' callstack, which is not corrupted by 'inline' function call
 #define GET_CALLSTACK_ADDRS( addresses, depth )							\

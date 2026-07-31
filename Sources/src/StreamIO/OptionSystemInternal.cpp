@@ -162,11 +162,11 @@ bool COptionSystem::Set( const std::string &szVarName, const variant_t &_var )
 	if ( var.vt == VT_BSTR )
 	{
 		// cut string for allowable lenght
-		bk1_wstring szStr = (const WORD*)bstr_t(var);
+		bk1_wstring szStr = Bk1AsWide( (const WORD*)bstr_t(var) );
 		if ( szStr.size() > 12 )
 		{
 			szStr.resize( 8 );
-			var = bstr_t(szStr.c_str());
+			var = bstr_t( Bk1AsUtf16( szStr.c_str() ) );
 		}
 	}
 	//CRAP}
@@ -174,7 +174,7 @@ bool COptionSystem::Set( const std::string &szVarName, const variant_t &_var )
 	//CRAP{ FOR LOCAL PLAYER NAME
 	if ( szVarName == "GamePlay.PlayerName" )
 	{
-		bk1_wstring szPlayerName = (const WORD*)bstr_t(var);
+		bk1_wstring szPlayerName = Bk1AsWide( (const WORD*)bstr_t(var) );
 		if ( szPlayerName.empty() )
 		{
 			IText * pT = GetSingleton<ITextManager>()->GetDialog( "Textes\\PlayerName" );
@@ -426,7 +426,7 @@ void COptionSystem::Repair( IDataTree *pSS, const bool bToDefault )
 			//CRAP{ FOR LOCAL PLAYER'S NAME
 			if ( pDesc->szName == "GamePlay.PlayerName" )
 			{
-				const bk1_wstring szPlayerName = (const WORD*)bstr_t(dummy);
+				const bk1_wstring szPlayerName = Bk1AsWide( (const WORD*)bstr_t(dummy) );
 				if ( szPlayerName.empty() )
 				{
 					SetVar( pDesc->szName, pTmpOptions->GetVar( pDesc->szName ) );

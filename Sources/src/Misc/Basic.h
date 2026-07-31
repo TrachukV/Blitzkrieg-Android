@@ -570,8 +570,12 @@ public:																																								\
 	TPtrName& operator=( const TPtrName &a ) { this->Set( a.GetPtr() ); return *this; }				\
 	bool operator==( const TPtrName &a ) const { return this->GetPtr() == a.GetPtr(); }				\
 	bool operator==( const TUserObj *a ) const { return this->GetPtr() == a; }								\
+	template <class TOther>																										\
+		bool operator==( TOther *a ) const { return this->GetPtr() == a; }		\
 	bool operator!=( const TPtrName &a ) const { return this->GetPtr() != a.GetPtr(); }				\
 	bool operator!=( const TUserObj *a ) const { return this->GetPtr() != a; }								\
+	template <class TOther>																										\
+		bool operator!=( TOther *a ) const { return this->GetPtr() != a; }		\
 	bool operator< ( const TUserObj *a ) const { return this->GetPtr() < a; }									\
 	bool operator> ( const TUserObj *a ) const { return this->GetPtr() > a; }									\
 	bool operator<=( const TUserObj *a ) const { return this->GetPtr() <= a; }								\

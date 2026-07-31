@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "..\Misc\WideString.h"
 
 #include <mmsystem.h>
 
@@ -93,7 +94,7 @@ void CInterfaceScreenBase::SetWindowText( const int nElementID, const WORD *pszT
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CInterfaceScreenBase::SetWindowText( const int nElementID, IText *pText )
 {
-	SetWindowText( nElementID, pText->GetString() );
+	SetWindowText( nElementID, Bk1AsUtf16( pText->GetString() ) );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CInterfaceScreenBase::SuspendAILogic( bool bSuspend )

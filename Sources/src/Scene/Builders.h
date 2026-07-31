@@ -64,7 +64,7 @@ struct STerrainTLVertex
 		struct
 		{
 			CVec4 pos;
-			DWORD color;
+			DWORD reservedColor_;			// 'color' is the one above
 			CVec2 tex;
 			CVec2 tex1;
 		};
@@ -99,7 +99,7 @@ struct STerrainLVertex
 		struct
 		{
 			CVec3 pos;
-			DWORD color;
+			DWORD reservedColor_;			// 'color' is the one above
 			CVec2 tex;
 			CVec2 tex1;
 		};

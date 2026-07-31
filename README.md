@@ -1,75 +1,70 @@
-[English](README.md)        [Русский](README_Russian.md)        [中文](README_Chinese.md)        [हिन्दी](README_Hindi.md)        [Español](README_Spanish.md)        [Français](README_French.md)        [Deutsch](README_German.md)        [Português](README_Portuguese.md)        [日本語](README_Japanese.md)        [Bahasa Indonesia](README_Indonesian.md)
+# Blitzkrieg — Android port
 
-[![Blitzkrieg Trailer](Blitzkrieg.png)](https://www.youtube.com/watch?v=zNxMvTcsJbk)
+A native Android port of **Blitzkrieg** (Nival Interactive, 2003), the real-time
+strategy game whose singleplayer source Nival released in 2025.
 
-The computer game [Blitzkrieg](https://wikipedia.org/wiki/Blitzkrieg_(video_game)) is the first installment of the legendary series of real-time strategy war games, developed by [Nival Interactive](http://nival.com/) and released on March 28, 2003.
+The approach is to compile the original C++ for arm64 and replace only the
+platform layer, rather than rewriting the game. The goal is the game as it was —
+its own menus, campaign, missions and art — with touch controls in place of
+mouse and keyboard.
 
-The game is still available on [Steam](https://store.steampowered.com/app/313480/Blitzkrieg_Anthology/) and [GOG.com](https://www.gog.com/en/game/blitzkrieg_anthology).
+This repository is a fork of [nival/Blitzkrieg](https://github.com/nival/Blitzkrieg);
+the original project README is kept as [README_Original.md](README_Original.md).
 
-In 2025, the game's singleplayer source code was released under a [special license](LICENSE.md) that prohibits commercial use but is completely open for the game's community, education and research.
-Please review the terms of the [license agreement](LICENSE.md) carefully before using it.
+## State: not playable yet
 
-# What is in this repository
-- `Data` - game data
-- `Soft` and `Tools` - development tools
-- `Versions` - compiled versions of the game, including map editors
-- `Sources` - source code and tools
+This is honest work in progress, and nothing runs. What exists is the
+compatibility layer, the platform replacements written so far, and the original
+sources brought to the point where the compiler accepts them.
 
-# Preparation
+| Module | Translation units building for arm64 |
+| --- | --- |
+| `Misc`, `StreamIO`, `Formats`, `Image`, `Anim`, `Common` | complete |
+| `zlib`, `GameSpy`, `LuaLib`, `RandomMapGen` | complete |
+| `Net` | 11 / 15 |
+| `Scene` | 29 / 50 |
+| `UI` | 12 / 33 |
+| **Total** | **~220** |
 
-All libraries from the SDK directory are needed for compilation. The paths to them must be entered in **Tools => Options => Directories** in the following order:
+Still ahead, and each is a replacement rather than a port: Direct3D 8 (`GFX`),
+DirectInput (`Input`), FMOD (`SFX`), and the `AILogic`, `Main`, `GameTT` and
+`Game` modules, which have not been started.
 
-## Include
-```
-C:\PROGRAM FILES\MICROSOFT VISUAL STUDIO\VC98\STLPORT
-C:\SDK\BINK (not included in the repository)
-C:\SDK\FMOD\API\INC (not included in the repository)
-C:\SDK\S3TC
-C:\SDK\STINGRAY STUDIO 2002\INCLUDE\TOOLKIT (not included in the repository)
-C:\SDK\STINGRAY STUDIO 2002\INCLUDE (not included in the repository)
-C:\SDK\STINGRAY STUDIO 2002\REGEX\INCLUDE (not included in the repository)
-C:\SDK\Maya4.0\include
-```
-
-## Lib
-```
-C:\SDK\BINK (not included in the repository)
-C:\SDK\FMOD\API\LIB (not included in the repository)
-C:\SDK\S3TC
-C:\SDK\STINGRAY STUDIO 2002\LIB (not included in the repository)
-C:\SDK\STINGRAY STUDIO 2002\REGEX\LIB (not included in the repository)
-C:\SDK\Maya4.0\lib
+```bash
+android/compile_check.sh Misc StreamIO      # what builds, per module
+android/tests/run_tests.sh                  # the tests that guard the rewritten parts
 ```
 
-In addition, **DirectX 8.1** or higher is required (it will automatically be added to the paths).
+## What was replaced rather than ported
 
-### Important Notes
+Some of the original's dependencies do not exist off Windows and could not be
+answered with a stub, because the game genuinely depends on what they do:
 
-- **Bink, FMOD, Stingray** libraries are not included in this repository as they require separate licensing.
-- **stlport** *must* be located in the Visual C directory, alongside `include`.
-- The path `C:\PROGRAM FILES\MICROSOFT VISUAL STUDIO\VC98\STLPORT` must be **first**, otherwise, the build will fail.
+- **MSXML** — the game's data is 7336 XML files, so this is a real parser,
+  serialiser and DOM with COM-style reference counting.
+- **The S3TC texture codec** — DXT1 through DXT5, compressing and expanding,
+  with endpoints fitted to the principal axis of each block. Covered by a
+  round-trip test.
+- **The registry** — a tree of keys and values over a file, since the game keeps
+  its installation path and options there.
+- **Win32 platform** — threads, events, critical sections, the file APIs with
+  case-folding directory scans, code-page conversion with real CP1251 and
+  CP1252 tables, sockets over POSIX, process creation over fork and exec, and
+  the floating-point control word over arm64's FPCR.
 
----
+Everything changed in the original sources is guarded on `_MSC_VER` or
+`_M_IX86`, so the Windows build still compiles as it did.
 
-# Additional Tools
+Notes on the decisions, and the measurements behind them, are in
+[android/README.md](android/README.md).
 
-- The **tools** directory contains utilities used during the build process.
-- Resources are stored in **zip (deflate)** format and are packed/unpacked using **zip/unzip**.
-- **Do not use pkzip** — it truncates file names and does not use the deflate algorithm.
-- Some data is edited manually using an **XML-editor**, as frequent editing was not necessary and writing a separate editor was impractical.
+## Licence
 
----
+The game and its source are Nival Interactive's, released under a licence that
+permits study and modification but **prohibits commercial use** — see
+[LICENSE.md](LICENSE.md). This port is non-commercial and carries the same
+terms. It is not affiliated with or endorsed by Nival.
 
-# Files in `data`
-
-In the game's directory, under **data**, there are files that are manually edited or simply placed:
-
-- `sin.arr` — binary file with a sine table (just place it, do not touch).
-- `objects.xml` — registry of game objects (edited manually).
-- `consts.xml` — game constants for designers (edited manually).
-- `MusicSettings.xml` — music settings (edited manually).
-- `partys.xml` — country data (which squad to use for gun crew, parachutist model, etc.).
-
-## Files in `medals`
-
-In the **medals** subdirectory, files `ranks.xml` contain ranks and **experience** needed to obtain them, organized by country.
+Blitzkrieg is still sold on
+[Steam](https://store.steampowered.com/app/313480/Blitzkrieg_Anthology/) and
+[GOG](https://www.gog.com/en/game/blitzkrieg_anthology).

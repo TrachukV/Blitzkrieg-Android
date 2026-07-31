@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma ONCE
 #include "..\StreamIO\OptionSystem.h"
+#include "..\Misc\WideString.h"
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ui side
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -141,7 +142,7 @@ public:
 class COptionTextEntry : public COption
 {
 	OBJECT_COMPLETE_METHODS( COptionTextEntry );
-	std::wstring szText;
+	bk1_wstring szText;
 public:
 	COptionTextEntry() {  }
 	COptionTextEntry( const char *pszName, const bool _bInstant, const WORD *_pszText)	: COption( pszName, _bInstant ), szText( _pszText ) {  }
@@ -161,7 +162,7 @@ public:
 class COptionTextEntryGameSpyCharacters : public COption
 {
 	OBJECT_COMPLETE_METHODS( COptionTextEntryGameSpyCharacters );
-	std::wstring szText;
+	bk1_wstring szText;
 public:
 	COptionTextEntryGameSpyCharacters() {  }
 	COptionTextEntryGameSpyCharacters( const char *pszName, const bool _bInstant, const WORD *_pszText )	: COption( pszName, _bInstant ), szText( _pszText ) {  }

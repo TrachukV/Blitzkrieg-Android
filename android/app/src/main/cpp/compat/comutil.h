@@ -6,6 +6,7 @@
 #include "bk1_win32_types.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <string>
@@ -220,6 +221,10 @@ public:
 
     _bstr_t( const _bstr_t &other ) : narrow_( other.narrow_ ) { Build(); }
 
+    // StreamIO/OptionSystemInternal.cpp spells a variant's value as a string
+    // with bstr_t( var ). Defined below, once _variant_t is complete.
+    _bstr_t( const class _variant_t &var );
+
     _bstr_t &operator=( const _bstr_t &other )
     {
         if ( this != &other )
@@ -306,6 +311,58 @@ public:
 
     void Clear() { VariantClear( this ); }
 };
+
+// Spells a variant's value as a string, the way _bstr_t does on Windows.
+inline _bstr_t::_bstr_t( const _variant_t &var ) : bstr_( 0 )
+{
+    char buff[64];
+    switch ( var.vt )
+    {
+    case VT_BSTR:
+        {
+            const std::wstring wide =
+                Bk1Utf16ToWide( var.bstrVal, SysStringLen( var.bstrVal ) );
+            narrow_.reserve( wide.size() );
+            for ( size_t i = 0; i < wide.size(); ++i )
+            {
+                const unsigned int cp = (unsigned int)wide[i];
+                narrow_.push_back( cp < 0x100 ? (char)cp : '?' );
+            }
+        }
+        break;
+    case VT_EMPTY:
+    case VT_NULL:
+        break;
+    case VT_BOOL:
+        narrow_ = var.boolVal != VARIANT_FALSE ? "true" : "false";
+        break;
+    case VT_R4:
+        snprintf( buff, sizeof( buff ), "%g", (double)var.fltVal );
+        narrow_ = buff;
+        break;
+    case VT_R8:
+        snprintf( buff, sizeof( buff ), "%g", var.dblVal );
+        narrow_ = buff;
+        break;
+    case VT_UI1:
+        snprintf( buff, sizeof( buff ), "%u", (unsigned)var.bVal );
+        narrow_ = buff;
+        break;
+    case VT_I2:
+        snprintf( buff, sizeof( buff ), "%d", (int)var.iVal );
+        narrow_ = buff;
+        break;
+    case VT_INT:
+        snprintf( buff, sizeof( buff ), "%d", var.intVal );
+        narrow_ = buff;
+        break;
+    default:
+        snprintf( buff, sizeof( buff ), "%ld", (long)var.lVal );
+        narrow_ = buff;
+        break;
+    }
+    Build();
+}
 
 typedef _variant_t variant_t;
 typedef _bstr_t    bstr_t;

@@ -4,6 +4,7 @@
 #pragma ONCE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "..\Misc\FileUtils.h"
+#include "..\Misc\WideString.h"
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CGlobalVars : public IGlobalVars
 {
@@ -12,7 +13,7 @@ class CGlobalVars : public IGlobalVars
 	typedef std::hash_map<std::string, std::string> CValuesMap;
 	CValuesMap values;
 	
-	typedef std::hash_map<std::string, std::wstring> CWValuesMap;
+	typedef std::hash_map<std::string, bk1_wstring> CWValuesMap;
 	CWValuesMap wValues;
 public:
 	virtual const char* STDCALL GetVar( const char *pszValueName ) const

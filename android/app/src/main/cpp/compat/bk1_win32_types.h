@@ -149,3 +149,4 @@ typedef struct _EXCEPTION_POINTERS {
 #include "bk1_win32_platform.h"
 #include "bk1_win32_files.h"
 #include "bk1_win32_fileio.h"
+#include "bk1_com_stream.h"

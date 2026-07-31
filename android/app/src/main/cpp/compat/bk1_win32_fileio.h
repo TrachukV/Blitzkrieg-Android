@@ -89,3 +89,28 @@ HMODULE GetModuleHandleA( const char *pszModule );
 #define GetFullPathName GetFullPathNameA
 #define GetDiskFreeSpace GetDiskFreeSpaceA
 #define GetModuleHandle GetModuleHandleA
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+inline char *_fullpath( char *pszAbs, const char *pszRel, size_t nMax )
+{
+    // MSVC resolves relative paths against the cwd; realpath is the equivalent
+    // but requires the file to exist, so fall back to a plain join.
+    if ( pszRel == 0 || pszAbs == 0 )
+        return 0;
+    if ( realpath( pszRel, pszAbs ) != 0 )
+        return pszAbs;
+    if ( pszRel[0] == '/' )
+    {
+        snprintf( pszAbs, nMax, "%s", pszRel );
+        return pszAbs;
+    }
+    char szCwd[4096];
+    if ( getcwd( szCwd, sizeof( szCwd ) ) == 0 )
+        return 0;
+    snprintf( pszAbs, nMax, "%s/%s", szCwd, pszRel );
+    return pszAbs;
+}
+

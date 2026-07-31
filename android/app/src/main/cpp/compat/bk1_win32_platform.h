@@ -7,6 +7,7 @@
 #include "bk1_win32_types.h"
 
 #include <dlfcn.h>
+#include <errno.h>
 
 #include <chrono>
 #include <condition_variable>
@@ -195,6 +196,18 @@ inline void *GetProcAddress( HMODULE hModule, const char *pszName )
 }
 
 #define LoadLibrary LoadLibraryA
+
+// ---------------------------------------------------------------------------
+// Last error. The engine logs it after a failed call; errno is the nearest
+// thing that carries the same information here.
+// ---------------------------------------------------------------------------
+#define ERROR_SUCCESS           0
+#define ERROR_FILE_NOT_FOUND    2
+#define ERROR_ACCESS_DENIED     5
+#define ERROR_ALREADY_EXISTS    183
+
+inline DWORD GetLastError() { return (DWORD)errno; }
+inline void SetLastError( DWORD dwError ) { errno = (int)dwError; }
 
 // ---------------------------------------------------------------------------
 // Timing

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The game is a native activity: there is no Java above it, because there is
+  nothing for Java to do. The C++ owns the surface, the frame loop and the
+  input, and the activity exists to hand it a window.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- The renderer is written against OpenGL ES 3.0 and will not start
+         without it. Saying so here keeps the store from offering the game to
+         devices that cannot run it. -->
+    <uses-feature android:glEsVersion="0x00030000" android:required="true" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="true" />
+
+    <application
+        android:label="Blitzkrieg"
+        android:hasCode="false"
+        android:isGame="true"
+        android:allowBackup="true"
+        android:extractNativeLibs="true">
+
+        <activity
+            android:name="android.app.NativeActivity"
+            android:exported="true"
+            android:label="Blitzkrieg"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|density|uiMode"
+            android:resizeableActivity="false"
+            android:immersive="true"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+
+            <!-- Which library holds android_main. -->
+            <meta-data android:name="android.app.lib_name" android:value="blitzkrieg" />
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

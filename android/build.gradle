@@ -1,0 +1,6 @@
+// The port builds with the Android Gradle plugin and nothing else -- no
+// third-party dependencies, because the game has none: everything it needs is
+// either in the NDK or in this repository.
+plugins {
+    id 'com.android.application' version '8.5.2' apply false
+}

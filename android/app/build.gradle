@@ -1,0 +1,73 @@
+// The app module. There is no Java source set: the activity is
+// android.app.NativeActivity and everything above the surface is C++.
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.nival.blitzkrieg'
+    compileSdk 34
+    ndkVersion '28.2.13676358'
+
+    defaultConfig {
+        applicationId 'com.nival.blitzkrieg'
+        // 24 is where the compatibility layer's floor sits: it is the level
+        // whose libc has the file and locale entry points the layer builds on.
+        minSdk 24
+        targetSdk 34
+        versionCode 1
+        versionName '0.1-port'
+
+        externalNativeBuild {
+            cmake {
+                // The static C++ library and hidden visibility are not a size
+                // choice. wchar_t is 16 bits here, which collides with the
+                // mangled names in a libc++ built with 32-bit wchar_t; keeping
+                // the library static and its symbols hidden is what stops the
+                // dynamic loader from ever resolving one of ours to one of
+                // theirs. tests/check_wchar_abi.sh is the proof.
+                arguments '-DANDROID_STL=c++_static'
+            }
+        }
+
+        // 64-bit only. The engine's remaining assembly and its pointer
+        // assumptions were dealt with for arm64; a 32-bit build would be a
+        // second port, not a second ABI.
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path 'src/main/cpp/CMakeLists.txt'
+            version '3.22.1'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.debug
+        }
+        debug {
+            // The engine's own assertions are worth having while the port is
+            // being brought up.
+            jniDebuggable true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    // The game data is not in the repository -- it belongs to whoever owns a
+    // copy of the game -- so nothing is packaged from it here. See the README
+    // for where the original Data and Run directories go on the device.
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging true
+        }
+    }
+}

@@ -93,10 +93,16 @@ It needs the port to tell three cases apart, and both tests exist:
 - **Everything else is ground**, and a tap there is the order -- the right click
   the port sends today only after a hold.
 
-So this is not blocked on anything unknown; it is a hook from the port into the
-mission interface, an ownership test on whatever comes back, and a branch in the
-gesture bridge. Written down here because finding those two calls took longer
-than using them will.
+There is one gap, and it is worth naming exactly so nobody looks for a getter
+that is not there: `IMainLoop` offers `SetInterface`, `PushInterface` and
+`PopInterface`, and no way to read the interface that is current. The port
+cannot reach `CInterfaceMission` by asking. So the way in is the other
+direction -- the mission hands the port a pointer to itself when it starts,
+guarded on `_MSC_VER` like every other change to these sources.
+
+With that hook the rest is small: an ownership test on whatever `PickObjects`
+returns, and a branch in the gesture bridge. Written down because finding these
+three things took longer than using them will.
 
 ## Status
 

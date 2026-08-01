@@ -35,6 +35,15 @@ The last line is where it stands. `consts.xml` lives inside the game's `.pak`
 archives; the engine reads it while building the camera, and without it there is
 nothing further to run. Everything above that line is the port working.
 
+The machinery that reads those archives is verified, separately from having
+them. Putting a `.pak` on the device containing nothing but a well-formed
+`consts.xml` -- a test fixture, not game content -- takes the engine past
+`CCamera::Init` and on to the next file it wants, `cursor\1.xml`. That exercises
+the whole chain in one go: the zip reader, the MSXML replacement written for
+this port, and the data table on top of it. Startup from here is a walk through
+the game's own data, and each step now names the file it is missing rather than
+faulting.
+
 | Module | Units | Module | Units |
 | --- | --- | --- | --- |
 | `AILogic` | 169 | `Net` | 15 |

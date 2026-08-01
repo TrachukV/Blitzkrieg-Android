@@ -28,33 +28,46 @@ Rewriting that text to say "tap" while the command has no touch route would be
 describing controls that do not exist. So the order of work is: give the
 commands a route first, then make the text name it.
 
-## What has to be reachable
+## Correction: the orders are already reachable
 
-The engine already resolves these by name — `GameTT/WorldClient.cpp` and
-`GameTT/iMissionInternal.cpp` each carry a table of name → command. That is the
-good news: an on-screen control does not have to forge a key press, it can ask
-for the command the same way a binding does.
+An earlier version of this note said the orders could not be issued from a
+touchscreen. That was wrong, and the mistake was reading the key bindings and
+stopping there.
 
-Unit orders (`WorldClient.cpp`):
+Neither `config.cfg` nor `defconf.cfg` binds a single gameplay order -- both
+carry the same twelve commands, and all of them are developer tools: wireframe,
+statistics, console, screenshot. What the config *does* mention is
+`action_ui_button_`, and that is the answer: in this build the orders are issued
+from the game's own command panel, the grid of buttons at the bottom of the
+mission screen. Move, stop, dig in, attack, aggressive move, rotate, unload,
+board -- eight of them, on screen, in the original's own interface.
+
+They answer a finger. Tapping one raises the game's tooltip for it, which is
+what a button under a pointer does.
+
+So there is no panel to build. What is left is narrower and entirely about
+words.
+
+## What the text still gets wrong
+
+The tooltip that appeared under the finger names a hotkey -- `[R]` -- and the
+mission hints name `<A>`, `<CTRL>` and right-click. A player on a touchscreen
+reads an instruction to press a key that does not exist, while the command it
+describes is sitting on the panel a centimetre away.
+
+That is the work: the 85 files counted above, rewritten to name the panel button
+or the gesture instead of the key. The counts and the delivery mechanism below
+still stand.
+
+The engine's own name-to-command tables (`GameTT/WorldClient.cpp`,
+`GameTT/iMissionInternal.cpp`) are still worth recording, because a future
+gesture shortcut -- a two-finger tap for attack-move, say -- can ask for a
+command by name rather than forging a key:
 
     action_move        action_attack      action_stop        action_guard
     action_ambush      action_follow      action_swarm       action_rotate
     action_formation   action_board       action_leave       action_install
     action_uninstall   action_ranging     action_suppress    action_stand_ground
-    action_hook_artillery                 select_by_type
-
-Mission-level (`iMissionInternal.cpp`):
-
-    show_objectives    show_help_screen   show_escape_menu   show_save_menu
-    show_status_bar    select_next_object reset_selection    show_avia_buttons
-    force_action_move_on/off              force_action_attack_on/off
-    add_action_on/off  clear_screen_acks
-
-The modifier-style ones matter as much as the orders: `add_action_*` is how a
-player queues an order rather than replacing it, and `force_action_*` is how an
-order is forced onto ground that would otherwise mean something else. On a
-keyboard they are held modifiers. On a touchscreen they have to become state —
-a button that stays down — because there is no second hand.
 
 ## Delivering the text without touching the player's data
 
@@ -66,4 +79,5 @@ exactly as they were, and a port that is uninstalled leaves nothing behind.
 
 ## Status
 
-Scoped, not built. The measurements above are real; the panel is not written.
+The panel needed no building -- the game has one and it answers touch. The text
+is not rewritten yet; that is what remains, and it is measured above.

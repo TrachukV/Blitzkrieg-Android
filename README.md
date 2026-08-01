@@ -109,6 +109,29 @@ uid wrote the bytes, and needs no permission at all.
 The port looks in both, plus `/sdcard/Blitzkrieg`, and says which one it took and
 why it passed over the others.
 
+## What is verified, and what is not
+
+Three campaigns start and play: Allied (winter Norway), German (summer), Soviet
+(deep winter) -- different terrain, seasons and unit sets, each holding 60 fps.
+Menus, campaign map, chapter and mission briefings, Options down to the video
+page, and a mission on the battlefield, all reached by touch.
+
+Known broken: **the Tutorials list comes up empty.** The six tutorials are in
+the data and on the device, so this is the port and not missing content.
+`GameTT/TutorialList.cpp` scans `scenarios\tutorials\` for `*.xml` through the
+data storage, and the files sit a level down, one directory per tutorial -- so
+the scan has to descend, and something in that walk does not. The compatibility
+layer's `FindFirstFile` does report `FILE_ATTRIBUTE_DIRECTORY`, so it is further
+in than that.
+
+Not verified, and I will not claim otherwise: no real device -- every figure
+here is from an arm64 emulator; no campaign played to the end, only its opening
+missions; and two-finger gestures are covered by the recogniser's own tests but
+not injected through Android. That last one is not for want of trying: the
+emulator exposes a device per finger, `shell` is in the `input` group and the
+nodes are `0660 root:input`, but `sendevent` is refused by SELinux, and the
+`google_apis` image that would allow `adb root` does not boot on this host.
+
 ## Touch
 
 Blitzkrieg wants a second mouse button, a wheel, arrow keys and a drag that

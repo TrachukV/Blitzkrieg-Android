@@ -11,7 +11,11 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <ctype.h>
+
+#include <map>
 #include <string>
+#include <vector>
 
 namespace {
 
@@ -31,17 +35,134 @@ struct SFindHandle
 
 }   // anonymous namespace
 
+namespace {
+
+// Case folding, and why a path needs it.
+//
+// The game's data was authored on Windows, where the filesystem does not care
+// about case, and the engine relies on that far more than it looks. It builds
+// paths by concatenating names out of XML, and CFileSystem::IsStreamExist even
+// lowercases the whole path before asking whether it exists -- harmless on
+// Windows, fatal here, because the path it is handed contains "/Android/" and
+// the lowercase spelling of that directory does not exist.
+//
+// So a path is resolved a component at a time: if a name is there verbatim it
+// is used, and if it is not, its parent directory is read and matched without
+// regard to case. That reproduces what Windows does, at the one boundary every
+// path crosses.
+//
+// Directory listings are remembered, because the engine asks about tens of
+// thousands of files and a scan per lookup would make loading crawl.
+std::map<std::string, std::vector<std::string> > g_directoryCache;
+
+bool EqualsNoCase( const std::string &a, const std::string &b )
+{
+    if ( a.size() != b.size() )
+        return false;
+    for ( size_t i = 0; i < a.size(); ++i )
+    {
+        if ( tolower( (unsigned char)a[i] ) != tolower( (unsigned char)b[i] ) )
+            return false;
+    }
+    return true;
+}
+
+// The real spelling of pszName inside szDirectory, or empty if nothing matches.
+std::string MatchInDirectory( const std::string &szDirectory, const std::string &szName )
+{
+    std::map<std::string, std::vector<std::string> >::iterator it =
+        g_directoryCache.find( szDirectory );
+    if ( it == g_directoryCache.end() )
+    {
+        std::vector<std::string> entries;
+        if ( DIR *pDir = opendir( szDirectory.empty() ? "/" : szDirectory.c_str() ) )
+        {
+            while ( struct dirent *pEnt = readdir( pDir ) )
+                entries.push_back( pEnt->d_name );
+            closedir( pDir );
+        }
+        it = g_directoryCache.insert( std::make_pair( szDirectory, entries ) ).first;
+    }
+    for ( size_t i = 0; i < it->second.size(); ++i )
+    {
+        if ( EqualsNoCase( it->second[i], szName ) )
+            return it->second[i];
+    }
+    return std::string();
+}
+
+}   // anonymous namespace
+
+void Bk1ForgetDirectory( const char *pszPath )
+{
+    // A directory that has just been written to must be read again.
+    if ( pszPath == 0 )
+    {
+        g_directoryCache.clear();
+        return;
+    }
+    std::string szPath = Bk1HostPath( pszPath );
+    const size_t nSlash = szPath.rfind( '/' );
+    g_directoryCache.erase( ( nSlash == std::string::npos ) ? std::string()
+                                                            : szPath.substr( 0, nSlash ) );
+}
+
 std::string Bk1HostPath( const char *pszPath )
 {
     if ( pszPath == 0 )
         return std::string();
+
     std::string szResult( pszPath );
     for ( size_t i = 0; i < szResult.size(); ++i )
     {
         if ( szResult[i] == '\\' )
             szResult[i] = '/';
     }
-    return szResult;
+
+    // Present as given? Then nothing else is needed, which is the common case
+    // and costs one stat.
+    struct stat st;
+    if ( stat( szResult.c_str(), &st ) == 0 )
+        return szResult;
+
+    // Otherwise walk it, folding case where a component does not match.
+    const bool bAbsolute = !szResult.empty() && szResult[0] == '/';
+    std::string szBuilt = bAbsolute ? "" : ".";
+    size_t nStart = bAbsolute ? 1 : 0;
+
+    while ( nStart <= szResult.size() )
+    {
+        size_t nEnd = szResult.find( '/', nStart );
+        if ( nEnd == std::string::npos )
+            nEnd = szResult.size();
+        const std::string szComponent = szResult.substr( nStart, nEnd - nStart );
+
+        if ( !szComponent.empty() && szComponent != "." )
+        {
+            const std::string szCandidate = szBuilt + "/" + szComponent;
+            if ( stat( szCandidate.c_str(), &st ) == 0 )
+            {
+                szBuilt = szCandidate;
+            }
+            else
+            {
+                const std::string szReal = MatchInDirectory( szBuilt, szComponent );
+                if ( szReal.empty() )
+                {
+                    // Nothing matches. Hand back the rest unchanged -- the
+                    // caller is about to fail, and it should fail against the
+                    // name it asked for.
+                    return szBuilt + "/" + szResult.substr( nStart );
+                }
+                szBuilt += "/" + szReal;
+            }
+        }
+
+        if ( nEnd == szResult.size() )
+            break;
+        nStart = nEnd + 1;
+    }
+    return szBuilt;
 }
 
 namespace {
@@ -312,6 +433,8 @@ BOOL MoveFileA( const char *pszFrom, const char *pszTo )
     const std::string szTo = Bk1HostPath( pszTo );
     pszFrom = szFrom.c_str();
     pszTo = szTo.c_str();
+    Bk1ForgetDirectory( pszFrom );
+    Bk1ForgetDirectory( pszTo );
     return rename( pszFrom, pszTo ) == 0 ? TRUE : FALSE;
 }
 
@@ -321,6 +444,7 @@ BOOL DeleteFileA( const char *pszPath )
         return FALSE;
     const std::string szPath = Bk1HostPath( pszPath );
     pszPath = szPath.c_str();
+    Bk1ForgetDirectory( pszPath );
     return unlink( pszPath ) == 0 ? TRUE : FALSE;
 }
 
@@ -366,6 +490,7 @@ BOOL CreateDirectoryA( const char *pszPath, LPVOID )
         return FALSE;
     const std::string szPath = Bk1HostPath( pszPath );
     pszPath = szPath.c_str();
+    Bk1ForgetDirectory( pszPath );
     return mkdir( pszPath, 0777 ) == 0 ? TRUE : FALSE;
 }
 
@@ -375,6 +500,7 @@ BOOL RemoveDirectoryA( const char *pszPath )
         return FALSE;
     const std::string szPath = Bk1HostPath( pszPath );
     pszPath = szPath.c_str();
+    Bk1ForgetDirectory( pszPath );
     return rmdir( pszPath ) == 0 ? TRUE : FALSE;
 }
 

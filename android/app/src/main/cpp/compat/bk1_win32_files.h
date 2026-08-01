@@ -127,4 +127,8 @@ BOOL FileTimeToSystemTime( const FILETIME *pIn, SYSTEMTIME *pOut );
 //
 // Outside the extern "C" block above because it returns a std::string.
 std::string Bk1HostPath( const char *pszPath );
+
+// Directory listings are remembered while resolving case. Anything that
+// creates or removes a file has to say so, or the new name stays invisible.
+void Bk1ForgetDirectory( const char *pszPath );
 #endif

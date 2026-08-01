@@ -9,6 +9,8 @@
 // pipeline that is not needed.
 #include "bk1_d3d8_gles.h"
 
+#include <android/log.h>
+
 #include <math.h>
 #include <string.h>
 
@@ -799,12 +801,75 @@ void SDevice::ApplyState()
     // the shader multiplies a column vector, so the matrix goes up transposed.
     glUniformMatrix4fv( program.nTransformUniform, 1, GL_TRUE, &matCombined.m[0][0] );
 
+    {
+        static int nShown = 0;
+        if ( nShown < 40 )
+        {
+            ++nShown;
+            for ( int r = 0; r < 4; ++r )
+            {
+                (void)r;
+            }
+            // 2/width and -2/height sit in the diagonal of an orthographic
+            // projection; printing the sizes they imply is easier to read than
+            // sixteen numbers.
+            const float fSx = matCombined.m[0][0];
+            const float fSy = matCombined.m[1][1];
+            __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
+                                 "   projection implies %.0f x %.0f",
+                                 ( fSx != 0.0f ) ? 2.0f / fSx : 0.0f,
+                                 ( fSy != 0.0f ) ? -2.0f / fSy : 0.0f );
+        }
+    }
+
     int nClientWidth = 0, nClientHeight = 0;
     Bk1GetClientSize( &nClientWidth, &nClientHeight );
     const GLint nViewportSize = glGetUniformLocation( program.nProgram, "uViewportSize" );
     glUniform2f( nViewportSize,
                  viewport.Width != 0 ? (float)viewport.Width : (float)nClientWidth,
                  viewport.Height != 0 ? (float)viewport.Height : (float)nClientHeight );
+}
+
+// Bring-up diagnostic: the first few draws, with what they were given. A
+// picture that is wrong says nothing about which of stride, layout or position
+// is wrong; this says it directly.
+void ReportDraw( const char *pszWhat, D3DPRIMITIVETYPE type, UINT nPrimitives,
+                 DWORD dwFVF, int nStride, const SVertexLayout &layout,
+                 const void *pVertices )
+{
+    static int nReported = 0;
+    if ( nReported >= 40 )
+        return;
+    ++nReported;
+    __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
+                         "%s type=%d prims=%u fvf=0x%x stride=%d layoutStride=%d "
+                         "xyzrhw=%d diffuse=%d texcoords=%d",
+                         pszWhat, (int)type, nPrimitives, (unsigned)dwFVF, nStride,
+                         layout.nStride, layout.bTransformed ? 1 : 0,
+                         layout.bHasDiffuse ? 1 : 0, layout.nTexCoords );
+    if ( pVertices != 0 && !layout.bTransformed )
+    {
+        const unsigned char *p = (const unsigned char *)pVertices;
+        const int n = ( nStride > 0 ) ? nStride : layout.nStride;
+        for ( int i = 0; i < 3 && n > 0; ++i )
+        {
+            const float *pf = (const float *)( p + (size_t)i * n );
+            __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
+                                 "   v%d  %.2f %.2f %.2f", i, pf[0], pf[1], pf[2] );
+        }
+    }
+    if ( pVertices != 0 && layout.bTransformed )
+    {
+        const unsigned char *p = (const unsigned char *)pVertices;
+        const int n = ( nStride > 0 ) ? nStride : layout.nStride;
+        for ( int i = 0; i < 3 && n > 0; ++i )
+        {
+            const float *pf = (const float *)( p + (size_t)i * n );
+            __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
+                                 "   v%d  %.1f %.1f %.3f rhw %.3f", i,
+                                 pf[0], pf[1], pf[2], pf[3] );
+        }
+    }
 }
 
 void SDevice::BindVertexLayout( const SVertexLayout &layout, int nBaseOffset )
@@ -893,6 +958,10 @@ HRESULT STDCALL SDevice::DrawPrimitive( D3DPRIMITIVETYPE type, UINT nStartVertex
     const int nStride = (int)( nStreamStride != 0 ? nStreamStride : (UINT)layout.nStride );
     BindVertexLayout( layout, (int)nStartVertex * nStride );
 
+    ReportDraw( "array", type, nPrimitiveCount, dwFVF != 0 ? dwFVF : pStream->dwFVF,
+                nStride, layout,
+                pStream->data.empty() ? 0 : &pStream->data[0] );
+
     glDrawArrays( PrimitiveMode( type ), 0, (GLsizei)VertexCount( type, nPrimitiveCount ) );
     return D3D_OK;
 }
@@ -915,6 +984,48 @@ HRESULT STDCALL SDevice::DrawIndexedPrimitive( D3DPRIMITIVETYPE type, UINT,
     // Direct3D adds the base vertex index to every index; GLES has no such
     // offset before 3.2, so it is folded into the attribute pointers.
     BindVertexLayout( layout, (int)nBaseVertexIndex * nStride );
+
+    {
+        // The triangle as it is actually assembled: the indices the draw uses
+        // and the positions they point at. Buffer order says nothing here --
+        // an indexed draw can take any six vertices out of thousands.
+        static int nTraced = 0;
+        if ( nTraced < 3 && !pIndices->data.empty() && !pStream->data.empty() )
+        {
+            ++nTraced;
+            const bool bWide16 = ( pIndices->format != D3DFMT_INDEX32 );
+            for ( UINT i = 0; i < nPrimitiveCount * 3 && i < 6; ++i )
+            {
+                const size_t nAt = (size_t)nStartIndex + i;
+                unsigned int nIndex = 0;
+                if ( bWide16 )
+                {
+                    if ( ( nAt + 1 ) * 2 > pIndices->data.size() ) break;
+                    nIndex = *(const unsigned short *)( &pIndices->data[nAt * 2] );
+                }
+                else
+                {
+                    if ( ( nAt + 1 ) * 4 > pIndices->data.size() ) break;
+                    nIndex = *(const unsigned int *)( &pIndices->data[nAt * 4] );
+                }
+                const size_t nOffset = ( (size_t)nBaseVertexIndex + nIndex ) * nStride;
+                if ( nOffset + 12 > pStream->data.size() )
+                {
+                    __android_log_print( ANDROID_LOG_WARN, "Blitzkrieg.gfx",
+                                         "   i%u -> %u PAST THE BUFFER", i, nIndex );
+                    continue;
+                }
+                const float *pf = (const float *)( &pStream->data[nOffset] );
+                __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
+                                     "   i%u -> %u  %.1f %.1f %.2f", i, nIndex,
+                                     pf[0], pf[1], pf[2] );
+            }
+        }
+    }
+
+    ReportDraw( "indexed", type, nPrimitiveCount, dwFVF != 0 ? dwFVF : pStream->dwFVF,
+                nStride, layout,
+                pStream->data.empty() ? 0 : &pStream->data[0] );
 
     const bool bWide = ( pIndices->format == D3DFMT_INDEX32 );
     const size_t nIndexSize = bWide ? 4 : 2;

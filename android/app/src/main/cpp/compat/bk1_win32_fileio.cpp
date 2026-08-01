@@ -54,6 +54,14 @@ HANDLE CreateFileA( const char *pszName, DWORD dwAccess, DWORD /*dwShare*/,
     const std::string szName = Bk1HostPath( pszName );
     pszName = szName.c_str();
 
+    // A file that is about to appear must not stay hidden behind a remembered
+    // directory listing.
+    if ( dwCreation == CREATE_NEW || dwCreation == CREATE_ALWAYS ||
+         dwCreation == OPEN_ALWAYS )
+    {
+        Bk1ForgetDirectory( pszName );
+    }
+
     const bool bRead = ( dwAccess & GENERIC_READ ) != 0;
     const bool bWrite = ( dwAccess & GENERIC_WRITE ) != 0;
 

@@ -32,6 +32,7 @@
 #include "../../../../../Sources/src/StreamIO/RandomGen.h"
 #include "../../../../../Sources/src/Main/iMain.h"
 #include "../../../../../Sources/src/Main/GameDB.h"
+#include "../../../../../Sources/src/Net/NetDriver.h"
 #include "../../../../../Sources/src/Main/ScenarioTracker.h"
 #include "../../../../../Sources/src/Main/CommandsHistoryInterface.h"
 
@@ -122,27 +123,39 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
         // all about the real problem being an empty directory.
         const std::string szDataDirectory = szRoot + "\\data";
         const std::string szHostDataDirectory = Bk1HostPath( szDataDirectory.c_str() );
+        // Either form counts. The shipped game packs its data into .pak
+        // archives, but Nival's source release carries the same tree loose,
+        // and CCommonFileSystem opens both -- a zip storage over the pattern
+        // and a plain file storage over the directory beside it. Requiring an
+        // archive would refuse data the engine reads perfectly well.
         int nArchives = 0;
+        int nEntries = 0;
         if ( DIR *pDir = opendir( szHostDataDirectory.c_str() ) )
         {
             while ( dirent *pEntry = readdir( pDir ) )
             {
+                if ( strcmp( pEntry->d_name, "." ) == 0 ||
+                     strcmp( pEntry->d_name, ".." ) == 0 )
+                    continue;
+                ++nEntries;
                 const char *pszDot = strrchr( pEntry->d_name, '.' );
                 if ( pszDot != 0 && strcasecmp( pszDot, ".pak" ) == 0 )
                     ++nArchives;
             }
             closedir( pDir );
         }
-        if ( nArchives == 0 )
+        if ( nEntries == 0 )
         {
-            LOGE( "no game data. Expected the original game's archives here:" );
-            LOGE( "    %s/*.pak", szHostDataDirectory.c_str() );
+            LOGE( "no game data. Expected the game's Data tree here, either as" );
+            LOGE( "*.pak archives or loose, both of which the engine reads:" );
+            LOGE( "    %s", szHostDataDirectory.c_str() );
             LOGE( "This port ships no game content -- it belongs to whoever owns" );
             LOGE( "a copy of the game. Copy the Data directory across and start" );
             LOGE( "again. adb push <game>/Data/. %s/", szHostDataDirectory.c_str() );
             return false;
         }
-        LOGI( "%d archives in %s", nArchives, szHostDataDirectory.c_str() );
+        LOGI( "%d entries in %s, %d of them archives",
+              nEntries, szHostDataDirectory.c_str(), nArchives );
 
         const std::string szPattern = szDataDirectory + "\\*.pak";
         CPtr<IDataStorage> pStorage =
@@ -156,6 +169,74 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
         RegisterSingleton( IDataStorage::tidTypeID, pStorage );
     }
 
+    // --- the constants ---
+    // consts.xml feeds the global variables that everything below reads. This
+    // and the three steps after it were missing from the first version of this
+    // file, which is why NMain::Initialize came back with no object database:
+    // WinMain does them here, before it, and I had read around them.
+    {
+        CTableAccessor table = NDB::OpenDataTable( "consts.xml" );
+        NMain::SetupGlobalVarConsts( table );
+    }
+
+    // The video mode the interface lays itself out against. There is one mode
+    // here -- the surface Android gave us -- so mission and intermission are
+    // the same, where Windows had a pair the player could switch between.
+    //
+    // Windowed, and that is not a compromise. The engine's fullscreen path
+    // picks a display mode out of the adapter's list; Android has no modes to
+    // pick from, and the surface size is already decided. Its windowed path
+    // takes the size it is given, which is the truthful description of what
+    // this is. Asking for fullscreen made it fall back to 1024x768 while the
+    // interface laid itself out at 2700x1280, and the two disagreed on screen.
+    SetGlobalVar( "GFX.Mode.Mission.SizeX", nSurfaceWidth );
+    SetGlobalVar( "GFX.Mode.Mission.SizeY", nSurfaceHeight );
+    SetGlobalVar( "GFX.Mode.Mission.BPP", 32 );
+    SetGlobalVar( "GFX.Mode.Mission.Stencil", 8 );
+    SetGlobalVar( "GFX.Mode.Mission.FullScreen", int( GFXFS_WINDOWED ) );
+    SetGlobalVar( "GFX.Mode.Mission.Frequency", 0 );
+    SetGlobalVar( "GFX.Mode.InterMission.SizeX", nSurfaceWidth );
+    SetGlobalVar( "GFX.Mode.InterMission.SizeY", nSurfaceHeight );
+    SetGlobalVar( "GFX.Mode.InterMission.BPP", 32 );
+    SetGlobalVar( "GFX.Mode.InterMission.Stencil", 8 );
+    SetGlobalVar( "GFX.Mode.InterMission.FullScreen", int( GFXFS_WINDOWED ) );
+    SetGlobalVar( "GFX.Mode.InterMission.Frequency", 0 );
+    SetGlobalVar( "GFX.Mode.Current.SizeX", nSurfaceWidth );
+    SetGlobalVar( "GFX.Mode.Current.SizeY", nSurfaceHeight );
+    SetGlobalVar( "GFX.Mode.Current.BPP", 32 );
+    SetGlobalVar( "GFX.Mode.Current.Stencil", 8 );
+    SetGlobalVar( "GFX.Mode.Current.FullScreen", int( GFXFS_WINDOWED ) );
+    SetGlobalVar( "GFX.Mode.Current.Frequency", 0 );
+
+    // --- the object database ---
+    // Everything the game builds comes out of here, and the save/load system
+    // needs to know about it before anything is created.
+    {
+        CPtr<IObjectsDB> pGDB = CreateObjectsDB();
+        if ( pGDB == 0 )
+        {
+            LOGE( "cannot create the object database" );
+            return false;
+        }
+        RegisterSingleton( IObjectsDB::tidTypeID, pGDB );
+        GetSLS()->SetGDB( pGDB );
+    }
+
+    // --- the net driver ---
+    // Registered even for a single-player launch, because the transceiver the
+    // main loop builds looks it up either way.
+    {
+        SetGlobalVar( "GameSpyGameName", "blitzkrieg" );
+        SetGlobalVar( "GameSpyEngineName", "blitzkrieg" );
+        SetGlobalVar( "GameSpyChatName", "#GSP!blitzkrieg" );
+
+        CTableAccessor constsTbl = NDB::OpenDataTable( "consts.xml" );
+        SetGlobalVar( "NetGameVersion", constsTbl.GetInt( "Net", "GameVersion", 1 ) );
+
+        INetDriver *pNetDriver = CreateObject<INetDriver>( INetDriver::tidTypeID );
+        RegisterSingleton( INetDriver::tidTypeID, pNetDriver );
+    }
+
     // --- the subsystems ---
     // Windows passed three window handles here -- the frame, the one graphics
     // draws into and the one input is captured against. They are one window in
@@ -167,7 +248,13 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
     }
 
     // --- the object database ---
-    if ( GetSingleton<IObjectsDB>()->LoadDB() == false )
+    IObjectsDB *pObjectsDB = GetSingleton<IObjectsDB>();
+    if ( pObjectsDB == 0 )
+    {
+        LOGE( "no object database: NMain::Initialize did not register one" );
+        return false;
+    }
+    if ( pObjectsDB->LoadDB() == false )
     {
         LOGE( "cannot load objects.xml" );
         return false;
@@ -178,6 +265,11 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
     // pickers, so this runs before anything shows a menu.
     {
         IFilesInspector *pInspector = GetSingleton<IFilesInspector>();
+        if ( pInspector == 0 )
+        {
+            LOGE( "no files inspector" );
+            return false;
+        }
 
         struct SEntry { const char *pszName; const char *pszPattern; };
         static const SEntry entries[] = {
@@ -192,6 +284,11 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
         {
             IFilesInspectorEntryCollector *pCollector =
                 CreateObject<IFilesInspectorEntryCollector>( MAIN_FILES_INSPECTOR_ENTRY_COLLECTOR );
+            if ( pCollector == 0 )
+            {
+                LOGE( "cannot create the collector for %s", entries[i].pszName );
+                return false;
+            }
             pCollector->Configure( entries[i].pszPattern );
             pInspector->AddEntry( entries[i].pszName, pCollector );
         }
@@ -204,7 +301,12 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
     // size is what makes the interface lay itself out to the screen.
     {
         IGFX *pGFX = GetSingleton<IGFX>();
-        if ( pGFX->SetMode( nSurfaceWidth, nSurfaceHeight, 32, 8, GFXFS_FULLSCREEN, 0 ) == false )
+        if ( pGFX == 0 )
+        {
+            LOGE( "no graphics singleton" );
+            return false;
+        }
+        if ( pGFX->SetMode( nSurfaceWidth, nSurfaceHeight, 32, 8, GFXFS_WINDOWED, 0 ) == false )
         {
             LOGE( "IGFX::SetMode( %d, %d ) failed", nSurfaceWidth, nSurfaceHeight );
             return false;
@@ -215,7 +317,10 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
                                               1, 1024 * 8 + nSurfaceHeight * 2 );
         pGFX->SetProjectionTransform( matrix );
         pGFX->EnableLighting( false );
-        GetSingleton<ITextureManager>()->SetQuality( ITextureManager::TEXTURE_QUALITY_HIGH );
+        if ( ITextureManager *pTM = GetSingleton<ITextureManager>() )
+            pTM->SetQuality( ITextureManager::TEXTURE_QUALITY_HIGH );
+        else
+            LOGE( "no texture manager" );
     }
 
     // --- saved settings ---
@@ -227,29 +332,50 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
     // moves it; the bounds are the surface.
     {
         CPtr<ICursor> pCursor = GetSingleton<ICursor>();
+        if ( pCursor == 0 )
+        {
+            LOGE( "no cursor singleton" );
+            return false;
+        }
         pCursor->SetBounds( 0, 0, nSurfaceWidth, nSurfaceHeight );
         pCursor->SetMode( 0 );
     }
 
     // --- the interface font ---
     {
-        CPtr<IGFXFont> pFont = GetSingleton<IFontManager>()->GetFont( "fonts\\medium" );
+        IFontManager *pFonts = GetSingleton<IFontManager>();
+        if ( pFonts == 0 )
+        {
+            LOGE( "no font manager" );
+            return false;
+        }
+        CPtr<IGFXFont> pFont = pFonts->GetFont( "fonts\\medium" );
+        if ( pFont == 0 )
+            LOGE( "fonts\\medium is missing; text will not draw" );
         GetSingleton<IGFX>()->SetFont( pFont );
     }
 
     // --- sound ---
     {
         ISFX *pSFX = GetSingleton<ISFX>();
+        if ( pSFX == 0 )
+        {
+            LOGE( "no sound singleton" );
+            return false;
+        }
         pSFX->SetSFXMasterVolume( 1.0f );
         pSFX->SetStreamMasterVolume( GetGlobalVar( "Sound.StreamMasterVolume", 1.0f ) );
         pSFX->EnableSFX( GetGlobalVar( "Sound.EnableSFX", 1 ) );
         pSFX->EnableStreaming( GetGlobalVar( "Sound.EnableStream", 1 ) );
     }
 
-    GetSingleton<IConsoleBuffer>()->WriteASCII( CONSOLE_STREAM_COMMAND,
-                                                "Exec( \"autoexec.cfg\" )", 0xff0000ff );
+    if ( IConsoleBuffer *pConsole = GetSingleton<IConsoleBuffer>() )
+        pConsole->WriteASCII( CONSOLE_STREAM_COMMAND, "Exec( \"autoexec.cfg\" )", 0xff0000ff );
 
-    GetSingleton<IOptionSystem>()->Init();
+    if ( IOptionSystem *pOptions = GetSingleton<IOptionSystem>() )
+        pOptions->Init();
+    else
+        LOGE( "no option system" );
 
     // NSysKeys::EnableSystemKeys is commented out in the original too.
 
@@ -261,11 +387,13 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
         return false;
     }
     RegisterSingleton( IMainLoop::tidTypeID, g_pMainLoop );
-    GetSingleton<ICursor>()->Acquire( true );
+    if ( ICursor *pCursor = GetSingleton<ICursor>() )
+        pCursor->Acquire( true );
 
     // The mod the profile remembers, if any.
     {
-        const std::string szMOD = GetSingleton<IUserProfile>()->GetMOD();
+        IUserProfile *pProfile = GetSingleton<IUserProfile>();
+        const std::string szMOD = ( pProfile != 0 ) ? pProfile->GetMOD() : std::string();
         if ( !szMOD.empty() )
             g_pMainLoop->Command( MAIN_COMMAND_CHANGE_MOD, szMOD.c_str() );
     }

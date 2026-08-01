@@ -55,6 +55,19 @@ add_compile_options(
     # visibility have to hold across every unit that ends up in the library, or
     # the ABI check stops meaning anything.
     -fshort-wchar
+    # char is signed under MSVC and unsigned on ARM by default, and the engine
+    # was written against the first. It packs a surface normal into a DWORD one
+    # byte a component and reads it back with
+    #     float( char( cNumber ) ) / 127.0f
+    # which on ARM turns every negative component into a large positive one:
+    # -1.0 packs to 129, and 129 read unsigned is +1.016 rather than -1.0.
+    # Measured, in a mission: the terrain normal under a vehicle came back as
+    # 0.573 0.580 0.580 -- normalize(1,1,1) -- instead of near-vertical, which
+    # collapsed the shadow projection's denominator to -0.0028 and threw the
+    # shadow across the map as a second solid copy of the vehicle.
+    # This is a whole class of bug, not one line, so it is fixed where the
+    # assumption lives rather than at each place that relies on it.
+    -fsigned-char
     -fvisibility=hidden
     -fvisibility-inlines-hidden
 )

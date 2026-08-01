@@ -248,7 +248,7 @@ int CUnitGuns::GetNAmmo( const int nCommonGun ) const
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // nAmmo со знаком
-void CUnitGuns::ChangeAmmo( const int nCommonGun, const nAmmo )
+void CUnitGuns::ChangeAmmo( const int nCommonGun, const int nAmmo )
 {
 	NI_ASSERT_T( nCommonGun < nCommonGuns, NStr::Format( "Wrong number of gun (%d), total number of guns (%d)", nCommonGun, nCommonGuns ) );
 	commonGunsInfo[nCommonGun]->nAmmo += nAmmo;

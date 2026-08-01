@@ -699,7 +699,7 @@ void CSoldierAttackState::AnalyzeMovingToSidePosition()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CSoldierAttackState::IsBruteMoving()
 {
-	const nMinPossiblePiercing = pGun->GetMinPossiblePiercing();
+	const int nMinPossiblePiercing = pGun->GetMinPossiblePiercing();
 	return
 		!pUnit->CanMove() ||
 		pEnemy->GetArmor(0) <= nMinPossiblePiercing &&

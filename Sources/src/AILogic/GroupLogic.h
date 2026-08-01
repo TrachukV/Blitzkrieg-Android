@@ -60,7 +60,7 @@ class CGroupLogic : public IRefCount
 	void EraseFromAmbushGroups( const SAIUnitCmd &command, const WORD wGroup );
 	void CreateAmbushGroup( const WORD wGroup );
 	void ProcessAmbushGroups();
-	void SetToAmbush( CAmbushGroups::iterator &iter );
+	void SetToAmbush( const CAmbushGroups::iterator &iter );
 
 	//
 	static WORD GetGroupNumberByID( const WORD wID );

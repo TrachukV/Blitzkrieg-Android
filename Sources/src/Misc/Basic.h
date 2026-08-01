@@ -590,12 +590,40 @@ public:																																								\
 	bool operator<=( const TUserObj *a ) const { return this->GetPtr() <= a; }								\
 	bool operator>=( const TUserObj *a ) const { return this->GetPtr() >= a; }								\
 };
+// Ordering two of the same smart pointer was ambiguous: the member operator
+// above is viable by converting one side to TUserObj*, and so is the built-in
+// comparison on raw pointers by converting both, and neither is better. The
+// engine keeps ordered containers of these -- std::set< CObj<CFormation> > in
+// AILogic/Units.h is one -- and MSVC 6 resolved it to the pointer comparison.
+//
+// These are deliberately free templates rather than members. Where the engine
+// writes its own ordering for a particular instantiation, as Shell.h does for
+// CPtr<CInvisShell> to sort shells by explosion time, that hand-written
+// operator is a non-template and wins outright; a member here would have
+// competed with it and broken that intent.
+#define BASIC_PTR_ORDER( TPtrName )                                                               \
+template <class TUserObj>                                                                          \
+	inline bool operator< ( const TPtrName<TUserObj> &a, const TPtrName<TUserObj> &b )                \
+		{ return a.GetPtr() < b.GetPtr(); }                                                             \
+template <class TUserObj>                                                                          \
+	inline bool operator> ( const TPtrName<TUserObj> &a, const TPtrName<TUserObj> &b )                \
+		{ return a.GetPtr() > b.GetPtr(); }                                                             \
+template <class TUserObj>                                                                          \
+	inline bool operator<=( const TPtrName<TUserObj> &a, const TPtrName<TUserObj> &b )                \
+		{ return a.GetPtr() <= b.GetPtr(); }                                                            \
+template <class TUserObj>                                                                          \
+	inline bool operator>=( const TPtrName<TUserObj> &a, const TPtrName<TUserObj> &b )                \
+		{ return a.GetPtr() >= b.GetPtr(); }
+
 // ptr specialization
 BASIC_PTR_DECLARE( CPtr, NRefCount::SRefPtrFunc );
+BASIC_PTR_ORDER( CPtr )
 // obj specialization
 BASIC_PTR_DECLARE( CObj, NRefCount::SRefObjFunc );
+BASIC_PTR_ORDER( CObj )
 // M-obj specialization
 BASIC_PTR_DECLARE( CMObj, NRefCount::SRefMFunc );
+BASIC_PTR_ORDER( CMObj )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // polimorphic casts for pointers above
 template <class TOut, class TUserObj, class TRefFunc>

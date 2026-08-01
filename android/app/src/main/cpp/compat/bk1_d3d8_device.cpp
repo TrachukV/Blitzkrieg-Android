@@ -384,11 +384,16 @@ struct SDevice : public IDirect3DDevice8
     void BindVertexLayout( const SVertexLayout &layout, int nBaseOffset );
 };
 
+// The live device, so that a texture being destroyed can reach the cache that
+// may still be holding its name. One device exists at a time here.
+static SDevice *g_pLiveDevice = 0;
+
 SDevice::SDevice()
     : nRefCount( 1 ), bProgramBuilt( false ), pStream( 0 ), nStreamStride( 0 ),
       material(), 
       pIndices( 0 ), nBaseVertexIndex( 0 ), dwFVF( 0 ), nVertexArray( 0 )
 {
+    g_pLiveDevice = this;
     memset( &present, 0, sizeof( present ) );
     memset( renderStates, 0, sizeof( renderStates ) );
     memset( pStageTexture, 0, sizeof( pStageTexture ) );
@@ -1637,6 +1642,14 @@ HRESULT STDCALL SDirect3D::GetDeviceCaps( UINT, D3DDEVTYPE, D3DCAPS8 *pCaps )
 }
 
 }   // anonymous namespace
+
+// Outside the anonymous namespace: the resources call this by name, and the
+// device it reaches is the file-scope one above.
+void ForgetGLState()
+{
+    if ( g_pLiveDevice != 0 )
+        g_pLiveDevice->cache.Invalidate();
+}
 }   // namespace NBk1D3D
 
 extern "C" IDirect3D8 *Direct3DCreate8( UINT )

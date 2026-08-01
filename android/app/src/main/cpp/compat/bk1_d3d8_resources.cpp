@@ -318,7 +318,12 @@ STexture::STexture()
 STexture::~STexture()
 {
     if ( nGLTexture != 0 )
+    {
+        // Before the name goes back to GL, which will hand it out again: a
+        // cache still holding it would skip the bind for whatever gets it next.
+        ForgetGLState();
         glDeleteTextures( 1, &nGLTexture );
+    }
 }
 
 HRESULT STDCALL STexture::QueryInterface( REFIID, void **ppvObject )

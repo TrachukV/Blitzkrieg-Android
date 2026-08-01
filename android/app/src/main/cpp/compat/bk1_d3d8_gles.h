@@ -304,6 +304,14 @@ struct SGLCache
     void Invalidate() { memset( this, 0, sizeof( *this ) ); bValid = false; }
 };
 
+// Throws away what GL was last told, so the next draw says all of it again.
+//
+// Anything that can make the cache disagree with GL has to call this. Deleting
+// a texture is the dangerous one: GL hands the same name out again, so a cache
+// still holding it will skip the bind for a completely different texture. That
+// is not theoretical -- it is why the second mission of a run drew nothing.
+void ForgetGLState();
+
 bool BuildProgram( SProgram *pProgram );
 
 }   // namespace NBk1D3D

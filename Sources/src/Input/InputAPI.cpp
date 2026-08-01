@@ -436,6 +436,14 @@ BOOL CALLBACK DIEnumDeviceObjectsCallback( LPCDIDEVICEOBJECTINSTANCE lpddoi, LPV
 	// compose control's name with the device's one
 	if ( pDesc->eType != DEVICE_TYPE_KEYBOARD ) 
 		szControlName = pDesc->szName + "_" + szControlName;
+#ifndef _MSC_VER
+	// Bring-up on Android: these names are what the binding file refers to, so
+	// a mismatch here means a control the player cannot reach. Only the
+	// pointing device is listed -- the keyboard would add 256 lines and its
+	// names come from a fixed table rather than from this enumeration.
+	if ( pDesc->eType != DEVICE_TYPE_KEYBOARD )
+		NStr::DebugTrace( "control: %s (ofs %d)\n", szControlName.c_str(), int(instance.dwOfs) );
+#endif
 	//
 	SControlDesc control;
 	control.szFriendlyName = instance.tszName;

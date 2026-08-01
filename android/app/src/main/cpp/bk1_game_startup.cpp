@@ -14,6 +14,7 @@
 
 #include <android/log.h>
 #include <dirent.h>
+#include <unistd.h>
 #include <string.h>
 
 #include <string>
@@ -89,6 +90,13 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
         if ( szRoot[i] == '/' )
             szRoot[i] = '\\';
     }
+    // The engine names its own files relative to the current directory --
+    // ".\\config.cfg", ".\\saves\\", ".\\data\\*.pak". On Windows
+    // NMain::SetGameDirectory made the install folder current before any of
+    // that ran; here the process starts in "/", where none of it exists.
+    if ( chdir( Bk1HostPath( szRoot.c_str() ).c_str() ) != 0 )
+        LOGE( "cannot enter %s; the engine will not find its own files", szRoot.c_str() );
+
     const std::string szLogFileName = szRoot + "\\log.txt";
     DeleteFile( szLogFileName.c_str() );
 

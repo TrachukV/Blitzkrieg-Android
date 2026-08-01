@@ -6,6 +6,8 @@
 // the immediate state its polling path asks for.
 #include "dinput.h"
 
+#include <android/log.h>
+
 #include <string.h>
 
 #include <deque>
@@ -254,6 +256,20 @@ struct SInputDevice : public IDirectInputDevice8
         std::lock_guard<std::mutex> lock( g_mutex );
         SDeviceState &state = StateFor( nDevice );
 
+        {
+            // Bring-up: is the engine reading this device at all, and does it
+            // see what touch put in? A menu that does not react is either an
+            // event that never arrives or one that arrives and means nothing.
+            static int nShown = 0;
+            if ( nShown < 8 )
+            {
+                ++nShown;
+                __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.input",
+                                     "GetDeviceData: device %d, acquired %d, queued %d",
+                                     nDevice, bAcquired ? 1 : 0, (int)state.events.size() );
+            }
+        }
+
         // A null buffer asks how much is waiting.
         if ( rgdod == 0 )
         {
@@ -328,6 +344,8 @@ struct SDirectInput : public IDirectInput8
     HRESULT STDCALL EnumDevices( DWORD dwDevType, LPDIENUMDEVICESCALLBACKA pCallback,
                                  void *pRef, DWORD ) override
     {
+        __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.input",
+                             "EnumDevices( 0x%x )", (unsigned)dwDevType );
         if ( pCallback == 0 )
             return E_INVALIDARG;
 
@@ -345,7 +363,12 @@ struct SDirectInput : public IDirectInput8
             instance.dwSize = sizeof( instance );
             instance.guidInstance = GUID_SysMouse;
             instance.guidProduct = GUID_SysMouse;
-            instance.dwDevType = DIDEVTYPE_MOUSE;
+            // The DirectInput 8 type, not the older one. Input/InputAPI.cpp
+            // switches on GET_DIDEVICE_TYPE and compares against DI8DEVTYPE_*;
+            // reporting DIDEVTYPE_MOUSE (2) instead of DI8DEVTYPE_MOUSE (0x12)
+            // made every device fall through as unknown, so the engine created
+            // none, read none, and no touch ever reached the game.
+            instance.dwDevType = DI8DEVTYPE_MOUSE;
             snprintf( instance.tszInstanceName, sizeof( instance.tszInstanceName ), "Touch" );
             snprintf( instance.tszProductName, sizeof( instance.tszProductName ), "Touch" );
             if ( pCallback( &instance, pRef ) == DIENUM_STOP )
@@ -357,7 +380,7 @@ struct SDirectInput : public IDirectInput8
             instance.dwSize = sizeof( instance );
             instance.guidInstance = GUID_SysKeyboard;
             instance.guidProduct = GUID_SysKeyboard;
-            instance.dwDevType = DIDEVTYPE_KEYBOARD;
+            instance.dwDevType = DI8DEVTYPE_KEYBOARD;
             snprintf( instance.tszInstanceName, sizeof( instance.tszInstanceName ), "Keyboard" );
             snprintf( instance.tszProductName, sizeof( instance.tszProductName ), "Keyboard" );
             pCallback( &instance, pRef );
@@ -437,6 +460,7 @@ extern "C" {
 
 HRESULT DirectInput8Create( HINSTANCE, DWORD, const GUID &, void **ppOut, IUnknown * )
 {
+    __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.input", "DirectInput8Create" );
     if ( ppOut == 0 )
         return E_INVALIDARG;
     *ppOut = new SDirectInput();

@@ -393,10 +393,15 @@ void DumpFrame()
 
 void SampleFrame()
 {
-    // One dump, a few seconds in, once the interface has settled.
+    // Written again every few seconds, overwriting, so that whatever the game
+    // is showing now can be fetched -- which is the only way to see the effect
+    // of a tap from outside the device.
     static int nFrames = 0;
-    if ( ++nFrames == 240 )
+    if ( ++nFrames >= 180 )
+    {
+        nFrames = 0;
         DumpFrame();
+    }
 
     static timespec last = { 0, 0 };
     timespec now;

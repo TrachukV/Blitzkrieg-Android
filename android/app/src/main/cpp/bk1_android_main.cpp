@@ -13,6 +13,7 @@
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
@@ -24,6 +25,7 @@
 #include "compat/dinput.h"
 #include "compat/fmod.h"
 #include "bk1_game_startup.h"
+#include "bk1_touch_gestures.h"
 
 #define LOG_TAG "Blitzkrieg"
 #define LOGI( ... ) __android_log_print( ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__ )
@@ -49,6 +51,21 @@ struct SAppState
     float fLastX;
     float fLastY;
 
+    // What the gesture layer needs to remember between events.
+    float fPressX;
+    float fPressY;
+    long long nPressTime;
+    bool  bMovedPastSlop;
+    bool  bLongPressFired;
+    bool  bLeftDown;
+    bool  bTwoFinger;
+    float fPinchCentreX;
+    float fPinchCentreY;
+    float fPinchSpread;
+    bool  bScrollHeld[4];
+    bool  bScrollLogged;
+    int   nDensityDpi;
+
     // The engine starts on the first frame that has a surface, and the data
     // directory has to be known before then.
     bool  bGameStarted;
@@ -59,13 +76,23 @@ struct SAppState
         : pApp( 0 ), display( EGL_NO_DISPLAY ), surface( EGL_NO_SURFACE ),
           context( EGL_NO_CONTEXT ), nWidth( 0 ), nHeight( 0 ), bReady( false ),
           nActivePointer( -1 ), fLastX( 0.0f ), fLastY( 0.0f ),
+          fPressX( 0.0f ), fPressY( 0.0f ), nPressTime( 0 ),
+          bMovedPastSlop( false ), bLongPressFired( false ), bLeftDown( false ),
+          bTwoFinger( false ), fPinchCentreX( 0.0f ), fPinchCentreY( 0.0f ),
+          fPinchSpread( 0.0f ), bScrollLogged( false ), nDensityDpi( 0 ),
           bGameStarted( false ), bGameFailed( false )
     {
         szDataDirectory[0] = 0;
+        for ( int i = 0; i < 4; ++i )
+            bScrollHeld[i] = false;
     }
 };
 
 SAppState g_state;
+
+// The gesture machine. Declared here rather than beside the touch handling
+// because the surface reports the display density before the first event.
+NBk1Touch::CRecogniser g_gestures;
 
 // ---------------------------------------------------------------------------
 // The surface
@@ -171,6 +198,7 @@ bool CreateSurface( SAppState *pState )
              nDensity != ACONFIGURATION_DENSITY_NONE )
         {
             Bk1SetDisplayDensity( nDensity );
+            g_gestures.SetDisplayDensity( (int)nDensity );
         }
     }
 
@@ -205,10 +233,68 @@ void DestroySurface( SAppState *pState )
 // ---------------------------------------------------------------------------
 // Touch
 // ---------------------------------------------------------------------------
-// A finger is the cursor. Moving it moves the cursor; putting it down and
-// lifting it is a click at that place. The engine's own binding, double-click
-// and drag machinery reads the result and needs no changes: to it, a mouse has
-// moved and a button has gone down.
+// The gestures themselves live in bk1_touch_gestures.cpp, with no Android in
+// them, because two-finger gestures cannot be injected on a stock emulator --
+// /dev/input refuses a non-root writer -- and the only way to test them is to
+// drive the machine directly. This file does the two things that do need
+// Android: it turns motion events into the machine's own vocabulary, and it
+// performs what the machine decides.
+long long NowMilliseconds()
+{
+    timespec now;
+    clock_gettime( CLOCK_MONOTONIC, &now );
+    return (long long)now.tv_sec * 1000 + now.tv_nsec / 1000000;
+}
+
+// Performing an action means pushing it at the devices the engine's bindings
+// read -- a buffered mouse and a keyboard -- so whatever the player has bound
+// in the options still applies. Nothing here reaches into the engine.
+void Perform( const NBk1Touch::SAction &action )
+{
+    switch ( action.kind )
+    {
+    case NBk1Touch::ACTION_CURSOR_TO:
+        Bk1SetCursorPos( action.nX, action.nY );
+        break;
+    case NBk1Touch::ACTION_MOUSE_MOVE:
+        Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_X, (DWORD)action.nX );
+        Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_Y, (DWORD)action.nY );
+        break;
+    case NBk1Touch::ACTION_LEFT_DOWN:
+        Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_BUTTON0, 0x80 );
+        break;
+    case NBk1Touch::ACTION_LEFT_UP:
+        Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_BUTTON0, 0 );
+        break;
+    case NBk1Touch::ACTION_RIGHT_CLICK:
+        Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_BUTTON1, 0x80 );
+        Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_BUTTON1, 0 );
+        LOGI( "gesture: hold -> right click at %d, %d", action.nX, action.nY );
+        break;
+    case NBk1Touch::ACTION_WHEEL:
+        Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_Z, (DWORD)action.nX );
+        break;
+    case NBk1Touch::ACTION_SCROLL_LEFT:
+        Bk1PushInputEvent( BK1_INPUT_KEYBOARD, DIK_LEFT, action.nX ? 0x80 : 0 );
+        break;
+    case NBk1Touch::ACTION_SCROLL_RIGHT:
+        Bk1PushInputEvent( BK1_INPUT_KEYBOARD, DIK_RIGHT, action.nX ? 0x80 : 0 );
+        break;
+    case NBk1Touch::ACTION_SCROLL_UP:
+        Bk1PushInputEvent( BK1_INPUT_KEYBOARD, DIK_UP, action.nX ? 0x80 : 0 );
+        break;
+    case NBk1Touch::ACTION_SCROLL_DOWN:
+        Bk1PushInputEvent( BK1_INPUT_KEYBOARD, DIK_DOWN, action.nX ? 0x80 : 0 );
+        break;
+    }
+}
+
+void PerformAll( const NBk1Touch::SAction *pActions, int nCount )
+{
+    for ( int i = 0; i < nCount; ++i )
+        Perform( pActions[i] );
+}
+
 int HandleInput( android_app *pApp, AInputEvent *pEvent )
 {
     SAppState *pState = (SAppState *)pApp->userData;
@@ -217,82 +303,47 @@ int HandleInput( android_app *pApp, AInputEvent *pEvent )
 
     const int32_t nAction = AMotionEvent_getAction( pEvent );
     const int32_t nKind = nAction & AMOTION_EVENT_ACTION_MASK;
-    const size_t  nIndex =
-        (size_t)( ( nAction & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK ) >>
-                  AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT );
+    const size_t  nCount = AMotionEvent_getPointerCount( pEvent );
 
-    const float fX = AMotionEvent_getX( pEvent, nIndex );
-    const float fY = AMotionEvent_getY( pEvent, nIndex );
+    NBk1Touch::SFinger fingers[8];
+    const size_t nFingers = ( nCount < 8 ) ? nCount : 8;
+    for ( size_t i = 0; i < nFingers; ++i )
+    {
+        fingers[i].nId = AMotionEvent_getPointerId( pEvent, i );
+        fingers[i].fX = AMotionEvent_getX( pEvent, i );
+        fingers[i].fY = AMotionEvent_getY( pEvent, i );
+    }
 
+    NBk1Touch::EPhase phase;
     switch ( nKind )
     {
-    case AMOTION_EVENT_ACTION_DOWN:
-    case AMOTION_EVENT_ACTION_POINTER_DOWN:
-        if ( pState->nActivePointer < 0 )
-        {
-            pState->nActivePointer = AMotionEvent_getPointerId( pEvent, nIndex );
-            pState->fLastX = fX;
-            pState->fLastY = fY;
-            // The cursor goes to the finger before the press, so the engine
-            // sees the button go down where it was touched.
-            Bk1SetCursorPos( (int)fX, (int)fY );
-            Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_BUTTON0, 0x80 );
-
-            // Once, so that bringing the port up on a new device shows whether
-            // touch is reaching the engine's input at all. Reading the cursor
-            // back means the report comes from the layer the engine reads,
-            // not from the coordinates handed in here.
-            static bool bReported = false;
-            if ( !bReported )
-            {
-                bReported = true;
-                POINT cursor = { 0, 0 };
-                GetCursorPos( &cursor );
-                LOGI( "touch reaches the engine: cursor at %ld, %ld",
-                      (long)cursor.x, (long)cursor.y );
-            }
-        }
-        return 1;
-
-    case AMOTION_EVENT_ACTION_MOVE:
-        {
-            const size_t nCount = AMotionEvent_getPointerCount( pEvent );
-            for ( size_t i = 0; i < nCount; ++i )
-            {
-                if ( AMotionEvent_getPointerId( pEvent, i ) != pState->nActivePointer )
-                    continue;
-                const float fMoveX = AMotionEvent_getX( pEvent, i );
-                const float fMoveY = AMotionEvent_getY( pEvent, i );
-                const int nDeltaX = (int)( fMoveX - pState->fLastX );
-                const int nDeltaY = (int)( fMoveY - pState->fLastY );
-                if ( nDeltaX != 0 || nDeltaY != 0 )
-                {
-                    // Both spellings, because the engine reads the axes as a
-                    // relative stream and the cursor as an absolute position.
-                    Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_X, (DWORD)nDeltaX );
-                    Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_Y, (DWORD)nDeltaY );
-                    Bk1SetCursorPos( (int)fMoveX, (int)fMoveY );
-                    pState->fLastX = fMoveX;
-                    pState->fLastY = fMoveY;
-                }
-            }
-        }
-        return 1;
-
-    case AMOTION_EVENT_ACTION_UP:
-    case AMOTION_EVENT_ACTION_POINTER_UP:
-    case AMOTION_EVENT_ACTION_CANCEL:
-        if ( AMotionEvent_getPointerId( pEvent, nIndex ) == pState->nActivePointer )
-        {
-            Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_BUTTON0, 0 );
-            pState->nActivePointer = -1;
-        }
-        return 1;
-
-    default:
-        break;
+    case AMOTION_EVENT_ACTION_DOWN:         phase = NBk1Touch::PHASE_DOWN; break;
+    case AMOTION_EVENT_ACTION_POINTER_DOWN: phase = NBk1Touch::PHASE_SECOND_DOWN; break;
+    case AMOTION_EVENT_ACTION_MOVE:         phase = NBk1Touch::PHASE_MOVE; break;
+    case AMOTION_EVENT_ACTION_POINTER_UP:   phase = NBk1Touch::PHASE_SECOND_UP; break;
+    case AMOTION_EVENT_ACTION_UP:           phase = NBk1Touch::PHASE_UP; break;
+    case AMOTION_EVENT_ACTION_CANCEL:       phase = NBk1Touch::PHASE_CANCEL; break;
+    default:                                return 0;
     }
-    return 0;
+
+    NBk1Touch::SAction actions[NBk1Touch::MAX_ACTIONS];
+    const int nProduced = g_gestures.Handle( phase, fingers, nFingers,
+                                             NowMilliseconds(), actions );
+    PerformAll( actions, nProduced );
+
+    if ( phase == NBk1Touch::PHASE_DOWN )
+    {
+        static bool bReported = false;
+        if ( !bReported )
+        {
+            bReported = true;
+            POINT cursor = { 0, 0 };
+            GetCursorPos( &cursor );
+            LOGI( "touch reaches the engine: cursor at %ld, %ld",
+                  (long)cursor.x, (long)cursor.y );
+        }
+    }
+    return 1;
 }
 
 // ---------------------------------------------------------------------------
@@ -487,6 +538,13 @@ extern "C" void android_main( android_app *pApp )
             glViewport( 0, 0, g_state.nWidth, g_state.nHeight );
             glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
             glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
+        }
+
+        {
+            // A finger held perfectly still sends no motion events, so the
+            // order gesture can only be noticed from here.
+            NBk1Touch::SAction held[NBk1Touch::MAX_ACTIONS];
+            PerformAll( held, g_gestures.Tick( NowMilliseconds(), held ) );
         }
 
         eglSwapBuffers( g_state.display, g_state.surface );

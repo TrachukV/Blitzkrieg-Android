@@ -30,4 +30,15 @@ c++ -std=c++17 -O2 \
   -o "$OUT/wave_parser_test"
 "$OUT/wave_parser_test" || rc=1
 
+echo
+echo "=== touch gestures ==="
+# Three of these can be injected on a device with `adb shell input` and were
+# checked that way; the two-finger ones cannot, because a stock emulator image
+# refuses a non-root writer on /dev/input. Driving the recogniser directly is
+# the only way to cover them -- and it is the same unit the APK ships.
+c++ -std=c++17 -O2 \
+  "$ROOT/android/tests/touch_gesture_test.cpp" "$ROOT/android/app/src/main/cpp/bk1_touch_gestures.cpp" \
+  -o "$OUT/touch_gesture_test"
+"$OUT/touch_gesture_test" || rc=1
+
 exit $rc

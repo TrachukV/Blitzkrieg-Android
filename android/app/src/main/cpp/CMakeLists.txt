@@ -232,6 +232,7 @@ message( STATUS "engine: ${ENGINE_COUNT} translation units" )
 add_library( blitzkrieg SHARED
     bk1_android_main.cpp
     bk1_game_startup.cpp
+    bk1_touch_gestures.cpp
     bk1_module_registry.cpp
     ${COMPAT_SOURCES}
     ${ENGINE_SOURCES}

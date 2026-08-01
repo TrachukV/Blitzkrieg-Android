@@ -1,4 +1,14 @@
 #pragma once
+// MSVC's floating-point predicates, which the engine spells with the leading
+// underscore. It guards its physics with _finite -- a coordinate that has gone
+// to infinity -- from inside NI_ASSERT, so these only became reachable once
+// _DO_ASSERT was defined and those asserts started compiling.
+#ifdef __cplusplus
+#include <cmath>
+inline int _finite( double d ) { return std::isfinite( d ) ? 1 : 0; }
+inline int _isnan( double d )  { return std::isnan( d ) ? 1 : 0; }
+#endif
+
 // MSVC's floating-point control word, which the engine sets before computing
 // the checksums a multiplayer session compares.
 //

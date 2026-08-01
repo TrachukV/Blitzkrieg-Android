@@ -63,7 +63,7 @@ void CFence::InitDirectionInfo()
 		NI_ASSERT_T( leftTile.x == rightTile.x,
 			NStr::Format( 
 				"Can't recognize fence %s, vertical direction %d, upper tile is (%d,%d), lower tile is (%d,%d)",
-				GetStats()->szKeyName, nDir, leftTile.x, leftTile.y, rightTile.x, rightTile.y 
+				GetStats()->szKeyName.c_str(), nDir, leftTile.x, leftTile.y, rightTile.x, rightTile.y 
 			) 
 		);
 		NI_ASSERT_T( leftTile != rightTile,
@@ -88,7 +88,7 @@ void CFence::InitDirectionInfo()
 		NI_ASSERT_T( leftTile.y == rightTile.y,
 			NStr::Format( 
 				"Can't recognize fence %s, horizontal direction %d, left tile is (%d,%d), right tile is (%d,%d)",
-				GetStats()->szKeyName, nDir, leftTile.x, leftTile.y, rightTile.x, rightTile.y 
+				GetStats()->szKeyName.c_str(), nDir, leftTile.x, leftTile.y, rightTile.x, rightTile.y 
 			) 
 		);
 		NI_ASSERT_T( leftTile != rightTile,

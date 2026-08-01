@@ -1663,7 +1663,7 @@ void CFormationGunCrewState::RecountPoints( const CVec2 &vGunDir, const CVec2 &v
 
 	const int nCrew = crew.size();
 	const int nDesiredSize = pStats->vGunners[eGunState].size();
-	NI_ASSERT_T( nDesiredSize != 0, NStr::Format("%s in state %d has 0 gunners", pStats->szKeyName, eGunState) )
+	NI_ASSERT_T( nDesiredSize != 0, NStr::Format("%s in state %d has 0 gunners", pStats->szKeyName.c_str(), eGunState) )
 
 	for ( int i = 0; i < nCrew; ++i )
 	{

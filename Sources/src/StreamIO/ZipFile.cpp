@@ -301,7 +301,7 @@ IDataStream* CZipFile::ReadFile( IDataStream *pStream, int nIndex )
 
 	SZipLocalFileHeader hdr;
 	pStream->Read( &hdr, sizeof(hdr) );
-	NI_ASSERT_TF( hdr.dwSignature == SZipLocalFileHeader::SIGNATURE, "can't recognize zip local header", return false );
+	NI_ASSERT_TF( hdr.dwSignature == SZipLocalFileHeader::SIGNATURE, "can't recognize zip local header", return 0 );
 
 	// Skip extra fields
 	pStream->Seek( hdr.wFileNameLen + hdr.wExtraLen, STREAM_SEEK_CUR );
@@ -335,7 +335,7 @@ IDataStream* CZipFile::ReadFile( IDataStream *pStream, int nIndex )
 	}
 	void *pBuf = pDstStream->GetBuffer();
 	// proceed with DEFLAT unpacking
-	NI_ASSERT_TF( hdr.wCompression == SZipLocalFileHeader::COMP_DEFLAT, "Can support STORE and DEFLAT now", return false );
+	NI_ASSERT_TF( hdr.wCompression == SZipLocalFileHeader::COMP_DEFLAT, "Can support STORE and DEFLAT now", return 0 );
 
 	// Alloc compressed data buffer and read the whole stream
 	char *pcData = new char[hdr.dwCSize];

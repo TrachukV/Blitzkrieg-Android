@@ -41,6 +41,12 @@ add_compile_options(
     # it stays a warning here rather than stopping the build.
     "$<$<COMPILE_LANGUAGE:CXX>:-Wno-error=format-security>"
     "$<$<COMPILE_LANGUAGE:CXX>:-D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES>"
+    # NI_ASSERT_TF's third argument is the engine's error handling, not a
+    # diagnostic -- "return 0" when a file is missing, and so on -- and without
+    # this the whole macro expands to {} and takes that statement with it.
+    # BugSlayer.h says these are "meant to be enabled in release builds", and
+    # the shipped game was built that way. See compat/bk1_bugslayer.cpp.
+    "$<$<COMPILE_LANGUAGE:CXX>:-D_DO_ASSERT>"
     # bk1_msvc_types.h is force-included into every C++ unit: it is what makes
     # the original sources compile unchanged.
     "$<$<COMPILE_LANGUAGE:CXX>:-include>"

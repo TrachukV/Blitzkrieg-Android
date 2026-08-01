@@ -120,13 +120,13 @@ SBaseProperty* CManipulator::GetProperty( const std::string &szFullName, std::st
 	{
 		// extract index from property name
 		int nPos = szRest.find( ']' );
-		NI_ASSERT_TF( nPos != std::string::npos, NStr::Format("VECTOR property \"%s\" must have an index in the form of '[x]'", szName.c_str()), return false );
+		NI_ASSERT_TF( nPos != std::string::npos, NStr::Format("VECTOR property \"%s\" must have an index in the form of '[x]'", szName.c_str()), return 0 );
 		std::string szIndex = szRest.substr( 0, nPos );
-		NI_ASSERT_TF( NStr::IsDecNumber( szIndex ), NStr::Format("index for VECTOR property \"%s\" must be a decimal number", szName.c_str()), return false );
+		NI_ASSERT_TF( NStr::IsDecNumber( szIndex ), NStr::Format("index for VECTOR property \"%s\" must be a decimal number", szName.c_str()), return 0 );
 		int nIndex = NStr::ToInt( szIndex );
 		// extract rest name
 		nPos = szRest.find( '.' );
-		NI_ASSERT_TF( nPos != std::string::npos, NStr::Format("VECTOR property \"%s\" must have rest name, separated by '.'", szName.c_str()), return false );
+		NI_ASSERT_TF( nPos != std::string::npos, NStr::Format("VECTOR property \"%s\" must have rest name, separated by '.'", szName.c_str()), return 0 );
 		szRest = szRest.substr( nPos + 1 );
 		//
 		*pnIndex = nIndex;

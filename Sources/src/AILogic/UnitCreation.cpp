@@ -642,7 +642,7 @@ const CUnitCreation::SPartyDependentInfo & CUnitCreation::GetPartyDependentInfo(
 	for( ; i < partyDependentInfo.size() && szPartyName != partyDependentInfo[i].szPartyName; ++i )
 	{
 	}
-	NI_ASSERT_T( i < partyDependentInfo.size(), NStr::Format("wrong party name %s for party Number %i",szPartyName, nDipl ) );
+	NI_ASSERT_T( i < partyDependentInfo.size(), NStr::Format("wrong party name %s for party Number %i", szPartyName.c_str(), nDipl ) );
 	return partyDependentInfo[i];
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

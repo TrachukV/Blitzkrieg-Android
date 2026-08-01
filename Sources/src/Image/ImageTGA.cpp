@@ -390,7 +390,7 @@ CImage* NImage::LoadImageTGA( IDataStream *pStream )
 				SStorageElementStats stats;
 				pStream->GetStats( &stats );
 				const char *pszImageName = stats.pszName == 0 ? "" : stats.pszName;
-				NI_ASSERT_TF( 0, NStr::Format("Unsupported subformat %d for image \"%s\"", hdr.cImageType, pszImageName), return false );
+				NI_ASSERT_TF( 0, NStr::Format("Unsupported subformat %d for image \"%s\"", hdr.cImageType, pszImageName), return 0 );
 			}
 	}
 	// post-loading

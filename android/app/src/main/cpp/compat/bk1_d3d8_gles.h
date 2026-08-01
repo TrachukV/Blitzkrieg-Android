@@ -205,6 +205,7 @@ struct SProgram
 
     // vertex inputs
     GLint  nPositionAttrib;
+    GLint  nNormalAttrib;
     GLint  nDiffuseAttrib;
     GLint  nSpecularAttrib;
     GLint  nTexCoordAttrib[MAX_TEXTURE_UNITS];
@@ -220,6 +221,21 @@ struct SProgram
     GLint  nAlphaOpUniform;
     GLint  nAlphaArgUniform;
     GLint  nAlphaTestUniform;      // enabled, function, reference
+
+    // fixed-function lighting. The engine draws a unit's shadow by drawing the
+    // unit again with a black, part-transparent material and every light off,
+    // so the material is not decoration here -- without it the shadow comes out
+    // as a second solid copy of the vehicle.
+    GLint  nLightingUniform;       // lighting on at all
+    GLint  nWorldUniform;          // for putting the normal in world space
+    GLint  nMatDiffuseUniform;
+    GLint  nMatAmbientUniform;
+    GLint  nMatEmissiveUniform;
+    GLint  nGlobalAmbientUniform;
+    GLint  nLightCountUniform;
+    GLint  nLightDirUniform;       // towards the light, world space
+    GLint  nLightDiffuseUniform;
+    GLint  nLightAmbientUniform;
 
     SProgram() : nProgram( 0 ) {}
 };

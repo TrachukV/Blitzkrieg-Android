@@ -142,6 +142,12 @@ struct SDevice : public IDirect3DDevice8
     STexture   *pStageTexture[MAX_STAGES];
 
     D3DMATRIX matWorld;
+
+    // fixed-function lighting state
+    enum { MAX_LIGHTS = 4 };
+    D3DMATERIAL8 material;
+    D3DLIGHT8    lights[MAX_LIGHTS];
+    bool         bLightEnabled[MAX_LIGHTS];
     D3DMATRIX matView;
     D3DMATRIX matProjection;
 
@@ -307,9 +313,31 @@ struct SDevice : public IDirect3DDevice8
     HRESULT STDCALL SetTransform( D3DTRANSFORMSTATETYPE state,
                                   const D3DMATRIX *pMatrix ) override;
     HRESULT STDCALL SetViewport( const D3DVIEWPORT8 *pViewport ) override;
-    HRESULT STDCALL SetMaterial( const D3DMATERIAL8 * ) override { return D3D_OK; }
-    HRESULT STDCALL SetLight( DWORD, const D3DLIGHT8 * ) override { return D3D_OK; }
-    HRESULT STDCALL LightEnable( DWORD, BOOL ) override { return D3D_OK; }
+    // The engine lights its meshes with one directional sun, and draws their
+    // shadows by drawing the mesh again with every light off and a material
+    // that is black with a little alpha. Answering D3D_OK and doing nothing
+    // here is what put a second, fully lit copy of every vehicle on the
+    // ground beside it.
+    HRESULT STDCALL SetMaterial( const D3DMATERIAL8 *pMaterial ) override
+    {
+        if ( pMaterial != 0 )
+            material = *pMaterial;
+        return D3D_OK;
+    }
+
+    HRESULT STDCALL SetLight( DWORD nIndex, const D3DLIGHT8 *pLight ) override
+    {
+        if ( pLight != 0 && nIndex < MAX_LIGHTS )
+            lights[nIndex] = *pLight;
+        return D3D_OK;
+    }
+
+    HRESULT STDCALL LightEnable( DWORD nIndex, BOOL bEnable ) override
+    {
+        if ( nIndex < MAX_LIGHTS )
+            bLightEnabled[nIndex] = bEnable != FALSE;
+        return D3D_OK;
+    }
     HRESULT STDCALL SetRenderState( D3DRENDERSTATETYPE state, DWORD dwValue ) override;
     HRESULT STDCALL SetTexture( DWORD nStage, IDirect3DBaseTexture8 *pTexture ) override;
     HRESULT STDCALL SetTextureStageState( DWORD nStage, D3DTEXTURESTAGESTATETYPE type,
@@ -350,6 +378,7 @@ struct SDevice : public IDirect3DDevice8
 
 SDevice::SDevice()
     : nRefCount( 1 ), bProgramBuilt( false ), pStream( 0 ), nStreamStride( 0 ),
+      material(), 
       pIndices( 0 ), nBaseVertexIndex( 0 ), dwFVF( 0 ), nVertexArray( 0 )
 {
     memset( &present, 0, sizeof( present ) );
@@ -373,6 +402,15 @@ SDevice::SDevice()
     renderStates[D3DRS_ALPHAFUNC] = D3DCMP_ALWAYS;
     renderStates[D3DRS_ALPHAREF] = 0;
     renderStates[D3DRS_CULLMODE] = D3DCULL_CCW;
+    // Direct3D starts with lighting on and no ambient; the engine turns it off
+    // for everything that is not a mesh, so the default has to be the real one.
+    memset( &material, 0, sizeof( material ) );
+    memset( lights, 0, sizeof( lights ) );
+    for ( int i = 0; i < MAX_LIGHTS; ++i )
+        bLightEnabled[i] = false;
+
+    renderStates[D3DRS_LIGHTING] = TRUE;
+    renderStates[D3DRS_AMBIENT] = 0;
     renderStates[D3DRS_STENCILENABLE] = FALSE;
     renderStates[D3DRS_STENCILFUNC] = D3DCMP_ALWAYS;
     renderStates[D3DRS_STENCILMASK] = 0xFFFFFFFF;
@@ -853,24 +891,75 @@ void SDevice::ApplyState()
     // projective wedge.
     glUniformMatrix4fv( program.nTransformUniform, 1, GL_FALSE, &matCombined.m[0][0] );
 
+    // Lighting. The same convention as the combined matrix above: the D3D
+    // matrix goes up unchanged and GLSL reads it as its own transpose, which is
+    // exactly what turns Direct3D's row-vector multiply into GLSL's column one.
     {
-        static int nShown = 0;
-        if ( nShown < 40 )
+        const bool bLighting = renderStates[D3DRS_LIGHTING] != 0;
+        if ( program.nLightingUniform >= 0 )
+            glUniform1i( program.nLightingUniform, bLighting ? 1 : 0 );
+        if ( bLighting )
         {
-            ++nShown;
-            for ( int r = 0; r < 4; ++r )
+            if ( program.nWorldUniform >= 0 )
+                glUniformMatrix4fv( program.nWorldUniform, 1, GL_FALSE, &matWorld.m[0][0] );
+            if ( program.nMatDiffuseUniform >= 0 )
+                glUniform4f( program.nMatDiffuseUniform, material.Diffuse.r, material.Diffuse.g,
+                             material.Diffuse.b, material.Diffuse.a );
+            if ( program.nMatAmbientUniform >= 0 )
+                glUniform4f( program.nMatAmbientUniform, material.Ambient.r, material.Ambient.g,
+                             material.Ambient.b, material.Ambient.a );
+            if ( program.nMatEmissiveUniform >= 0 )
+                glUniform4f( program.nMatEmissiveUniform, material.Emissive.r, material.Emissive.g,
+                             material.Emissive.b, material.Emissive.a );
+            if ( program.nGlobalAmbientUniform >= 0 )
             {
-                (void)r;
+                const DWORD dwAmbient = renderStates[D3DRS_AMBIENT];
+                glUniform4f( program.nGlobalAmbientUniform,
+                             ( ( dwAmbient >> 16 ) & 0xFF ) / 255.0f,
+                             ( ( dwAmbient >> 8 ) & 0xFF ) / 255.0f,
+                             ( dwAmbient & 0xFF ) / 255.0f,
+                             ( ( dwAmbient >> 24 ) & 0xFF ) / 255.0f );
             }
-            // 2/width and -2/height sit in the diagonal of an orthographic
-            // projection; printing the sizes they imply is easier to read than
-            // sixteen numbers.
-            const float fSx = matCombined.m[0][0];
-            const float fSy = matCombined.m[1][1];
-            __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
-                                 "   projection implies %.0f x %.0f",
-                                 ( fSx != 0.0f ) ? 2.0f / fSx : 0.0f,
-                                 ( fSy != 0.0f ) ? -2.0f / fSy : 0.0f );
+
+            // Only the directional lights: they are the only kind this engine
+            // creates for meshes, and a point light without a position in the
+            // shader would be worse than none.
+            float fDir[MAX_LIGHTS * 3] = { 0.0f };
+            float fDiffuse[MAX_LIGHTS * 4] = { 0.0f };
+            float fAmbient[MAX_LIGHTS * 4] = { 0.0f };
+            int nCount = 0;
+            for ( int i = 0; i < MAX_LIGHTS; ++i )
+            {
+                if ( !bLightEnabled[i] || lights[i].Type != D3DLIGHT_DIRECTIONAL )
+                    continue;
+                // D3DLIGHT8::Direction is the way the light travels; N.L wants
+                // the way back to it.
+                float x = -lights[i].Direction.x;
+                float y = -lights[i].Direction.y;
+                float z = -lights[i].Direction.z;
+                const float fLen = sqrtf( x * x + y * y + z * z );
+                if ( fLen > 0.0f ) { x /= fLen; y /= fLen; z /= fLen; }
+                fDir[nCount * 3 + 0] = x;
+                fDir[nCount * 3 + 1] = y;
+                fDir[nCount * 3 + 2] = z;
+                fDiffuse[nCount * 4 + 0] = lights[i].Diffuse.r;
+                fDiffuse[nCount * 4 + 1] = lights[i].Diffuse.g;
+                fDiffuse[nCount * 4 + 2] = lights[i].Diffuse.b;
+                fDiffuse[nCount * 4 + 3] = lights[i].Diffuse.a;
+                fAmbient[nCount * 4 + 0] = lights[i].Ambient.r;
+                fAmbient[nCount * 4 + 1] = lights[i].Ambient.g;
+                fAmbient[nCount * 4 + 2] = lights[i].Ambient.b;
+                fAmbient[nCount * 4 + 3] = lights[i].Ambient.a;
+                ++nCount;
+            }
+            if ( program.nLightCountUniform >= 0 )
+                glUniform1i( program.nLightCountUniform, nCount );
+            if ( program.nLightDirUniform >= 0 )
+                glUniform3fv( program.nLightDirUniform, MAX_LIGHTS, fDir );
+            if ( program.nLightDiffuseUniform >= 0 )
+                glUniform4fv( program.nLightDiffuseUniform, MAX_LIGHTS, fDiffuse );
+            if ( program.nLightAmbientUniform >= 0 )
+                glUniform4fv( program.nLightAmbientUniform, MAX_LIGHTS, fAmbient );
         }
     }
 
@@ -954,6 +1043,22 @@ void SDevice::BindVertexLayout( const SVertexLayout &layout, int nBaseOffset )
         glVertexAttribPointer( program.nPositionAttrib, layout.bTransformed ? 4 : 3,
                                GL_FLOAT, GL_FALSE, nStride,
                                (const void *)(size_t)( nBaseOffset + layout.nPositionOffset ) );
+    }
+
+    if ( program.nNormalAttrib >= 0 )
+    {
+        if ( layout.bHasNormal )
+        {
+            glEnableVertexAttribArray( program.nNormalAttrib );
+            glVertexAttribPointer( program.nNormalAttrib, 3, GL_FLOAT, GL_FALSE,
+                                   nStride,
+                                   (const void *)(size_t)( nBaseOffset + layout.nNormalOffset ) );
+        }
+        else
+        {
+            glDisableVertexAttribArray( program.nNormalAttrib );
+            glVertexAttrib3f( program.nNormalAttrib, 0.0f, 0.0f, 1.0f );
+        }
     }
 
     // The colours arrive as a packed word, which is B, G, R, A in memory --

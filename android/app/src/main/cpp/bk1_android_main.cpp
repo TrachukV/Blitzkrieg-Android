@@ -520,12 +520,32 @@ void SampleFrame()
 // rather than assumed. This reports the average and the worst frame of each
 // second: an average of 60 with a 40ms straggler is a stutter somebody will
 // feel, and only the second number shows it.
-void ReportFrameRate()
+// Milliseconds on the monotonic clock, as a double, for measuring a frame.
+double MonotonicMs()
+{
+    timespec ts;
+    clock_gettime( CLOCK_MONOTONIC, &ts );
+    return ts.tv_sec * 1000.0 + ts.tv_nsec / 1000000.0;
+}
+
+// A frame is the engine's work and then the presentation of it, and those two
+// fail in opposite directions: time in the step is the game thinking, time in
+// the swap is the driver waiting for the GPU. Reporting only the total says a
+// mission is slow without saying what is slow, which is how a wrong guess about
+// glReadPixels survived a whole round of measurement.
+void ReportFrameRate( double fStepMs, double fSwapMs )
 {
     static timespec lastReport = { 0, 0 };
     static timespec lastFrame = { 0, 0 };
     static int      nFrames = 0;
     static double   fWorstMs = 0.0;
+    static double   fStepTotal = 0.0, fStepWorst = 0.0;
+    static double   fSwapTotal = 0.0, fSwapWorst = 0.0;
+
+    fStepTotal += fStepMs;
+    fSwapTotal += fSwapMs;
+    if ( fStepMs > fStepWorst ) fStepWorst = fStepMs;
+    if ( fSwapMs > fSwapWorst ) fSwapWorst = fSwapMs;
 
     timespec now;
     clock_gettime( CLOCK_MONOTONIC, &now );
@@ -548,8 +568,14 @@ void ReportFrameRate()
                             ( now.tv_nsec - lastReport.tv_nsec ) / 1000000000.0;
     if ( fElapsed >= 1.0 )
     {
-        LOGI( "%.1f fps, worst frame %.1f ms", nFrames / fElapsed, fWorstMs );
+        LOGI( "%.1f fps, worst frame %.1f ms | step avg %.1f worst %.1f | "
+              "swap avg %.1f worst %.1f",
+              nFrames / fElapsed, fWorstMs,
+              nFrames > 0 ? fStepTotal / nFrames : 0.0, fStepWorst,
+              nFrames > 0 ? fSwapTotal / nFrames : 0.0, fSwapWorst );
         lastReport = now;
+        fStepTotal = fSwapTotal = 0.0;
+        fStepWorst = fSwapWorst = 0.0;
         nFrames = 0;
         fWorstMs = 0.0;
     }
@@ -687,6 +713,7 @@ extern "C" void android_main( android_app *pApp )
             }
         }
 
+        const double fStepStart = MonotonicMs();
         if ( !g_state.bGameFailed )
         {
 
@@ -716,7 +743,9 @@ extern "C" void android_main( android_app *pApp )
         }
 
         SampleFrame();
+        const double fSwapStart = MonotonicMs();
         eglSwapBuffers( g_state.display, g_state.surface );
-        ReportFrameRate();
+        const double fSwapEnd = MonotonicMs();
+        ReportFrameRate( fSwapStart - fStepStart, fSwapEnd - fSwapStart );
     }
 }

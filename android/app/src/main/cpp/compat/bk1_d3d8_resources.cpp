@@ -629,6 +629,7 @@ const char *VERTEX_SOURCE =
     "#version 300 es\n"
     "precision highp float;\n"
     "in vec4 aPosition;\n"
+    "in vec3 aNormal;\n"
     "in vec4 aDiffuse;\n"
     "in vec4 aSpecular;\n"
     "in vec2 aTexCoord0;\n"
@@ -636,6 +637,16 @@ const char *VERTEX_SOURCE =
     "uniform mat4 uTransform;\n"
     "uniform int  uTransformed;\n"
     "uniform vec2 uViewportSize;\n"
+    "uniform int  uLighting;\n"
+    "uniform mat4 uWorld;\n"
+    "uniform vec4 uMatDiffuse;\n"
+    "uniform vec4 uMatAmbient;\n"
+    "uniform vec4 uMatEmissive;\n"
+    "uniform vec4 uGlobalAmbient;\n"
+    "uniform int  uLightCount;\n"
+    "uniform vec3 uLightDir[4];\n"
+    "uniform vec4 uLightDiffuse[4];\n"
+    "uniform vec4 uLightAmbient[4];\n"
     "out vec4 vDiffuse;\n"
     "out vec4 vSpecular;\n"
     "out vec2 vTexCoord0;\n"
@@ -653,7 +664,30 @@ const char *VERTEX_SOURCE =
     "    {\n"
     "        gl_Position = uTransform * vec4( aPosition.xyz, 1.0 );\n"
     "    }\n"
-    "    vDiffuse = aDiffuse.bgra;\n"
+    // Direct3D's fixed-function vertex lighting, for the lights this engine
+    // actually creates: directional ones. Colour is emissive, plus ambient
+    // against the global and per-light ambient, plus each light's diffuse by
+    // N.L. Alpha comes from the material's diffuse alpha, never from the
+    // lights -- which is what makes a shadow a shadow here.
+    // Direct3D does not light a vertex that arrives already transformed, and
+    // the engine leaves the lighting state on while it draws the menus out of
+    // XYZRHW vertices. Lighting those would paint every panel with a material
+    // meant for a tank.
+    "    if ( uLighting != 0 && uTransformed == 0 )\n"
+    "    {\n"
+    "        vec3 nrm = normalize( ( uWorld * vec4( aNormal, 0.0 ) ).xyz );\n"
+    "        vec3 lit = uMatEmissive.rgb + uMatAmbient.rgb * uGlobalAmbient.rgb;\n"
+    "        for ( int i = 0; i < 4; ++i )\n"
+    "        {\n"
+    "            if ( i >= uLightCount ) break;\n"
+    "            lit += uMatAmbient.rgb * uLightAmbient[i].rgb;\n"
+    "            float ndotl = max( dot( nrm, uLightDir[i] ), 0.0 );\n"
+    "            lit += uMatDiffuse.rgb * uLightDiffuse[i].rgb * ndotl;\n"
+    "        }\n"
+    "        vDiffuse = vec4( min( lit, vec3( 1.0 ) ), uMatDiffuse.a );\n"
+    "    }\n"
+    "    else\n"
+    "        vDiffuse = aDiffuse.bgra;\n"
     "    vSpecular = aSpecular.bgra;\n"
     "    vTexCoord0 = aTexCoord0;\n"
     "    vTexCoord1 = aTexCoord1;\n"
@@ -812,6 +846,7 @@ bool BuildProgram( SProgram *pProgram )
 
     pProgram->nProgram = nProgram;
     pProgram->nPositionAttrib = glGetAttribLocation( nProgram, "aPosition" );
+    pProgram->nNormalAttrib = glGetAttribLocation( nProgram, "aNormal" );
     pProgram->nDiffuseAttrib = glGetAttribLocation( nProgram, "aDiffuse" );
     pProgram->nSpecularAttrib = glGetAttribLocation( nProgram, "aSpecular" );
     pProgram->nTexCoordAttrib[0] = glGetAttribLocation( nProgram, "aTexCoord0" );
@@ -827,6 +862,16 @@ bool BuildProgram( SProgram *pProgram )
     pProgram->nAlphaOpUniform = glGetUniformLocation( nProgram, "uAlphaOp" );
     pProgram->nAlphaArgUniform = glGetUniformLocation( nProgram, "uAlphaArg" );
     pProgram->nAlphaTestUniform = glGetUniformLocation( nProgram, "uAlphaTest" );
+    pProgram->nLightingUniform = glGetUniformLocation( nProgram, "uLighting" );
+    pProgram->nWorldUniform = glGetUniformLocation( nProgram, "uWorld" );
+    pProgram->nMatDiffuseUniform = glGetUniformLocation( nProgram, "uMatDiffuse" );
+    pProgram->nMatAmbientUniform = glGetUniformLocation( nProgram, "uMatAmbient" );
+    pProgram->nMatEmissiveUniform = glGetUniformLocation( nProgram, "uMatEmissive" );
+    pProgram->nGlobalAmbientUniform = glGetUniformLocation( nProgram, "uGlobalAmbient" );
+    pProgram->nLightCountUniform = glGetUniformLocation( nProgram, "uLightCount" );
+    pProgram->nLightDirUniform = glGetUniformLocation( nProgram, "uLightDir" );
+    pProgram->nLightDiffuseUniform = glGetUniformLocation( nProgram, "uLightDiffuse" );
+    pProgram->nLightAmbientUniform = glGetUniformLocation( nProgram, "uLightAmbient" );
     return true;
 }
 

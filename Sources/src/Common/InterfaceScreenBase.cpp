@@ -331,21 +331,6 @@ CVec2 GetPosFromMsg( ICursor *pCursor, const SGameMessage &msg )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CInterfaceScreenBase::ProcessUIMessage( const SGameMessage &msg )
 {
-#ifndef _MSC_VER
-	{
-		// Bring-up on Android: which messages the interface is actually given.
-		// A menu that does not react is either a message that never arrives or
-		// one that arrives and hits nothing.
-		// The idle traffic -- the per-frame tick and the empty id -- would
-		// fill this before a finger ever touched the screen.
-		static int nShown = 0;
-		if ( nShown < 16 && msg.nEventID != -1 && msg.nEventID != 31415 )
-		{
-			++nShown;
-			NStr::DebugTrace( "ui message: 0x%x\n", int(msg.nEventID) );
-		}
-	}
-#endif
 	if ( pUIScreen )
 	{
 		switch ( msg.nEventID )
@@ -357,48 +342,12 @@ bool CInterfaceScreenBase::ProcessUIMessage( const SGameMessage &msg )
 				ProcessAndAdd( msg );
 			break;
 		case CMD_BEGIN_ACTION1:
-			{
-				// One call, and the result reported. The first version of this
-				// trace called OnLButtonDown itself and then let the real line
-				// call it again -- every press delivered twice, which is its
-				// own bug and a poor way to observe one.
-				const CVec2 vClick = GetPosFromMsg( pCursor, msg );
-				const bool bHit = pUIScreen->OnLButtonDown( vClick, E_LBUTTONDOWN );
-#ifndef _MSC_VER
-				{
-					static int nShown = 0;
-					if ( nShown < 8 )
-					{
-						++nShown;
-						NStr::DebugTrace( "click at %d,%d -> %s\n", int(vClick.x),
-						                  int(vClick.y), bHit ? "hit" : "miss" );
-					}
-				}
-#endif
-				if ( bHit == false )
+				if ( pUIScreen->OnLButtonDown( GetPosFromMsg(pCursor, msg), E_LBUTTONDOWN ) == false )
 					ProcessAndAdd( msg );
-			}
 				break;
 			case CMD_END_ACTION1:
-			{
-				const CVec2 vRelease = GetPosFromMsg( pCursor, msg );
-				const bool bHit = pUIScreen->OnLButtonUp( vRelease, E_MOUSE_FREE );
-#ifndef _MSC_VER
-				{
-					// The release is what activates a menu button, so this is
-					// the half that matters for "the menu does not react".
-					static int nShown = 0;
-					if ( nShown < 8 )
-					{
-						++nShown;
-						NStr::DebugTrace( "release at %d,%d -> %s\n", int(vRelease.x),
-						                  int(vRelease.y), bHit ? "hit" : "miss" );
-					}
-				}
-#endif
-				if ( bHit == false )
+				if ( pUIScreen->OnLButtonUp( GetPosFromMsg(pCursor, msg), E_MOUSE_FREE ) == false )
 					ProcessAndAdd( msg );
-			}
 				break;
 			//правая мыша
 			case CMD_BEGIN_ACTION2:

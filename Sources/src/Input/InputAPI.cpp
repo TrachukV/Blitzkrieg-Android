@@ -436,14 +436,6 @@ BOOL CALLBACK DIEnumDeviceObjectsCallback( LPCDIDEVICEOBJECTINSTANCE lpddoi, LPV
 	// compose control's name with the device's one
 	if ( pDesc->eType != DEVICE_TYPE_KEYBOARD ) 
 		szControlName = pDesc->szName + "_" + szControlName;
-#ifndef _MSC_VER
-	// Bring-up on Android: these names are what the binding file refers to, so
-	// a mismatch here means a control the player cannot reach. Only the
-	// pointing device is listed -- the keyboard would add 256 lines and its
-	// names come from a fixed table rather than from this enumeration.
-	if ( pDesc->eType != DEVICE_TYPE_KEYBOARD )
-		NStr::DebugTrace( "control: %s (ofs %d)\n", szControlName.c_str(), int(instance.dwOfs) );
-#endif
 	//
 	SControlDesc control;
 	control.szFriendlyName = instance.tszName;
@@ -1137,22 +1129,6 @@ void CInputAPI::Convert2Text( const DIDEVICEOBJECTDATA *pData, int nNumElements 
 void CInputAPI::EventCame( const DIDEVICEOBJECTDATA *pEvent, const int nParam )
 {
 	CControl *pControl = controlIDs[pEvent->dwOfs];
-#ifndef _MSC_VER
-	{
-		// Bring-up on Android: an event whose offset is not in this table is
-		// dropped without a word, which looks exactly like input that never
-		// arrived.
-		static int nShown = 0;
-		// Only the presses: the initial state sweep sends one zero per control
-		// and would fill this before a finger ever touched the screen.
-		if ( nShown < 12 && pEvent->dwData != 0 )
-		{
-			++nShown;
-			NStr::DebugTrace( "event: ofs 0x%x data %d -> %s\n", int(pEvent->dwOfs),
-			                  int(pEvent->dwData), pControl ? "control" : "NOTHING" );
-		}
-	}
-#endif
 	if ( pControl == 0 )
 		return;
 	// для POV dwData выражается в сотых долях градуса. нам надо перевести это в две оси - X & Y

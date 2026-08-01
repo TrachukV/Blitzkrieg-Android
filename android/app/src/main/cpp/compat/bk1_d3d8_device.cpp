@@ -1149,13 +1149,83 @@ struct SDirect3D : public IDirect3D8
     }
 
     // One mode, which is the surface the activity gave us.
-    UINT STDCALL GetAdapterModeCount( UINT ) override { return 1; }
+    // The display modes a card would offer.
+    //
+    // There is no mode to set here: the surface is whatever size Android gave
+    // it, and the engine draws its 1024x768 frame onto that. But the options
+    // screen is not asking what can be set -- it is asking what to list, and
+    // then it looks up the *current* setting's index in that list. The game
+    // ships with "1024x768x32" as its GFX.Mode default, so a list holding only
+    // the real surface size can never contain the value being looked for; the
+    // search returns -1 and CUIOption::ChangeSelection indexes an array at -1.
+    // That was a hard crash walking into Options, at a fault address 24 bytes
+    // below zero -- one element back from the start.
+    //
+    // So the port answers the way a PC of that era did, with the standard 4:3
+    // ladder the game was written against, plus the surface's own size at the
+    // end for anyone who wants it. Every entry is 32-bit: the renderer has one
+    // backbuffer format and reporting 16-bit modes it cannot give would be a
+    // lie the options screen would then offer to the player.
+    struct SMode { UINT nWidth; UINT nHeight; };
+    static const SMode *StandardModes( int *pnCount )
+    {
+        static const SMode modes[] = {
+            {  640,  480 }, {  800,  600 }, { 1024,  768 }, { 1152,  864 },
+            { 1280,  960 }, { 1280, 1024 }, { 1600, 1200 },
+        };
+        *pnCount = (int)( sizeof( modes ) / sizeof( modes[0] ) );
+        return modes;
+    }
+
+    // The surface's size, if it is not already one of the standard ones.
+    bool NativeModeIsExtra( UINT *pnWidth, UINT *pnHeight ) const
+    {
+        int nWidth = 0, nHeight = 0;
+        Bk1GetClientSize( &nWidth, &nHeight );
+        if ( nWidth < 640 || nHeight < 480 )
+            return false;
+        int nStandard = 0;
+        const SMode *pModes = StandardModes( &nStandard );
+        for ( int i = 0; i < nStandard; ++i )
+        {
+            if ( pModes[i].nWidth == (UINT)nWidth && pModes[i].nHeight == (UINT)nHeight )
+                return false;
+        }
+        *pnWidth = (UINT)nWidth;
+        *pnHeight = (UINT)nHeight;
+        return true;
+    }
+
+    UINT STDCALL GetAdapterModeCount( UINT ) override
+    {
+        int nStandard = 0;
+        StandardModes( &nStandard );
+        UINT nWidth = 0, nHeight = 0;
+        return (UINT)nStandard + ( NativeModeIsExtra( &nWidth, &nHeight ) ? 1 : 0 );
+    }
 
     HRESULT STDCALL EnumAdapterModes( UINT, UINT nMode, D3DDISPLAYMODE *pMode ) override
     {
-        if ( pMode == 0 || nMode > 0 )
+        if ( pMode == 0 )
             return D3DERR_INVALIDCALL;
-        return GetAdapterDisplayMode( 0, pMode );
+        int nStandard = 0;
+        const SMode *pModes = StandardModes( &nStandard );
+        pMode->RefreshRate = 60;
+        pMode->Format = D3DFMT_X8R8G8B8;
+        if ( (int)nMode < nStandard )
+        {
+            pMode->Width = pModes[nMode].nWidth;
+            pMode->Height = pModes[nMode].nHeight;
+            return D3D_OK;
+        }
+        UINT nWidth = 0, nHeight = 0;
+        if ( (int)nMode == nStandard && NativeModeIsExtra( &nWidth, &nHeight ) )
+        {
+            pMode->Width = nWidth;
+            pMode->Height = nHeight;
+            return D3D_OK;
+        }
+        return D3DERR_INVALIDCALL;
     }
 
     HRESULT STDCALL GetAdapterDisplayMode( UINT, D3DDISPLAYMODE *pMode ) override

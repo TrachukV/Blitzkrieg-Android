@@ -8,6 +8,7 @@
 // mouse events the engine's bindings already read, and it presents each frame.
 #include <android/log.h>
 #include <android/keycodes.h>
+#include <sys/system_properties.h>
 #include <android/native_window.h>
 #include <android_native_app_glue.h>
 
@@ -416,8 +417,41 @@ void DumpFrame()
     free( pPixels );
 }
 
+// Reading the framebuffer back is how this port is checked from outside the
+// device, and it is also a full pipeline stall: glReadPixels on 2700x1280 has
+// to wait for the GPU to finish, and 13.8 MB then goes to disk on the frame
+// thread. In a mission that showed up exactly as it should -- every third
+// second a frame took 80 ms instead of 28, and the average fps was reported
+// lower than the game was actually running at.
+//
+// So it is off unless asked for. It stays in the build because it is the only
+// honest way to see what has been drawn: a screenshot taken by the system
+// composites its own idea of the surface, and has handed back a frame that was
+// byte-identical to the one before while the game was plainly moving.
+//
+//   adb shell setprop debug.blitzkrieg.frames 1
+//
+// The property is read once. Nothing is sampled, read back or written when it
+// is unset, which is the shipping case.
+static bool FrameDumpWanted()
+{
+    static int nWanted = -1;
+    if ( nWanted < 0 )
+    {
+        char szValue[PROP_VALUE_MAX] = { 0 };
+        __system_property_get( "debug.blitzkrieg.frames", szValue );
+        nWanted = ( szValue[0] != 0 && szValue[0] != '0' ) ? 1 : 0;
+        if ( nWanted )
+            LOGI( "frame dumps on: debug.blitzkrieg.frames=%s", szValue );
+    }
+    return nWanted != 0;
+}
+
 void SampleFrame()
 {
+    if ( !FrameDumpWanted() )
+        return;
+
     // Written again every few seconds, overwriting, so that whatever the game
     // is showing now can be fetched -- which is the only way to see the effect
     // of a tap from outside the device.

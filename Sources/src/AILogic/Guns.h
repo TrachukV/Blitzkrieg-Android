@@ -115,7 +115,7 @@ public:
 
 	virtual const float GetDispersion() const = 0;
 	// во столько раз разброс вдоль траектории борльше разброса поперек траектории
-	virtual const float GetDispRatio( byte nShellType, const float fDist ) const =0; 
+	virtual const float GetDispRatio( BYTE nShellType, const float fDist ) const =0; 
 	virtual const int GetFireRate() const = 0;
 	virtual void LockInCurAngle() = 0;
 	virtual void UnlockCurAngle() = 0;

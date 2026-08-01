@@ -166,6 +166,9 @@ public:
 template<>
 class CUnitsIter<1, 0>
 {
+	static const BYTE cOnlyOneTypeVisibility = 1;
+	static const int NSize = 0;
+
 	CVec2 vDownLeft;
 	CVec2 vUpRight;
 
@@ -314,6 +317,9 @@ public:
 template<>
 class CUnitsIter<0, 0>
 {
+	static const BYTE cOnlyOneTypeVisibility = 0;
+	static const int NSize = 0;
+
 	CVec2 vDownLeft;
 	CVec2 vUpRight;
 

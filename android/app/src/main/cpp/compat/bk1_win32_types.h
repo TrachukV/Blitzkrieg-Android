@@ -7,6 +7,9 @@
 #include <stdlib.h>
 
 typedef unsigned char       BYTE;
+// MSVC's <rpcndr.h>, reached through <windows.h>, spells the same type in
+// lower case, and the engine declares shell-type parameters with it.
+typedef unsigned char       byte;
 typedef unsigned short      WORD;
 typedef unsigned int        DWORD;
 typedef int                 BOOL;

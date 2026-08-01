@@ -10,6 +10,7 @@
 // So this mirrors WinMain step for step, and where a step is Windows-only it
 // says so rather than quietly dropping it.
 #include "compat/bk1_msvc_types.h"
+#include "compat/bk1_win32_files.h"
 
 #include <android/log.h>
 #include <dirent.h>
@@ -71,8 +72,23 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
     // WinMain deletes log.txt and error.txt beside the executable and points
     // the console buffer at them. Here they go next to the data, which is the
     // only directory the app can be sure it may write to.
-    const std::string szRoot = ( pszDataDirectory != 0 ) ? pszDataDirectory : ".";
-    const std::string szLogFileName = szRoot + "/log.txt";
+    // The engine's paths are Windows paths, and it does its own arithmetic on
+    // them -- CZipFileSystem and CCommonFileSystem both find the directory part
+    // by searching for a backslash. Handed a path with forward slashes they
+    // find none, decide the whole thing is a filename, and look in the current
+    // directory instead; that is what left CZipFile::Init with a null stream.
+    //
+    // So the engine is given its root the way Windows would give it, and
+    // Bk1HostPath translates back at the one boundary where a path becomes a
+    // system call. Every path the engine builds on top of this stays in the
+    // shape the engine expects.
+    std::string szRoot = ( pszDataDirectory != 0 ) ? pszDataDirectory : ".";
+    for ( size_t i = 0; i < szRoot.size(); ++i )
+    {
+        if ( szRoot[i] == '/' )
+            szRoot[i] = '\\';
+    }
+    const std::string szLogFileName = szRoot + "\\log.txt";
     DeleteFile( szLogFileName.c_str() );
 
     if ( IConsoleBuffer *pConsole = GetSingleton<IConsoleBuffer>() )
@@ -104,9 +120,10 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
         // far away from the cause -- the first attempt at this crashed deep
         // inside CDataTableXML::Open on a null stream, which says nothing at
         // all about the real problem being an empty directory.
-        const std::string szDataDirectory = szRoot + "/data";
+        const std::string szDataDirectory = szRoot + "\\data";
+        const std::string szHostDataDirectory = Bk1HostPath( szDataDirectory.c_str() );
         int nArchives = 0;
-        if ( DIR *pDir = opendir( szDataDirectory.c_str() ) )
+        if ( DIR *pDir = opendir( szHostDataDirectory.c_str() ) )
         {
             while ( dirent *pEntry = readdir( pDir ) )
             {
@@ -119,15 +136,15 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
         if ( nArchives == 0 )
         {
             LOGE( "no game data. Expected the original game's archives here:" );
-            LOGE( "    %s/*.pak", szDataDirectory.c_str() );
+            LOGE( "    %s/*.pak", szHostDataDirectory.c_str() );
             LOGE( "This port ships no game content -- it belongs to whoever owns" );
             LOGE( "a copy of the game. Copy the Data directory across and start" );
-            LOGE( "again. adb push <game>/Data/. %s/", szDataDirectory.c_str() );
+            LOGE( "again. adb push <game>/Data/. %s/", szHostDataDirectory.c_str() );
             return false;
         }
-        LOGI( "%d archives in %s", nArchives, szDataDirectory.c_str() );
+        LOGI( "%d archives in %s", nArchives, szHostDataDirectory.c_str() );
 
-        const std::string szPattern = szDataDirectory + "/*.pak";
+        const std::string szPattern = szDataDirectory + "\\*.pak";
         CPtr<IDataStorage> pStorage =
             OpenStorage( szPattern.c_str(), STREAM_ACCESS_READ, STORAGE_TYPE_MOD );
         if ( pStorage == 0 )

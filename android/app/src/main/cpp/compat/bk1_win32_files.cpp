@@ -29,6 +29,23 @@ struct SFindHandle
     ~SFindHandle() { if ( pDir != 0 ) closedir( pDir ); }
 };
 
+}   // anonymous namespace
+
+std::string Bk1HostPath( const char *pszPath )
+{
+    if ( pszPath == 0 )
+        return std::string();
+    std::string szResult( pszPath );
+    for ( size_t i = 0; i < szResult.size(); ++i )
+    {
+        if ( szResult[i] == '\\' )
+            szResult[i] = '/';
+    }
+    return szResult;
+}
+
+namespace {
+
 void SplitMask( const char *pszMask, std::string *pDir, std::string *pPattern )
 {
     const char *pszSlash = strrchr( pszMask, '/' );
@@ -257,8 +274,12 @@ BOOL FindClose( HANDLE hFind )
 
 DWORD GetFileAttributesA( const char *pszPath )
 {
+    if ( pszPath == 0 )
+        return INVALID_FILE_ATTRIBUTES;
+    const std::string szPath = Bk1HostPath( pszPath );
+    pszPath = szPath.c_str();
     struct stat st;
-    if ( pszPath == 0 || stat( pszPath, &st ) != 0 )
+    if ( stat( pszPath, &st ) != 0 )
         return INVALID_FILE_ATTRIBUTES;
     DWORD dwAttr = S_ISDIR( st.st_mode ) ? FILE_ATTRIBUTE_DIRECTORY : FILE_ATTRIBUTE_NORMAL;
     if ( ( st.st_mode & S_IWUSR ) == 0 )
@@ -268,8 +289,12 @@ DWORD GetFileAttributesA( const char *pszPath )
 
 BOOL SetFileAttributesA( const char *pszPath, DWORD dwAttributes )
 {
+    if ( pszPath == 0 )
+        return FALSE;
+    const std::string szPath = Bk1HostPath( pszPath );
+    pszPath = szPath.c_str();
     struct stat st;
-    if ( pszPath == 0 || stat( pszPath, &st ) != 0 )
+    if ( stat( pszPath, &st ) != 0 )
         return FALSE;
     mode_t mode = st.st_mode;
     if ( ( dwAttributes & FILE_ATTRIBUTE_READONLY ) != 0 )
@@ -283,6 +308,10 @@ BOOL MoveFileA( const char *pszFrom, const char *pszTo )
 {
     if ( pszFrom == 0 || pszTo == 0 )
         return FALSE;
+    const std::string szFrom = Bk1HostPath( pszFrom );
+    const std::string szTo = Bk1HostPath( pszTo );
+    pszFrom = szFrom.c_str();
+    pszTo = szTo.c_str();
     return rename( pszFrom, pszTo ) == 0 ? TRUE : FALSE;
 }
 
@@ -290,6 +319,8 @@ BOOL DeleteFileA( const char *pszPath )
 {
     if ( pszPath == 0 )
         return FALSE;
+    const std::string szPath = Bk1HostPath( pszPath );
+    pszPath = szPath.c_str();
     return unlink( pszPath ) == 0 ? TRUE : FALSE;
 }
 
@@ -297,6 +328,10 @@ BOOL CopyFileA( const char *pszFrom, const char *pszTo, BOOL bFailIfExists )
 {
     if ( pszFrom == 0 || pszTo == 0 )
         return FALSE;
+    const std::string szFrom = Bk1HostPath( pszFrom );
+    const std::string szTo = Bk1HostPath( pszTo );
+    pszFrom = szFrom.c_str();
+    pszTo = szTo.c_str();
     if ( bFailIfExists != FALSE && access( pszTo, F_OK ) == 0 )
         return FALSE;
 
@@ -329,6 +364,8 @@ BOOL CreateDirectoryA( const char *pszPath, LPVOID )
 {
     if ( pszPath == 0 )
         return FALSE;
+    const std::string szPath = Bk1HostPath( pszPath );
+    pszPath = szPath.c_str();
     return mkdir( pszPath, 0777 ) == 0 ? TRUE : FALSE;
 }
 
@@ -336,6 +373,8 @@ BOOL RemoveDirectoryA( const char *pszPath )
 {
     if ( pszPath == 0 )
         return FALSE;
+    const std::string szPath = Bk1HostPath( pszPath );
+    pszPath = szPath.c_str();
     return rmdir( pszPath ) == 0 ? TRUE : FALSE;
 }
 
@@ -352,6 +391,8 @@ BOOL SetCurrentDirectoryA( const char *pszPath )
 {
     if ( pszPath == 0 )
         return FALSE;
+    const std::string szPath = Bk1HostPath( pszPath );
+    pszPath = szPath.c_str();
     return chdir( pszPath ) == 0 ? TRUE : FALSE;
 }
 
@@ -361,6 +402,8 @@ BOOL Bk1SetFileTimeByPath( const char *pszPath, const FILETIME * /*pCreation*/,
     // POSIX has no creation stamp to set, so that argument is ignored.
     if ( pszPath == 0 )
         return FALSE;
+    const std::string szPath = Bk1HostPath( pszPath );
+    pszPath = szPath.c_str();
 
     struct stat st;
     if ( stat( pszPath, &st ) != 0 )

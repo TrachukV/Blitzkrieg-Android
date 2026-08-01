@@ -1,11 +1,14 @@
 // POSIX implementations of the handle-based Win32 file API.
 #include "bk1_win32_fileio.h"
+#include "bk1_win32_files.h"
 
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <string>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <sys/time.h>
@@ -45,6 +48,11 @@ HANDLE CreateFileA( const char *pszName, DWORD dwAccess, DWORD /*dwShare*/,
 {
     if ( pszName == 0 )
         return INVALID_HANDLE_VALUE;
+
+    // Everything the engine opens is named the Windows way; this is where that
+    // becomes a path the kernel understands.
+    const std::string szName = Bk1HostPath( pszName );
+    pszName = szName.c_str();
 
     const bool bRead = ( dwAccess & GENERIC_READ ) != 0;
     const bool bWrite = ( dwAccess & GENERIC_WRITE ) != 0;
@@ -219,6 +227,8 @@ DWORD GetFullPathNameA( const char *pszFileName, DWORD nBufferLength,
 {
     if ( pszFileName == 0 || pszBuffer == 0 )
         return 0;
+    const std::string szTranslated = Bk1HostPath( pszFileName );
+    pszFileName = szTranslated.c_str();
 
     char szResolved[PATH_MAX];
     if ( pszFileName[0] == '/' )

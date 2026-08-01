@@ -4,6 +4,8 @@
 // authored on a case-insensitive filesystem and Android's is not.
 #include "bk1_win32_types.h"
 
+#include <string>
+
 #ifndef MAX_PATH
 #define MAX_PATH 260
 #endif
@@ -107,3 +109,22 @@ BOOL FileTimeToSystemTime( const FILETIME *pIn, SYSTEMTIME *pOut );
 #define RemoveDirectory   RemoveDirectoryA
 #define GetCurrentDirectory GetCurrentDirectoryA
 #define SetCurrentDirectory SetCurrentDirectoryA
+
+#ifdef __cplusplus
+// The one place the engine's world meets the filesystem's.
+//
+// Every path inside Blitzkrieg is written the Windows way -- "data\scenarios",
+// "movies\intro" -- and more than twenty places in the engine take those apart
+// by searching for a backslash. Teaching all of them about the other separator
+// would be twenty chances to get it wrong, and several of those paths are
+// engine-internal keys rather than filesystem paths, so changing them would be
+// wrong even where it worked.
+//
+// The engine keeps its backslashes. They are translated here instead, at the
+// boundary every path crosses exactly once. A path that already uses forward
+// slashes -- one that came from Android rather than from the game data -- goes
+// through unchanged.
+//
+// Outside the extern "C" block above because it returns a std::string.
+std::string Bk1HostPath( const char *pszPath );
+#endif

@@ -76,6 +76,28 @@ already opens its storage that way, so adapted strings can ride inside the APK
 and be mounted over the data at a higher priority. The player's own files stay
 exactly as they were, and a port that is uninstalled leaves nothing behind.
 
+## Tap to order: feasible, and here is the hinge
+
+The one piece of the familiar scheme still missing is the one every mobile
+strategy game has: with units selected, a tap on the ground orders them there.
+The port asks for a held finger instead, which works but is a beat slower than
+players expect.
+
+It needs the port to tell three cases apart, and both tests exist:
+
+- **Is the finger on the interface?** `IUIScreen::PickElement( pos, recursion )`
+  answers it. A tap on the command panel or the minimap must stay a left click.
+- **Is the finger on an object?** `CInterfaceMission::PickObjects( list, pos,
+  type, bVisible )` answers it. A tap on one of your own units should select it,
+  not order the rest to attack it.
+- **Everything else is ground**, and a tap there is the order -- the right click
+  the port sends today only after a hold.
+
+So this is not blocked on anything unknown; it is a hook from the port into the
+mission interface, an ownership test on whatever comes back, and a branch in the
+gesture bridge. Written down here because finding those two calls took longer
+than using them will.
+
 ## Status
 
 The panel needed no building -- the game has one and it answers touch. The text

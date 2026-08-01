@@ -110,7 +110,7 @@ void Feed( CRecogniser *pR, SLog *pLog, EPhase phase, const SFinger *pFingers,
 
 void TestTapIsALeftClick()
 {
-    printf( "a tap is a left click\n" );
+    printf( "a tap is reported as a tap, for the bridge to give meaning to\n" );
     CRecogniser r;
     r.SetDisplayDensity( DPI );
     SLog log;
@@ -119,16 +119,22 @@ void TestTapIsALeftClick()
     Feed( &r, &log, PHASE_DOWN, &f, 1, 1000 );
     Feed( &r, &log, PHASE_UP, &f, 1, 1080 );
 
-    Check( log.Count( ACTION_LEFT_DOWN ) == 1, "one press" );
-    Check( log.Count( ACTION_LEFT_UP ) == 1, "one release" );
-    Check( log.Count( ACTION_RIGHT_CLICK ) == 0, "no order" );
+    // The recogniser reports the gesture and stops there. Whether a tap is a
+    // click or an order depends on what it landed on, and only the engine can
+    // say -- so the meaning is decided in the bridge, not here.
+    Check( log.Count( ACTION_TAP ) == 1, "one tap" );
+    Check( log.Count( ACTION_LEFT_DOWN ) == 0, "and no meaning attached to it" );
+    Check( log.Count( ACTION_RIGHT_CLICK ) == 0, "no order either" );
+    const SAction *pTap = log.First( ACTION_TAP );
+    Check( pTap != 0 && pTap->nX == 500 && pTap->nY == 400,
+           "the tap carries where the finger was" );
     const SAction *pCursor = log.First( ACTION_CURSOR_TO );
     Check( pCursor != 0 && pCursor->nX == 500 && pCursor->nY == 400,
-           "cursor moved to the finger before the press" );
-    // The press waits for the lift: on touch alone nothing is clicked, or
-    // every drag of the map would begin by clicking whatever it started on.
-    Check( log.IndexOf( ACTION_LEFT_DOWN ) > log.IndexOf( ACTION_CURSOR_TO ),
-           "and the press came after it, at the lift" );
+           "cursor moved to the finger first" );
+    // The tap is reported at the lift, not at the touch: a finger that goes on
+    // to drag the map must not have clicked where it started.
+    Check( log.IndexOf( ACTION_TAP ) > log.IndexOf( ACTION_CURSOR_TO ),
+           "and the tap came after it, at the lift" );
 }
 
 void TestOneFingerDragsTheMap()

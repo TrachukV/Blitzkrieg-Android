@@ -106,5 +106,10 @@ three things took longer than using them will.
 
 ## Status
 
-The panel needed no building -- the game has one and it answers touch. The text
-is not rewritten yet; that is what remains, and it is measured above.
+The panel needed no building -- the game has one and it answers touch. Tap to
+order is built: the mission hands the port a pointer to itself once it is
+running, and a tap asks what it landed on before deciding what it means.
+
+The text is still the game's own, and now that is closer to right than
+rewriting it would have been: the keys it names can be pressed, and the orders
+it describes can be tapped for.

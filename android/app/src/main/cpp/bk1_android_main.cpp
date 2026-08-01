@@ -10,6 +10,7 @@
 #include <android/keycodes.h>
 
 #include "bk1_android_keys.h"
+#include "bk1_touch_pick.h"
 #include <sys/system_properties.h>
 
 // Defined in compat/bk1_d3d8_device.cpp, at global scope: how long the frame
@@ -280,6 +281,26 @@ void Perform( const NBk1Touch::SAction &action )
     case NBk1Touch::ACTION_LEFT_UP:
         Bk1EmulateMouseButton( DIMOFS_BUTTON0, false );
         break;
+    // A tap means different things depending on what it lands on, and only the
+    // engine knows. On the ground it is the order every strategy game on this
+    // device answers a tap with; on a unit or on the command panel it is the
+    // click it has always been. Outside a mission there is nothing to ask, and
+    // Bk1PickAt says so, which is the menus' case.
+    case NBk1Touch::ACTION_TAP:
+    {
+        const int nOver = Bk1PickAt( action.nX, action.nY );
+        if ( nOver == BK1_PICK_GROUND )
+        {
+            Bk1EmulateMouseButton( DIMOFS_BUTTON1, true );
+            Bk1EmulateMouseButton( DIMOFS_BUTTON1, false );
+        }
+        else
+        {
+            Bk1EmulateMouseButton( DIMOFS_BUTTON0, true );
+            Bk1EmulateMouseButton( DIMOFS_BUTTON0, false );
+        }
+        break;
+    }
     case NBk1Touch::ACTION_RIGHT_CLICK:
         Bk1EmulateMouseButton( DIMOFS_BUTTON1, true );
         Bk1EmulateMouseButton( DIMOFS_BUTTON1, false );

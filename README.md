@@ -138,7 +138,8 @@ means "select". A touchscreen has none of them:
 
 | Gesture | Stands in for |
 | --- | --- |
-| one finger, tap | left click |
+| one finger, tap on the ground | the order: the units go there |
+| one finger, tap on a unit or a button | left click: select, or press |
 | one finger, drag | **the map moves with the finger** |
 | one finger, held still | right click: the order gesture |
 | two fingers, drag | the selection box |

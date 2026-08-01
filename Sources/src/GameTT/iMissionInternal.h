@@ -243,6 +243,16 @@ private:
 	//
 	void BeginSelection( const CVec2 &vPos );
 	void EndSelection( const CVec2 &vPos );
+#ifndef _MSC_VER
+public:
+	// What a finger is over, so that the touch layer can tell a tap on the
+	// ground -- which should be an order -- from a tap on a unit or a button,
+	// which should be a click. 1 interface, 2 object, 3 ground, 0 unknown.
+	//
+	// The access is spelled out because the class macros above switch it, and
+	// inheriting whatever they left is how this ended up private twice.
+	int Bk1PickPointKind( int nX, int nY );
+#endif
 	bool PickObjects( CPickVisObjList *pPickedObjects, const CVec2 &pos, EObjGameType type, bool bVisible = false );
 	bool PickObjects( CPickVisObjList *pPickedObjects, const CTRect<float> &rect, EObjGameType type, bool bVisible = false );
 	void ResetSelection( IVisObj *pObj = 0 );

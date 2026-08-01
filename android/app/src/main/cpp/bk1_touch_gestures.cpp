@@ -300,8 +300,7 @@ int CRecogniser::Handle( EPhase phase, const SFinger *pFingers, size_t nFingers,
         if ( !bMovedPastSlop && !bLongPressFired && !bTwoFinger && !bLeftDown )
         {
             pActions[nCount++] = Make( ACTION_CURSOR_TO, (int)fPressX, (int)fPressY );
-            pActions[nCount++] = Make( ACTION_LEFT_DOWN, 0, 0 );
-            bLeftDown = true;
+            pActions[nCount++] = Make( ACTION_TAP, (int)fPressX, (int)fPressY );
         }
         nCount = ReleaseLeft( pActions, nCount );
         nActiveId = -1;

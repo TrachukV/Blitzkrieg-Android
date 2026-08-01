@@ -154,6 +154,15 @@ static const NInput::SRegisterCommandEntry missionCommands[] =
 	{ 0											,	0												}
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifndef _MSC_VER
+// The mission hands itself to the touch layer while it runs.
+//
+// There is no way to ask the main loop which interface is current -- IMainLoop
+// can be told to set one and cannot be asked to return one -- so the reaching
+// goes the other way. Cleared in Done(), so a stale mission is never asked.
+static CInterfaceMission *g_pTouchMission = 0;
+#endif
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static DWORD timeFrameLastTime = 0;
 static DWORD timePeriodTime = 0;
 static NTimer::STime timeFrameLastGameTime = 0;
@@ -962,6 +971,10 @@ bool CInterfaceMission::Init()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CInterfaceMission::Done()
 {
+#ifndef _MSC_VER
+	if ( g_pTouchMission == this )
+		g_pTouchMission = 0;
+#endif
 	GetSingleton<IMessageLinkContainer>()->SetInterface( 0 );
 	// remove mission temporary global variables
 	GetSingleton<IGlobalVars>()->RemoveVarsByMatch( "temp." );	
@@ -1526,6 +1539,12 @@ bool CInterfaceMission::NewMission( const std::string &_szMapName, bool _bCycled
 	// minimum difficulty (trough campaign)
 	GetSingleton<IScenarioTracker>()->UpdateMinimumDifficulty();
 	//
+#ifndef _MSC_VER
+	// Only now: the scene, the interface and the world all exist, and a finger
+	// asking what is under it will get a real answer. Claiming this in the
+	// constructor meant a tap in the menu reached a half-built mission.
+	g_pTouchMission = this;
+#endif
 	return true;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2389,6 +2408,37 @@ void CInterfaceMission::VisualizeFeedback( const int /*EMissionCommands*/ nFeedB
 		pBuffer->Write( CONSOLE_STREAM_CHAT, pText->GetString(), dwTextColor );
 	}
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifndef _MSC_VER
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+int CInterfaceMission::Bk1PickPointKind( int nX, int nY )
+{
+	// Both of these are built while the mission starts and torn down before it
+	// ends, and a finger can arrive on either side of that. Asking a
+	// half-built mission what is under a point is how this first crashed, on a
+	// tap in the menu.
+	if ( pScene == 0 || pUIScreen == 0 )
+		return 0;
+	CVec2 vPos;
+	vPos.x = float( nX );
+	vPos.y = float( nY );
+	// The interface first: a tap on the command panel or the minimap is a
+	// click on that panel, whatever is on the ground beneath it.
+	if ( pUIScreen != 0 && pUIScreen->PickElement( vPos, 16 ) != 0 )
+		return 1;
+	// Then the world. Only what is visible, because ordering units to a spot
+	// they cannot see is not what the finger meant.
+	CPickVisObjList picked;
+	if ( PickObjects( &picked, vPos, SGVOGT_UNKNOWN, true ) )
+		return 2;
+	return 3;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+extern "C" int Bk1PickAt( int nX, int nY )
+{
+	return g_pTouchMission != 0 ? g_pTouchMission->Bk1PickPointKind( nX, nY ) : 0;
+}
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CInterfaceMission::PickObjects( CPickVisObjList *pPickedObjects, const CVec2 &point, EObjGameType type, bool bVisible )
 {

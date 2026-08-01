@@ -35,6 +35,10 @@ enum EActionKind
     ACTION_MOUSE_MOVE,      // relative motion, (nX, nY) as a delta
     ACTION_LEFT_DOWN,
     ACTION_LEFT_UP,
+    ACTION_TAP,             // a finger down and up in one place, at (nX, nY).
+                            // What it means depends on what is under it, and
+                            // only the port can ask, so the recogniser reports
+                            // the gesture and leaves the meaning alone.
     ACTION_RIGHT_CLICK,     // down and up together: an order
     ACTION_WHEEL,           // nX is notches, positive is zoom in
     ACTION_SCROLL_LEFT,     // nX is 1 to press the key, 0 to let go

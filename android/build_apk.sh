@@ -42,7 +42,7 @@ MAKE="$NDK/prebuilt/$( uname -s | tr '[:upper:]' '[:lower:]' )-x86_64/bin/make"
 "$CMAKE" -S "$HERE/app/src/main/cpp" -B "$BUILD/native" \
     -DCMAKE_TOOLCHAIN_FILE="$NDK/build/cmake/android.toolchain.cmake" \
     -DANDROID_ABI=arm64-v8a \
-    -DANDROID_PLATFORM=android-24 \
+    -DANDROID_PLATFORM=android-26 \
     -DANDROID_STL=c++_static \
     -DANDROID_NDK="$NDK" \
     -DCMAKE_BUILD_TYPE="$CONFIG" \
@@ -78,7 +78,7 @@ sed "s|<manifest |<manifest package=\"$PACKAGE\" |" \
 "$BT/aapt2" link -o "$BUILD/unsigned.apk" \
     -I "$SDK/platforms/$PLATFORM/android.jar" \
     --manifest "$BUILD/AndroidManifest.xml" \
-    --min-sdk-version 24 --target-sdk-version 34 \
+    --min-sdk-version 26 --target-sdk-version 34 \
     --version-code 1 --version-name 0.1-port
 
 cp "$BUILD/native/libblitzkrieg.so" "$BUILD/apk/lib/arm64-v8a/"
@@ -88,7 +88,11 @@ cp "$BUILD/native/libblitzkrieg.so" "$BUILD/apk/lib/arm64-v8a/"
 # A local key, so the result installs. Anything published would be signed with
 # a real one; this is here so that building produces something you can put on a
 # device immediately.
-KEYSTORE="$BUILD/debug.keystore"
+#
+# It lives beside the build rather than inside it: wiping build/ and getting a
+# fresh key means the next install fails with a signature mismatch against
+# whatever is already on the device.
+KEYSTORE="$HERE/debug.keystore"
 if [ ! -f "$KEYSTORE" ]; then
     keytool -genkeypair -keystore "$KEYSTORE" -storepass android -keypass android \
         -alias blitzkrieg -keyalg RSA -keysize 2048 -validity 10000 \
@@ -97,7 +101,7 @@ fi
 
 "$BT/zipalign" -f -p 4 "$BUILD/unsigned.apk" "$BUILD/aligned.apk"
 "$BT/apksigner" sign --ks "$KEYSTORE" --ks-pass pass:android --key-pass pass:android \
-    --min-sdk-version 24 --out "$BUILD/Blitzkrieg.apk" "$BUILD/aligned.apk"
+    --min-sdk-version 26 --out "$BUILD/Blitzkrieg.apk" "$BUILD/aligned.apk"
 "$BT/apksigner" verify "$BUILD/Blitzkrieg.apk"
 
 echo

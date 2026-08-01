@@ -66,6 +66,8 @@ set( COMPAT_SOURCES
     compat/bk1_win32_window.cpp
     compat/bk1_win32_keys.cpp
     compat/bk1_win32_version.cpp
+    compat/bk1_wave.cpp
+    compat/bk1_fmod_audio.cpp
     compat/bk1_msvc_fpu.cpp
     compat/bk1_wchar_abi.cpp
     compat/bk1_msxml.cpp
@@ -88,6 +90,9 @@ target_link_libraries( blitzkrieg
     android
     EGL
     GLESv3
+    # The audio device and the music decoder, both from the NDK itself.
+    aaudio
+    mediandk
     log
 )
 

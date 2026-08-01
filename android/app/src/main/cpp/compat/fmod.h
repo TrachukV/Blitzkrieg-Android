@@ -8,9 +8,9 @@
 // header carries exactly those -- it is not a reimplementation of FMOD, it is
 // the surface Blitzkrieg calls.
 //
-// The implementation behind it is bk1_fmod_oboe.cpp: an Oboe output stream and
-// a mixer, with decoding through the NDK's own media codecs, which cover the
-// wav, ogg and mp3 the game ships.
+// The implementation behind it is bk1_fmod_audio.cpp: an AAudio output stream and
+// a mixer. AAudio is part of the NDK, so the port keeps its property of having
+// no third-party dependency at all.
 #include "bk1_win32_types.h"
 
 // ---------------------------------------------------------------------------

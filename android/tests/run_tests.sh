@@ -22,4 +22,12 @@ echo "=== DXT codec ==="
   -o "$OUT/dxt_codec_test"
 "$OUT/dxt_codec_test" || rc=1
 
+echo
+echo "=== wave parser ==="
+# Links the shipping unit, not a copy of it.
+c++ -std=c++17 -O2 \
+  "$ROOT/android/tests/wave_parser_test.cpp" "$COMPAT/bk1_wave.cpp" \
+  -o "$OUT/wave_parser_test"
+"$OUT/wave_parser_test" || rc=1
+
 exit $rc

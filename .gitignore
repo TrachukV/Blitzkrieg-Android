@@ -3,3 +3,4 @@ build/android/objs/
 # the native build output and the local signing key
 android/build/
 android/local.properties
+android/debug.keystore

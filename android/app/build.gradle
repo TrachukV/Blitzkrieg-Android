@@ -11,9 +11,10 @@ android {
 
     defaultConfig {
         applicationId 'com.nival.blitzkrieg'
-        // 24 is where the compatibility layer's floor sits: it is the level
-        // whose libc has the file and locale entry points the layer builds on.
-        minSdk 24
+        // AAudio, which the sound device is built on, arrived in 26. The game
+        // needs OpenGL ES 3 regardless, so the floor was never going to be low;
+        // 26 is Android 8, and it buys a real audio path rather than OpenSL ES.
+        minSdk 26
         targetSdk 34
         versionCode 1
         versionName '0.1-port'

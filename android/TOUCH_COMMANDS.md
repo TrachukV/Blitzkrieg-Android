@@ -24,9 +24,8 @@ Counted across `Data/Textes` and `Data/Scenarios`, in files the player reads:
 | function keys, `<TAB>`, `<SPACE>` | 20 | **no** |
 | `CTRL` / `SHIFT` / `ALT` | 21 | **no** |
 
-Rewriting that text to say "tap" while the command has no touch route would be
-describing controls that do not exist. So the order of work is: give the
-commands a route first, then make the text name it.
+Those counts are what matters; the conclusion I first drew from them was wrong,
+and the section below says why.
 
 ## Correction: the orders are already reachable
 

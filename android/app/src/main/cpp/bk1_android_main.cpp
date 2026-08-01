@@ -8,6 +8,8 @@
 // mouse events the engine's bindings already read, and it presents each frame.
 #include <android/log.h>
 #include <android/keycodes.h>
+
+#include "bk1_android_keys.h"
 #include <sys/system_properties.h>
 
 // Defined in compat/bk1_d3d8_device.cpp, at global scope: how long the frame
@@ -50,6 +52,7 @@ struct SAppState
     int        nWidth;
     int        nHeight;
     bool       bReady;
+    bool       bSoftKeyboard;   // whether the screen keyboard is up
 
     // The finger that is currently down, and where it started. A tap becomes a
     // click; a drag moves the cursor first so the engine sees the press where
@@ -312,21 +315,32 @@ int HandleInput( android_app *pApp, AInputEvent *pEvent )
     if ( pState == 0 )
         return 0;
 
-    // Back is Escape. Blitzkrieg closes every dialog, panel and menu with it,
-    // and a touchscreen has no key to send -- so the one button Android does
-    // give a game is bound to the one key the game uses for exactly this. It
-    // goes through the keyboard device, which is not emulated, so the buffered
-    // queue is the right road for it.
+    // Keys. Back is Escape -- Blitzkrieg closes every dialog and panel with it,
+    // and it is the one button Android gives a game -- and everything else goes
+    // through as the key it is.
+    //
+    // That second half is what makes the game's own instructions true. The text
+    // tells the player to press <A> to move aggressively, to hold <CTRL> while
+    // ordering, to reach for a function key; 94 such instructions sit in files
+    // the player reads. A port can rewrite all of them, or it can hand over the
+    // keys they name. This is the second, and it costs one table.
+    //
+    // It serves a real keyboard as well as the screen one. People do attach
+    // keyboards to tablets, and this asks nothing of them.
     if ( AInputEvent_getType( pEvent ) == AINPUT_EVENT_TYPE_KEY )
     {
-        if ( AKeyEvent_getKeyCode( pEvent ) != AKEYCODE_BACK )
-            return 0;
+        const int32_t nKeyCode = AKeyEvent_getKeyCode( pEvent );
         const int32_t nAction = AKeyEvent_getAction( pEvent );
+        const int nScanCode = ( nKeyCode == AKEYCODE_BACK )
+                                  ? DIK_ESCAPE
+                                  : Bk1AndroidKeyToScanCode( nKeyCode );
+        if ( nScanCode == 0 )
+            return 0;                   // not a key the engine knows: let Android have it
         if ( nAction == AKEY_EVENT_ACTION_DOWN )
-            Bk1PushInputEvent( BK1_INPUT_KEYBOARD, DIK_ESCAPE, 0x80 );
+            Bk1PushInputEvent( BK1_INPUT_KEYBOARD, (DWORD)nScanCode, 0x80 );
         else if ( nAction == AKEY_EVENT_ACTION_UP )
-            Bk1PushInputEvent( BK1_INPUT_KEYBOARD, DIK_ESCAPE, 0 );
-        return 1;                       // handled: do not let it close the app
+            Bk1PushInputEvent( BK1_INPUT_KEYBOARD, (DWORD)nScanCode, 0 );
+        return 1;                       // handled: back must not close the app
     }
 
     if ( AInputEvent_getType( pEvent ) != AINPUT_EVENT_TYPE_MOTION )
@@ -335,6 +349,29 @@ int HandleInput( android_app *pApp, AInputEvent *pEvent )
     const int32_t nAction = AMotionEvent_getAction( pEvent );
     const int32_t nKind = nAction & AMOTION_EVENT_ACTION_MASK;
     const size_t  nCount = AMotionEvent_getPointerCount( pEvent );
+
+    // Three fingers put the keyboard on screen, and take it away again.
+    //
+    // The keys above are only useful if there is something to press them with.
+    // A third finger is the gesture to spare: one is the pointer, two are the
+    // camera, and no part of playing this game asks for three at once.
+    if ( nKind == AMOTION_EVENT_ACTION_POINTER_DOWN && nCount >= 3 )
+    {
+        pState->bSoftKeyboard = !pState->bSoftKeyboard;
+        if ( pState->bSoftKeyboard )
+            ANativeActivity_showSoftInput( pApp->activity,
+                                           ANATIVEACTIVITY_SHOW_SOFT_INPUT_IMPLICIT );
+        else
+            ANativeActivity_hideSoftInput( pApp->activity,
+                                           ANATIVEACTIVITY_HIDE_SOFT_INPUT_NOT_ALWAYS );
+        LOGI( "keyboard %s", pState->bSoftKeyboard ? "shown" : "hidden" );
+        // Whatever the first two fingers were in the middle of, they are not
+        // doing it any more.
+        NBk1Touch::SAction cancel[NBk1Touch::MAX_ACTIONS];
+        PerformAll( cancel, g_gestures.Handle( NBk1Touch::PHASE_CANCEL, 0, 0,
+                                               NowMilliseconds(), cancel ) );
+        return 1;
+    }
 
     NBk1Touch::SFinger fingers[8];
     const size_t nFingers = ( nCount < 8 ) ? nCount : 8;

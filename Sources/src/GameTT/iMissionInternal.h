@@ -252,6 +252,17 @@ public:
 	// The access is spelled out because the class macros above switch it, and
 	// inheriting whatever they left is how this ended up private twice.
 	int Bk1PickPointKind( int nX, int nY );
+
+	// Ends the mission as a win, the way the engine does when the objectives
+	// are met. Not a cheat and not reachable in play: it exists so the road
+	// after a mission -- the statistics screen, the chapter that follows -- can
+	// be walked without playing a mission well enough to earn it, which is a
+	// test of the port and not of the tester.
+	void Bk1FinishAsWin();
+
+	// Stops answering the touch layer's questions. Called when the mission
+	// hands the screen to something else, because it outlives that moment.
+	void Bk1StopAnsweringTouch();
 #endif
 	bool PickObjects( CPickVisObjList *pPickedObjects, const CVec2 &pos, EObjGameType type, bool bVisible = false );
 	bool PickObjects( CPickVisObjList *pPickedObjects, const CTRect<float> &rect, EObjGameType type, bool bVisible = false );

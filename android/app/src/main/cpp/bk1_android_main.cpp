@@ -510,6 +510,25 @@ static bool FrameDumpWanted()
     return nWanted != 0;
 }
 
+// Ends the mission, once, when asked by property. The only way to see the
+// statistics screen and the chapter after it without winning a mission on
+// merit, which is a test of the player and not of the port.
+void FinishMissionIfAsked()
+{
+    static bool bDone = false;
+    if ( bDone )
+        return;
+    char szValue[PROP_VALUE_MAX] = { 0 };
+    __system_property_get( "debug.blitzkrieg.winmission", szValue );
+    if ( szValue[0] == 0 || szValue[0] == '0' )
+        return;
+    if ( Bk1FinishMissionAsWin() )
+    {
+        bDone = true;
+        LOGI( "mission finished as a win, by request" );
+    }
+}
+
 void SampleFrame()
 {
     if ( !FrameDumpWanted() )
@@ -809,6 +828,7 @@ extern "C" void android_main( android_app *pApp )
             PerformAll( held, g_gestures.Tick( NowMilliseconds(), held ) );
         }
 
+        FinishMissionIfAsked();
         SampleFrame();
         const double fSwapStart = MonotonicMs();
         eglSwapBuffers( g_state.display, g_state.surface );

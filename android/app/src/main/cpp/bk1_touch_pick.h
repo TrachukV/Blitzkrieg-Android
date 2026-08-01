@@ -23,6 +23,16 @@ extern "C" {
 
 int Bk1PickAt( int nX, int nY );
 
+// Ends the running mission as a win. Returns 0 when no mission is running.
+//
+// Diagnostic, not a cheat: it is how the road after a mission -- the statistics
+// screen and the chapter that follows -- gets walked without playing a mission
+// well enough to earn it. Reached only through a property that is unset in any
+// normal run:
+//
+//   adb shell setprop debug.blitzkrieg.winmission 1
+int Bk1FinishMissionAsWin( void );
+
 #ifdef __cplusplus
 }
 #endif

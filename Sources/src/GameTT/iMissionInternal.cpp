@@ -2076,11 +2076,17 @@ bool CInterfaceMission::ProcessMessageLocal( const SGameMessage &msg )
 
 		case MC_MP_FINISHED:
 			GetSingleton<IScenarioTracker>()->FinishMission( MISSION_FINISH_WIN );
+#ifndef _MSC_VER
+			Bk1StopAnsweringTouch();
+#endif
 			FinishInterface( MISSION_COMMAND_STATS, "2"/*STATS_COMPLEXITY_MISSION*/ );
 			break;
 
 		case WCB_DRAW:
 			GetSingleton<IScenarioTracker>()->FinishMission( MISSION_FINISH_WIN );
+#ifndef _MSC_VER
+			Bk1StopAnsweringTouch();
+#endif
 			FinishInterface( MISSION_COMMAND_STATS, "2"/*STATS_COMPLEXITY_MISSION*/ );
 
 			break;
@@ -2432,6 +2438,32 @@ int CInterfaceMission::Bk1PickPointKind( int nX, int nY )
 	if ( PickObjects( &picked, vPos, SGVOGT_UNKNOWN, true ) )
 		return 2;
 	return 3;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void CInterfaceMission::Bk1FinishAsWin()
+{
+	GetSingleton<IScenarioTracker>()->FinishMission( MISSION_FINISH_WIN );
+	Bk1StopAnsweringTouch();
+	FinishInterface( MISSION_COMMAND_STATS, "2" );
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// The mission answers "what is under this finger" only while it is the screen
+// on show. It outlives that: the statistics screen goes up while the mission
+// object is still alive, and a mission asked about a screen that is not its own
+// finds nothing, calls it ground, and turns every tap into an order. The
+// statistics screen's own button stopped working, which is how this was found.
+void CInterfaceMission::Bk1StopAnsweringTouch()
+{
+	if ( g_pTouchMission == this )
+		g_pTouchMission = 0;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+extern "C" int Bk1FinishMissionAsWin()
+{
+	if ( g_pTouchMission == 0 )
+		return 0;
+	g_pTouchMission->Bk1FinishAsWin();
+	return 1;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 extern "C" int Bk1PickAt( int nX, int nY )

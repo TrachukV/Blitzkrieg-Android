@@ -134,6 +134,18 @@ recurses into whatever comes back marked as a directory, and directories rarely
 have dots, so the walk never descended. Every list built by scanning a tree came
 up empty. One line, and six tutorials appeared.
 
+Known broken: **the mission after the first renders black.** Finishing a mission
+reaches the statistics screen, which is correct and complete -- the table, both
+sides, the timings -- and leaving it advances the campaign. The next mission
+then loads, runs its script and holds 60 fps at 181 draws a frame, and the
+screen is black: 96 of 96 sampled pixels, read out of the framebuffer itself
+rather than through a screenshot. Something about a second mission in one run
+does not survive. Not diagnosed.
+
+Found by adding a way to end a mission as a win on request --
+`adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road
+after a mission is a test of the port and playing well enough to earn it is not.
+
 Not verified, and I will not claim otherwise: no real device -- every figure
 here is from an arm64 emulator; no campaign played to the end, only its opening
 missions; and two-finger gestures are covered by the recogniser's own tests but

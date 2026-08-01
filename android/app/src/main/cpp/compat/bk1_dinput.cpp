@@ -505,6 +505,20 @@ void Bk1PushInputEvent( int nDevice, DWORD nOffset, DWORD nValue )
     std::lock_guard<std::mutex> lock( g_mutex );
     SDeviceState &state = StateFor( nDevice );
 
+    {
+        // Bring-up: the buttons only. Whether a press was ever queued is the
+        // difference between the gesture layer losing it and the queue doing so.
+        static int nShown = 0;
+        if ( nShown < 12 && nDevice == BK1_INPUT_MOUSE && nOffset >= DIMOFS_BUTTON0 )
+        {
+            ++nShown;
+            __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.input",
+                                 "queued: offset %u value %u (queue %d)",
+                                 (unsigned)nOffset, (unsigned)nValue,
+                                 (int)state.events.size() );
+        }
+    }
+
     // keep the immediate state in step with the stream
     if ( nDevice == BK1_INPUT_KEYBOARD )
     {

@@ -260,15 +260,19 @@ void Perform( const NBk1Touch::SAction &action )
         Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_X, (DWORD)action.nX );
         Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_Y, (DWORD)action.nY );
         break;
+    // The buttons go through the engine's emulation, not the buffered queue.
+    // The mouse is marked emulated so the cursor takes an absolute position,
+    // and the engine skips emulated devices when it polls DirectInput -- the
+    // queue would just fill up unread. Both halves belong to the same design.
     case NBk1Touch::ACTION_LEFT_DOWN:
-        Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_BUTTON0, 0x80 );
+        Bk1EmulateMouseButton( DIMOFS_BUTTON0, true );
         break;
     case NBk1Touch::ACTION_LEFT_UP:
-        Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_BUTTON0, 0 );
+        Bk1EmulateMouseButton( DIMOFS_BUTTON0, false );
         break;
     case NBk1Touch::ACTION_RIGHT_CLICK:
-        Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_BUTTON1, 0x80 );
-        Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_BUTTON1, 0 );
+        Bk1EmulateMouseButton( DIMOFS_BUTTON1, true );
+        Bk1EmulateMouseButton( DIMOFS_BUTTON1, false );
         LOGI( "gesture: hold -> right click at %d, %d", action.nX, action.nY );
         break;
     case NBk1Touch::ACTION_WHEEL:

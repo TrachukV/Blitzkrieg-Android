@@ -21,6 +21,17 @@ bool Bk1GameStep( bool bActive );
 // Asks the game to exit as the player would, so it saves on the way out.
 void Bk1GameRequestExit();
 
+// A mouse button, delivered the way the engine expects for a device it
+// believes is emulated.
+//
+// Marking the mouse emulated is what gives the cursor an absolute position --
+// necessary, because a tap carries no motion for the relative path to
+// integrate. But the engine then skips that device when it polls DirectInput
+// ("if ( it->bEmulated ) continue"), so buttons pushed into the buffered queue
+// are never read: the queue simply grows. EmulateInput is the other half of
+// the same design, and this is the door to it.
+void Bk1EmulateMouseButton( int nButtonOffset, bool bDown );
+
 void Bk1GameShutdown();
 
 bool Bk1GameIsRunning();

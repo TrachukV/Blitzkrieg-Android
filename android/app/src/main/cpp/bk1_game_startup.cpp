@@ -471,6 +471,21 @@ bool Bk1GameStep( bool bActive )
     return true;
 }
 
+void Bk1EmulateMouseButton( int nButtonOffset, bool bDown )
+{
+    IInput *pInput = GetSingleton<IInput>();
+    if ( pInput == 0 )
+        return;
+    // The control id an emulated event carries is the device object's offset,
+    // the same number the buffered path uses -- DIMOFS_BUTTON0 is 12.
+    // The stamp the engine puts on its own events, so the double-click and
+    // repeat logic sees one consistent clock.
+    DWORD nNow = 0;
+    if ( IGameTimer *pTimer = GetSingleton<IGameTimer>() )
+        nNow = (DWORD)pTimer->GetAbsTime();
+    pInput->EmulateInput( DEVICE_TYPE_MOUSE, nButtonOffset, bDown ? 0x80 : 0, nNow, 0 );
+}
+
 void Bk1GameRequestExit()
 {
     if ( g_pMainLoop != 0 && !g_bFinished )

@@ -797,9 +797,15 @@ void SDevice::ApplyState()
     D3DMATRIX matWorldView, matCombined;
     MultiplyMatrix( matWorld, matView, &matWorldView );
     MultiplyMatrix( matWorldView, matProjection, &matCombined );
-    // Direct3D's matrices are row-major and multiply a row vector on the left;
-    // the shader multiplies a column vector, so the matrix goes up transposed.
-    glUniformMatrix4fv( program.nTransformUniform, 1, GL_TRUE, &matCombined.m[0][0] );
+    // Direct3D stores a matrix by rows and multiplies a row vector on the left;
+    // GLSL stores one by columns and multiplies a column vector. The matrix the
+    // shader needs is the transpose of Direct3D's -- and a transpose stored by
+    // columns is the original stored by rows, which is what is already in
+    // memory here. So it goes up as it lies, and transposing it as well was
+    // undoing exactly the thing that makes it correct: it put the translation
+    // into the w column, w then varied per vertex, and every quad came out as a
+    // projective wedge.
+    glUniformMatrix4fv( program.nTransformUniform, 1, GL_FALSE, &matCombined.m[0][0] );
 
     {
         static int nShown = 0;

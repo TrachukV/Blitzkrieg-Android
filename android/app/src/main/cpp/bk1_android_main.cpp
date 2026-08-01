@@ -347,6 +347,102 @@ int HandleInput( android_app *pApp, AInputEvent *pEvent )
 }
 
 // ---------------------------------------------------------------------------
+// What is actually in the frame
+// ---------------------------------------------------------------------------
+// The emulator's screencap does not capture this surface -- clearing the whole
+// screen to magenta produced a capture without a magenta pixel in it, byte for
+// byte identical to the one before. So the only trustworthy way to see what
+// the port has drawn is to ask the context itself.
+//
+// Once a second, a coarse grid of pixels is read back and the commonest
+// colours reported. Black everywhere means nothing is being drawn; anything
+// else is the frame, whatever a screenshot may claim.
+// The whole frame, once, written out where it can be fetched from. Raw RGBA
+// rather than an image format: there is no encoder here, and the host can turn
+// four bytes a pixel into a picture without one.
+void DumpFrame()
+{
+    const size_t nBytes = (size_t)g_state.nWidth * g_state.nHeight * 4;
+    unsigned char *pPixels = (unsigned char *)malloc( nBytes );
+    if ( pPixels == 0 )
+        return;
+    glReadPixels( 0, 0, g_state.nWidth, g_state.nHeight, GL_RGBA, GL_UNSIGNED_BYTE,
+                  pPixels );
+
+    char szPath[1200];
+    snprintf( szPath, sizeof( szPath ), "%s/frame.rgba", g_state.szDataDirectory );
+    if ( FILE *pFile = fopen( szPath, "wb" ) )
+    {
+        fwrite( pPixels, 1, nBytes, pFile );
+        fclose( pFile );
+        LOGI( "frame written: %s, %dx%d", szPath, g_state.nWidth, g_state.nHeight );
+    }
+    else
+    {
+        LOGE( "cannot write %s", szPath );
+    }
+    free( pPixels );
+}
+
+void SampleFrame()
+{
+    // One dump, a few seconds in, once the interface has settled.
+    static int nFrames = 0;
+    if ( ++nFrames == 240 )
+        DumpFrame();
+
+    static timespec last = { 0, 0 };
+    timespec now;
+    clock_gettime( CLOCK_MONOTONIC, &now );
+    if ( last.tv_sec != 0 && now.tv_sec - last.tv_sec < 2 )
+        return;
+    last = now;
+
+    const int nAcross = 12, nDown = 8;
+    struct SCount { unsigned int nColour; int nTimes; };
+    SCount counts[nAcross * nDown];
+    int nDistinct = 0;
+
+    for ( int y = 0; y < nDown; ++y )
+    {
+        for ( int x = 0; x < nAcross; ++x )
+        {
+            unsigned char rgba[4] = { 0, 0, 0, 0 };
+            glReadPixels( g_state.nWidth * ( 2 * x + 1 ) / ( 2 * nAcross ),
+                          g_state.nHeight * ( 2 * y + 1 ) / ( 2 * nDown ),
+                          1, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgba );
+            const unsigned int nColour =
+                ( (unsigned int)rgba[0] << 16 ) | ( (unsigned int)rgba[1] << 8 ) | rgba[2];
+            int i = 0;
+            for ( ; i < nDistinct; ++i )
+            {
+                if ( counts[i].nColour == nColour ) { ++counts[i].nTimes; break; }
+            }
+            if ( i == nDistinct )
+            {
+                counts[nDistinct].nColour = nColour;
+                counts[nDistinct].nTimes = 1;
+                ++nDistinct;
+            }
+        }
+    }
+
+    // The three commonest, which is enough to tell a blank frame from a drawn one.
+    for ( int nShown = 0; nShown < 3 && nShown < nDistinct; ++nShown )
+    {
+        int nBest = 0;
+        for ( int i = 1; i < nDistinct; ++i )
+        {
+            if ( counts[i].nTimes > counts[nBest].nTimes )
+                nBest = i;
+        }
+        __android_log_print( ANDROID_LOG_INFO, LOG_TAG, "frame: #%06x on %d of %d samples",
+                             counts[nBest].nColour, counts[nBest].nTimes, nAcross * nDown );
+        counts[nBest].nTimes = -1;
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Frame rate
 // ---------------------------------------------------------------------------
 // The port is meant to hold the display's refresh rate, so it is measured
@@ -522,6 +618,7 @@ extern "C" void android_main( android_app *pApp )
 
         if ( !g_state.bGameFailed )
         {
+
             // The engine draws the whole frame, clear included. Clearing here
             // as well would only cost fill rate.
             if ( !Bk1GameStep( true ) )
@@ -547,6 +644,7 @@ extern "C" void android_main( android_app *pApp )
             PerformAll( held, g_gestures.Tick( NowMilliseconds(), held ) );
         }
 
+        SampleFrame();
         eglSwapBuffers( g_state.display, g_state.surface );
         ReportFrameRate();
     }

@@ -32,9 +32,9 @@ public:
 	virtual const SHMatrix& STDCALL GetMatrix() const { return matResult; }
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CMatrixEffectorJogging : public ISceneEffectorJogging
+class CSceneMatrixEffectorJogging : public ISceneEffectorJogging
 {
-	OBJECT_NORMAL_METHODS( CMatrixEffectorJogging );
+	OBJECT_NORMAL_METHODS( CSceneMatrixEffectorJogging );
 	DECLARE_SERIALIZE;
 	//
 	SHMatrix matResult;										// result matrix
@@ -43,7 +43,7 @@ class CMatrixEffectorJogging : public ISceneEffectorJogging
 	// jogging params
 	float fWeightCoeff;										// weight of the technics for jogging
 public:
-	CMatrixEffectorJogging() : matResult( MONE ), lastUpdateTime( 0 ), fWeightCoeff( 1.0f ) {  }
+	CSceneMatrixEffectorJogging() : matResult( MONE ), lastUpdateTime( 0 ), fWeightCoeff( 1.0f ) {  }
 	//
 	virtual void STDCALL SetupTimes( const NTimer::STime &_timeStart, const NTimer::STime &_timeLife )
 	{

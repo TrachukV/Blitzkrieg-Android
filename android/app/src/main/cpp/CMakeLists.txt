@@ -26,10 +26,20 @@ set( SOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../../Sources/src )
 # Guarded by the language, because the NDK's glue is C and neither the C++
 # template flags nor the force-include below mean anything to it.
 add_compile_options(
-    "$<$<COMPILE_LANGUAGE:CXX>:-fms-extensions>"
+    # Not language-guarded: the engine writes its includes with backslashes,
+    # "..\zlib\zlib.h", and this is what makes a compiler on this side of the
+    # world read them as paths. libpng's png.h does it from C. Only the
+    # force-include below is C++-only -- that is what the C glue choked on.
+    -fms-extensions
     "$<$<COMPILE_LANGUAGE:CXX>:-fdelayed-template-parsing>"
     "$<$<COMPILE_LANGUAGE:CXX>:-Wno-reserved-user-defined-literal>"
     "$<$<COMPILE_LANGUAGE:CXX>:-Wno-invalid-offsetof>"
+    # The NDK makes -Wformat-security fatal by default. The engine's console
+    # takes a computed string -- NStr::Format has already done the formatting,
+    # and what reaches printf is the finished text. That is exactly the shape
+    # the warning describes and exactly the case where it is not a defect, so
+    # it stays a warning here rather than stopping the build.
+    "$<$<COMPILE_LANGUAGE:CXX>:-Wno-error=format-security>"
     "$<$<COMPILE_LANGUAGE:CXX>:-D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES>"
     # bk1_msvc_types.h is force-included into every C++ unit: it is what makes
     # the original sources compile unchanged.
@@ -66,6 +76,7 @@ set( COMPAT_SOURCES
     compat/bk1_win32_window.cpp
     compat/bk1_win32_keys.cpp
     compat/bk1_win32_version.cpp
+    compat/bk1_bugslayer.cpp
     compat/bk1_wave.cpp
     compat/bk1_fmod_audio.cpp
     compat/bk1_msvc_fpu.cpp
@@ -80,10 +91,169 @@ set( COMPAT_SOURCES
     compat/bk1_d3d8_device.cpp
 )
 
+# --- the engine ---------------------------------------------------------------
+# Each module's source list comes out of its own .dsp, which is the build file
+# the game was actually built with. Globbing *.cpp would sweep in files that
+# were never in the build -- dead experiments, editor-only helpers -- and
+# hand-copying the lists would let them drift. android/compile_check.sh reads
+# the same .dsp files, so what is checked and what is built cannot disagree.
+find_package( Python3 COMPONENTS Interpreter REQUIRED )
+
+function( bk1_module_sources MODULE OUT_VAR )
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE}
+                "${CMAKE_CURRENT_SOURCE_DIR}/../../../../list_module_sources.py"
+                "${SOURCES_DIR}" "${MODULE}"
+        OUTPUT_VARIABLE LISTING
+        RESULT_VARIABLE STATUS
+        OUTPUT_STRIP_TRAILING_WHITESPACE )
+    if( NOT STATUS EQUAL 0 )
+        message( FATAL_ERROR "cannot list ${MODULE}: ${STATUS}" )
+    endif()
+    string( REPLACE "\n" ";" RESULT "${LISTING}" )
+    set( ${OUT_VAR} "${RESULT}" PARENT_SCOPE )
+endfunction()
+
+# Every module in the game's dependency closure. ELK, MapEditor and editor are
+# absent because nothing the game runs reaches them.
+set( ENGINE_MODULES
+    Misc StreamIO Formats Image Anim Common zlib libpng GameSpy LuaLib
+    RandomMapGen Net Scene UI GFX Input Main GameTT AILogic SFX
+)
+
+set( ENGINE_SOURCES "" )
+foreach( MODULE ${ENGINE_MODULES} )
+    bk1_module_sources( ${MODULE} MODULE_SOURCES )
+    list( LENGTH MODULE_SOURCES COUNT )
+    message( STATUS "  ${MODULE}: ${COUNT} sources" )
+    list( APPEND ENGINE_SOURCES ${MODULE_SOURCES} )
+endforeach()
+
+# --- twenty DLLs becoming one library -----------------------------------------
+# Every module carried a byte-identical GlobalsLoader.cpp. That was not
+# duplication by accident: each module was a DLL, and a DLL needs its own
+# pointers to the process-wide singletons, filled in at load time by pulling
+# GetSLS_Hook, GetSingletonGlobal_Hook and GetTempRawBuffer_Hook out of
+# streamio.dll. Twenty copies of the same four globals, one per module, each
+# private to its own DLL.
+#
+# Here there is one binary and one address space, so exactly one copy is
+# correct and the other nineteen are duplicate symbols at link time.
+#
+# The file already knows what to do about it. Its _STREAMIO_DLL branch is the
+# case where the code is in the same binary as StreamIO: it calls those three
+# hooks directly instead of looking them up in a library. That branch was
+# written for StreamIO itself, and in this build it is true of everything. So
+# StreamIO's copy is the one that is built, with the branch selected, and the
+# nineteen others are dropped.
+set( GLOBALS_LOADER_KEPT "${SOURCES_DIR}/StreamIO/GlobalsLoader.cpp" )
+
+# Two more files exist twice for the same reason. Net/Streams.cpp is a
+# byte-identical copy of StreamIO/Streams.cpp, and Scene/TerrainBuilder.cpp of
+# RandomMapGen/TerrainBuilder.cpp -- a DLL could not share a translation unit
+# with another DLL, so it carried its own. One address space, one copy.
+# (GameTT/AckManager.cpp and AILogic/AckManager.cpp share a name but not their
+# contents, so both are built.)
+set( DUPLICATED_SOURCES
+    "${SOURCES_DIR}/Net/Streams.cpp"
+    "${SOURCES_DIR}/Scene/TerrainBuilder.cpp"
+)
+
+# And Main/LoadDLLs.cpp is the DLL loader itself -- a platform file, like
+# WinMain was. bk1_module_registry.cpp replaces it, keeping the same NMain
+# interface but taking the descriptors from the modules linked in here.
+list( APPEND DUPLICATED_SOURCES "${SOURCES_DIR}/Main/LoadDLLs.cpp" )
+
+# libpng's own test harness. Its .dsp lists it because the project built both
+# the library and the test; it carries a main() and nothing in the game calls
+# it.
+list( APPEND DUPLICATED_SOURCES "${SOURCES_DIR}/libpng/pngtest.c" )
+
+set( FILTERED_SOURCES "" )
+set( DROPPED_LOADERS 0 )
+foreach( SOURCE ${ENGINE_SOURCES} )
+    get_filename_component( SOURCE_NAME "${SOURCE}" NAME )
+    set( DROP FALSE )
+    if( SOURCE_NAME STREQUAL "GlobalsLoader.cpp" AND
+        NOT "${SOURCE}" STREQUAL "${GLOBALS_LOADER_KEPT}" )
+        set( DROP TRUE )
+    endif()
+    if( "${SOURCE}" IN_LIST DUPLICATED_SOURCES )
+        set( DROP TRUE )
+    endif()
+    if( DROP )
+        math( EXPR DROPPED_LOADERS "${DROPPED_LOADERS} + 1" )
+    else()
+        list( APPEND FILTERED_SOURCES "${SOURCE}" )
+    endif()
+endforeach()
+set( ENGINE_SOURCES ${FILTERED_SOURCES} )
+message( STATUS "dropped ${DROPPED_LOADERS} sources that exist once per DLL" )
+
+# Each module exports GetModuleDescriptor under that one name, which is fine
+# for eleven separate DLLs and a collision in one library. Renaming it per
+# module at the compiler rather than in the source keeps the engine files
+# untouched -- and bk1_module_registry.cpp calls them by these names.
+set( DESCRIPTOR_SOURCES
+    "StreamIO/StreamIOObjectFactory.cpp"
+    "Image/ImageObjectFactory.cpp"
+    "Anim/AnimObjectFactory.cpp"
+    "Net/NetObjectFactory.cpp"
+    "Scene/SceneObjectFactory.cpp"
+    "UI/UIObjectFactory.cpp"
+    "GFX/GFXObjectFactory.cpp"
+    "Input/InputObjectFactory.cpp"
+    "GameTT/MissionObjectFactory.cpp"
+    "AILogic/AILogicObjectFactory.cpp"
+    "SFX/SoundObjectFactory.cpp"
+)
+foreach( RELATIVE ${DESCRIPTOR_SOURCES} )
+    string( REGEX REPLACE "/.*" "" MODULE "${RELATIVE}" )
+    set( FULL "${SOURCES_DIR}/${RELATIVE}" )
+    if( NOT EXISTS "${FULL}" )
+        message( FATAL_ERROR "no ${FULL} -- the descriptor list is stale" )
+    endif()
+    set_property( SOURCE "${FULL}" APPEND PROPERTY COMPILE_DEFINITIONS
+                  "GetModuleDescriptor=Bk1GetModuleDescriptor_${MODULE}" )
+endforeach()
+
+set_property( SOURCE "${GLOBALS_LOADER_KEPT}" APPEND PROPERTY
+              COMPILE_DEFINITIONS "_STREAMIO_DLL" "_DONT_LOAD_STREAMIO" )
+
+list( LENGTH ENGINE_SOURCES ENGINE_COUNT )
+message( STATUS "engine: ${ENGINE_COUNT} translation units" )
+
 add_library( blitzkrieg SHARED
     bk1_android_main.cpp
+    bk1_game_startup.cpp
+    bk1_module_registry.cpp
     ${COMPAT_SOURCES}
+    ${ENGINE_SOURCES}
 )
+
+# The engine's headers are reached as "Foo.h" from within a module and as
+# "..\Module\Foo.h" from outside it. The second needs Sources/src on the path.
+# The first needs nothing: a quoted include looks in the including file's own
+# directory first, so Misc/Foo.cpp finds Misc/StdAfx.h by itself.
+target_include_directories( blitzkrieg PRIVATE ${SOURCES_DIR} )
+
+# Except for a source that sits in a subdirectory of its module. There is one --
+# AILogic/Scripts/Scripts.cpp -- and its "stdafx.h" means AILogic's, which is
+# not in its own directory. The original project compiled each module with the
+# module's directory current, which is what made that resolve.
+#
+# This is done per source and not by putting every module directory on the
+# global path, and the difference matters: thirty-five modules have a StdAfx.h
+# and they are not interchangeable. A global list would resolve every such
+# fall-through to whichever module happened to be listed first.
+foreach( SOURCE ${ENGINE_SOURCES} )
+    get_filename_component( SOURCE_DIR "${SOURCE}" DIRECTORY )
+    get_filename_component( PARENT_DIR "${SOURCE_DIR}" DIRECTORY )
+    if( NOT "${PARENT_DIR}" STREQUAL "${SOURCES_DIR}" )
+        set_property( SOURCE "${SOURCE}" APPEND PROPERTY
+                      INCLUDE_DIRECTORIES "${PARENT_DIR}" )
+    endif()
+endforeach()
 
 target_link_libraries( blitzkrieg
     native_app_glue

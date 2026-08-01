@@ -15,7 +15,14 @@
 #include "DataBase.h"
 #include "IniFile.h"
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-CSaveLoadSystem theSaveLoadSystem;
+#ifdef _MSC_VER
+#define BK1_EARLY_INIT
+#else
+// One binary now, not twenty DLLs: nothing orders these against the
+// static initialisers that use them, so they are ordered explicitly.
+#define BK1_EARLY_INIT __attribute__(( init_priority( 101 ) ))
+#endif
+CSaveLoadSystem theSaveLoadSystem BK1_EARLY_INIT;
 ISaveLoadSystem* STDCALL GetSLS_Hook()
 {
 	return &theSaveLoadSystem;

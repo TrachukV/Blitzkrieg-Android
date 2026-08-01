@@ -182,7 +182,7 @@ void CInterfaceMainMenu::RefreshCursor()
 	OnCursorMove( pCursor->GetPos() );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool GetFileVersion( const std::string &szFileName, VS_FIXEDFILEINFO *pVersionInfo )
+static bool GetFileVersion( const std::string &szFileName, VS_FIXEDFILEINFO *pVersionInfo )
 {
 	char pszLocalFileName[2048];
 	strcpy( pszLocalFileName, szFileName.c_str() );
@@ -202,7 +202,7 @@ bool GetFileVersion( const std::string &szFileName, VS_FIXEDFILEINFO *pVersionIn
 	*pVersionInfo = *pFFI;
 	return true;
 }
-void GetFileVersionString( const std::string &szFileName, std::string *pVersion )
+static void GetFileVersionString( const std::string &szFileName, std::string *pVersion )
 {
 	VS_FIXEDFILEINFO version;
 	if ( GetFileVersion(szFileName, &version) != false )

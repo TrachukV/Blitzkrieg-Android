@@ -625,7 +625,7 @@ void CMainLoop::Command( int nCommandID, const char *pszConfiguration )
 		Command( 0 );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool GetFileVersion( const std::string &szFileName, VS_FIXEDFILEINFO *pVersionInfo )
+static bool GetFileVersion( const std::string &szFileName, VS_FIXEDFILEINFO *pVersionInfo )
 {
 	char pszLocalFileName[2048];
 	strcpy( pszLocalFileName, szFileName.c_str() );
@@ -646,7 +646,7 @@ bool GetFileVersion( const std::string &szFileName, VS_FIXEDFILEINFO *pVersionIn
 	return true;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void GetFileVersionString( const std::string &szFileName, std::string *pVersion )
+static void GetFileVersionString( const std::string &szFileName, std::string *pVersion )
 {
 	VS_FIXEDFILEINFO version;
 	if ( GetFileVersion(szFileName, &version) != false )

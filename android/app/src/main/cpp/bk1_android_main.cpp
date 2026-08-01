@@ -22,6 +22,8 @@
 #include "compat/bk1_win32_keys.h"
 #include "compat/bk1_win32_registry.h"
 #include "compat/dinput.h"
+#include "compat/fmod.h"
+#include "bk1_game_startup.h"
 
 #define LOG_TAG "Blitzkrieg"
 #define LOGI( ... ) __android_log_print( ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__ )
@@ -47,10 +49,20 @@ struct SAppState
     float fLastX;
     float fLastY;
 
+    // The engine starts on the first frame that has a surface, and the data
+    // directory has to be known before then.
+    bool  bGameStarted;
+    bool  bGameFailed;
+    char  szDataDirectory[1024];
+
     SAppState()
         : pApp( 0 ), display( EGL_NO_DISPLAY ), surface( EGL_NO_SURFACE ),
           context( EGL_NO_CONTEXT ), nWidth( 0 ), nHeight( 0 ), bReady( false ),
-          nActivePointer( -1 ), fLastX( 0.0f ), fLastY( 0.0f ) {}
+          nActivePointer( -1 ), fLastX( 0.0f ), fLastY( 0.0f ),
+          bGameStarted( false ), bGameFailed( false )
+    {
+        szDataDirectory[0] = 0;
+    }
 };
 
 SAppState g_state;
@@ -345,6 +357,10 @@ void HandleCommand( android_app *pApp, int32_t nCommand )
         DestroySurface( pState );
         break;
 
+    case APP_CMD_GAINED_FOCUS:
+        Bk1SoundSetSuspended( false );
+        break;
+
     case APP_CMD_WINDOW_RESIZED:
     case APP_CMD_CONFIG_CHANGED:
         if ( pState->bReady )
@@ -360,6 +376,7 @@ void HandleCommand( android_app *pApp, int32_t nCommand )
         // finger is on the screen after the activity goes away.
         Bk1ClearInputEvents();
         Bk1ClearKeyStates();
+        Bk1SoundSetSuspended( true );
         break;
 
     case APP_CMD_SAVE_STATE:
@@ -398,6 +415,18 @@ extern "C" void android_main( android_app *pApp )
                   pApp->activity->internalDataPath );
         Bk1SetRegistryFile( szPath );
         LOGI( "settings at %s", szPath );
+
+        // The game's own data -- Data/*.pak, movies, saves -- is far too large
+        // to package, so it lives in the app's external directory where the
+        // player can copy it without root.
+        if ( pApp->activity->externalDataPath != 0 )
+            snprintf( g_state.szDataDirectory, sizeof( g_state.szDataDirectory ),
+                      "%s", pApp->activity->externalDataPath );
+        else
+            snprintf( g_state.szDataDirectory, sizeof( g_state.szDataDirectory ),
+                      "%s", pApp->activity->internalDataPath );
+        Bk1SoundSetRootDirectory( g_state.szDataDirectory );
+        LOGI( "game data expected under %s", g_state.szDataDirectory );
     }
 
     while ( true )
@@ -424,9 +453,41 @@ extern "C" void android_main( android_app *pApp )
         if ( !g_state.bReady )
             continue;
 
-        glViewport( 0, 0, g_state.nWidth, g_state.nHeight );
-        glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
-        glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
+        // The engine comes up on the first frame that has a surface, because
+        // its graphics setup wants the real size and there is no size before
+        // then. If it cannot start -- almost always missing game data -- the
+        // reason is already in the log and there is nothing to loop over.
+        if ( !g_state.bGameStarted )
+        {
+            g_state.bGameStarted = true;
+            if ( !Bk1GameStartup( g_state.szDataDirectory, g_state.nWidth,
+                                  g_state.nHeight ) )
+            {
+                LOGE( "the engine did not start; leaving the surface up so the "
+                      "log can be read" );
+                g_state.bGameFailed = true;
+            }
+        }
+
+        if ( !g_state.bGameFailed )
+        {
+            // The engine draws the whole frame, clear included. Clearing here
+            // as well would only cost fill rate.
+            if ( !Bk1GameStep( true ) )
+            {
+                LOGI( "the game asked to exit" );
+                Bk1GameShutdown();
+                DestroySurface( &g_state );
+                ANativeActivity_finish( pApp->activity );
+                return;
+            }
+        }
+        else
+        {
+            glViewport( 0, 0, g_state.nWidth, g_state.nHeight );
+            glClearColor( 0.0f, 0.0f, 0.0f, 1.0f );
+            glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT );
+        }
 
         eglSwapBuffers( g_state.display, g_state.surface );
         ReportFrameRate();

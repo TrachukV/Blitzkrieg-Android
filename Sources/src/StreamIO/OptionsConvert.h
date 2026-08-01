@@ -6,7 +6,7 @@
 // helper namespace for options
 namespace NOptionsConvert
 {
-	const int GetSpeed( const std::string &szSpeed )
+	inline const int GetSpeed( const std::string &szSpeed )
 	{
 		const int nMaxSpeed = +GetGlobalVar( "maxspeed", 10 );
 		const int nMinSpeed = -GetGlobalVar( "minspeed", 10 );

@@ -51,7 +51,7 @@ CSceneObjectFactory::CSceneObjectFactory()
 	REGISTER_CLASS( this, SCENE_BOLD_LINE, CBoldLineVisObj );
 
 	REGISTER_CLASS( this, SCENE_EFFECTOR_RECOIL, CMatrixEffectorRecoil );
-	REGISTER_CLASS( this, SCENE_EFFECTOR_JOGGING, CMatrixEffectorJogging );
+	REGISTER_CLASS( this, SCENE_EFFECTOR_JOGGING, CSceneMatrixEffectorJogging );
 	REGISTER_CLASS( this, SCENE_EFFECTOR_MATERIAL, CMaterialEffector );
 	
 	REGISTER_CLASS( this, SCENE_SOUNDSCENE, CSoundScene );

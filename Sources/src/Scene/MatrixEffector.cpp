@@ -57,7 +57,7 @@ bool CMatrixEffectorRecoil::Update( const NTimer::STime &time )
 // **
 // ************************************************************************************************************************ //
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int CMatrixEffectorJogging::operator&( IStructureSaver &ss )
+int CSceneMatrixEffectorJogging::operator&( IStructureSaver &ss )
 {
 	CSaverAccessor saver = &ss;
 	saver.Add( 1, &matResult );
@@ -67,7 +67,7 @@ int CMatrixEffectorJogging::operator&( IStructureSaver &ss )
 	return 0;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool CMatrixEffectorJogging::Update( const NTimer::STime &time )
+bool CSceneMatrixEffectorJogging::Update( const NTimer::STime &time )
 {
 	if ( time < timeStart )
 		return true;

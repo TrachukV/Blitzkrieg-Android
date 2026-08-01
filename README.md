@@ -86,6 +86,13 @@ the Windows shell, and `android_main` is what replaces them.
 
 ## Running it
 
+Build and install first -- the data goes into a directory that belongs to the
+installed package:
+
+```bash
+android/build_apk.sh Release && adb install -r android/build/Release/Blitzkrieg.apk
+```
+
 The game's data belongs to whoever owns a copy of Blitzkrieg. Copy the `Data`
 directory and the two config files out of an installation:
 
@@ -108,6 +115,10 @@ uid wrote the bytes, and needs no permission at all.
 
 The port looks in both, plus `/sdcard/Blitzkrieg`, and says which one it took and
 why it passed over the others.
+
+`config.cfg` and `defconf.cfg` are not optional. They carry the control
+bindings, and without them every menu lights up under the finger and answers
+nothing -- the input arrives, binds to nothing, and the engine does not say so.
 
 ## What is verified, and what is not
 

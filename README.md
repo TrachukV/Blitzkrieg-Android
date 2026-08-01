@@ -116,13 +116,12 @@ Three campaigns start and play: Allied (winter Norway), German (summer), Soviet
 Menus, campaign map, chapter and mission briefings, Options down to the video
 page, and a mission on the battlefield, all reached by touch.
 
-Known broken: **the Tutorials list comes up empty.** The six tutorials are in
-the data and on the device, so this is the port and not missing content.
-`GameTT/TutorialList.cpp` scans `scenarios\tutorials\` for `*.xml` through the
-data storage, and the files sit a level down, one directory per tutorial -- so
-the scan has to descend, and something in that walk does not. The compatibility
-layer's `FindFirstFile` does report `FILE_ATTRIBUTE_DIRECTORY`, so it is further
-in than that.
+The Tutorials list works too, and fixing it fixed a whole class. `fnmatch` reads
+`*.*` literally -- something, a dot, something -- while Windows has treated it as
+"everything" since MS-DOS. The engine enumerates a directory with `*.*` and
+recurses into whatever comes back marked as a directory, and directories rarely
+have dots, so the walk never descended. Every list built by scanning a tree came
+up empty. One line, and six tutorials appeared.
 
 Not verified, and I will not claim otherwise: no real device -- every figure
 here is from an arm64 emulator; no campaign played to the end, only its opening

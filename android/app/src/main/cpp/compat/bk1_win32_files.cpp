@@ -216,8 +216,21 @@ bool Fill( const std::string &szDir, const char *pszName, WIN32_FIND_DATAA *pDat
 
 // FNM_CASEFOLD keeps Windows' case-insensitive matching, which the game data
 // depends on.
+//
+// "*.*" is the one pattern where fnmatch and Windows disagree, and the
+// disagreement is not academic. fnmatch reads it literally -- something, a dot,
+// something -- so a name with no dot in it does not match. Windows has treated
+// "*.*" as "everything" since MS-DOS, extension or no extension, and the engine
+// leans on that: CCommonFileSystem enumerates a directory with "*.*" and
+// recurses into whatever comes back marked as a directory.
+//
+// Directories rarely have dots. So on Android the walk never descended, and
+// every list built by scanning a tree came up empty -- which is why the
+// Tutorials screen listed nothing while six tutorials sat in the data.
 bool Matches( const std::string &szPattern, const char *pszName )
 {
+    if ( szPattern == "*.*" )
+        return true;
     return fnmatch( szPattern.c_str(), pszName, FNM_CASEFOLD ) == 0;
 }
 

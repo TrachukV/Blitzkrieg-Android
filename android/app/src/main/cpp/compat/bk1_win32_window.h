@@ -55,6 +55,23 @@ BOOL SetWindowPos( HWND hWnd, HWND hWndInsertAfter, int nX, int nY,
 // --- driven by the Android side ---
 // The size of the rendering surface, which is the window's client area.
 void Bk1SetClientSize( int nWidth, int nHeight );
+
+// The size the engine believes it is drawing at, which is not the surface's.
+// Blitzkrieg's menus are authored at exactly 1024x768 and the game switched
+// the display to that mode to show them; there is no mode to switch to here,
+// so the engine keeps its own size and the device scales the result onto the
+// surface. Everything that turns a screen position into an engine position --
+// touch, above all -- has to know about that scale, and this is where it is
+// kept so there is one answer rather than several.
+void Bk1SetPresentSize( int nWidth, int nHeight );
+void Bk1GetPresentSize( int *pnWidth, int *pnHeight );
+
+// The letterboxed rectangle inside the surface that the engine's frame lands
+// on: the largest one that keeps its shape.
+void Bk1GetPresentRect( int *pnX, int *pnY, int *pnWidth, int *pnHeight );
+
+// A point on the surface, expressed in the engine's coordinates.
+void Bk1SurfaceToEngine( int nSurfaceX, int nSurfaceY, int *pnX, int *pnY );
 void Bk1GetClientSize( int *pnWidth, int *pnHeight );
 // Where the finger is. Clipped to the cursor's clip rectangle, as Windows
 // clips a real one, so that the engine's edge-scroll logic behaves.

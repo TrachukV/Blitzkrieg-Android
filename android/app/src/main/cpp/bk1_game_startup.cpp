@@ -195,14 +195,20 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
     SetGlobalVar( "GFX.Mode.Mission.Stencil", 8 );
     SetGlobalVar( "GFX.Mode.Mission.FullScreen", int( GFXFS_WINDOWED ) );
     SetGlobalVar( "GFX.Mode.Mission.Frequency", 0 );
-    SetGlobalVar( "GFX.Mode.InterMission.SizeX", nSurfaceWidth );
-    SetGlobalVar( "GFX.Mode.InterMission.SizeY", nSurfaceHeight );
+    // The menus are authored at exactly 1024x768 -- every rectangle in
+    // Data/UI is written in those coordinates -- and on Windows the game
+    // switched the display to that mode to show them. There is no mode to
+    // switch to here, so the engine is given the size its data expects and the
+    // device scales the result onto the surface, keeping the aspect ratio.
+    // Anything else moves the menu into a corner of the screen.
+    SetGlobalVar( "GFX.Mode.InterMission.SizeX", 1024 );
+    SetGlobalVar( "GFX.Mode.InterMission.SizeY", 768 );
     SetGlobalVar( "GFX.Mode.InterMission.BPP", 32 );
     SetGlobalVar( "GFX.Mode.InterMission.Stencil", 8 );
     SetGlobalVar( "GFX.Mode.InterMission.FullScreen", int( GFXFS_WINDOWED ) );
     SetGlobalVar( "GFX.Mode.InterMission.Frequency", 0 );
-    SetGlobalVar( "GFX.Mode.Current.SizeX", nSurfaceWidth );
-    SetGlobalVar( "GFX.Mode.Current.SizeY", nSurfaceHeight );
+    SetGlobalVar( "GFX.Mode.Current.SizeX", 1024 );
+    SetGlobalVar( "GFX.Mode.Current.SizeY", 768 );
     SetGlobalVar( "GFX.Mode.Current.BPP", 32 );
     SetGlobalVar( "GFX.Mode.Current.Stencil", 8 );
     SetGlobalVar( "GFX.Mode.Current.FullScreen", int( GFXFS_WINDOWED ) );
@@ -306,15 +312,18 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
             LOGE( "no graphics singleton" );
             return false;
         }
-        if ( pGFX->SetMode( nSurfaceWidth, nSurfaceHeight, 32, 8, GFXFS_WINDOWED, 0 ) == false )
+        // What the engine draws at, so the device knows where to put it and
+        // touch knows how to come back the other way.
+        Bk1SetPresentSize( 1024, 768 );
+        if ( pGFX->SetMode( 1024, 768, 32, 8, GFXFS_WINDOWED, 0 ) == false )
         {
             LOGE( "IGFX::SetMode( %d, %d ) failed", nSurfaceWidth, nSurfaceHeight );
             return false;
         }
         pGFX->SetCullMode( GFXC_CW );          // right-handed, as the engine expects
         SHMatrix matrix;
-        CreateOrthographicProjectionMatrixRH( &matrix, nSurfaceWidth, nSurfaceHeight,
-                                              1, 1024 * 8 + nSurfaceHeight * 2 );
+        CreateOrthographicProjectionMatrixRH( &matrix, 1024, 768,
+                                              1, 1024 * 8 + 768 * 2 );
         pGFX->SetProjectionTransform( matrix );
         pGFX->EnableLighting( false );
         if ( ITextureManager *pTM = GetSingleton<ITextureManager>() )
@@ -337,7 +346,7 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
             LOGE( "no cursor singleton" );
             return false;
         }
-        pCursor->SetBounds( 0, 0, nSurfaceWidth, nSurfaceHeight );
+        pCursor->SetBounds( 0, 0, 1024, 768 );
         pCursor->SetMode( 0 );
     }
 

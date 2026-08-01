@@ -310,8 +310,15 @@ int HandleInput( android_app *pApp, AInputEvent *pEvent )
     for ( size_t i = 0; i < nFingers; ++i )
     {
         fingers[i].nId = AMotionEvent_getPointerId( pEvent, i );
-        fingers[i].fX = AMotionEvent_getX( pEvent, i );
-        fingers[i].fY = AMotionEvent_getY( pEvent, i );
+        // Into the engine's coordinates. It draws at its own size and the
+        // device scales that onto the surface; a finger has to travel the
+        // same road backwards or every tap lands somewhere else.
+        int nEngineX = 0, nEngineY = 0;
+        Bk1SurfaceToEngine( (int)AMotionEvent_getX( pEvent, i ),
+                            (int)AMotionEvent_getY( pEvent, i ),
+                            &nEngineX, &nEngineY );
+        fingers[i].fX = (float)nEngineX;
+        fingers[i].fY = (float)nEngineY;
     }
 
     NBk1Touch::EPhase phase;

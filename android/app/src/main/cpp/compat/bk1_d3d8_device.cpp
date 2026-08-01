@@ -186,8 +186,12 @@ struct SDevice : public IDirect3DDevice8
         if ( pParameters != 0 )
         {
             present = *pParameters;
-            Bk1SetClientSize( (int)present.BackBufferWidth,
-                              (int)present.BackBufferHeight );
+            // The size the engine draws at, not the surface's. They were the
+            // same until the menus turned out to be authored at a fixed
+            // 1024x768; writing the back buffer's size into the surface's made
+            // the scale one to one again and left the picture in a corner.
+            Bk1SetPresentSize( (int)present.BackBufferWidth,
+                               (int)present.BackBufferHeight );
         }
         return D3D_OK;
     }
@@ -622,13 +626,55 @@ HRESULT STDCALL SDevice::SetTransform( D3DTRANSFORMSTATETYPE state,
     return D3D_OK;
 }
 
+// The engine's viewport, placed on the surface.
+//
+// It works in its own coordinates -- 1024x768 for the menus, whatever a mission
+// asks for -- and the device scales that onto the surface. So a viewport the
+// engine sets cannot go to GL as it stands: it has to be scaled and offset the
+// same way the picture is, or the two disagree and half the frame lands off
+// screen. GL also counts y upward where Direct3D counts down, which is the
+// other half of this conversion.
+void ApplyViewport( const D3DVIEWPORT8 &vp )
+{
+    int nRectX = 0, nRectY = 0, nRectWidth = 0, nRectHeight = 0;
+    Bk1GetPresentRect( &nRectX, &nRectY, &nRectWidth, &nRectHeight );
+    int nEngineWidth = 0, nEngineHeight = 0;
+    Bk1GetPresentSize( &nEngineWidth, &nEngineHeight );
+    if ( nEngineWidth <= 0 || nEngineHeight <= 0 || nRectWidth <= 0 || nRectHeight <= 0 )
+        return;
+
+    const double dScaleX = (double)nRectWidth / nEngineWidth;
+    const double dScaleY = (double)nRectHeight / nEngineHeight;
+    const int nWidth = (int)( vp.Width * dScaleX + 0.5 );
+    const int nHeight = (int)( vp.Height * dScaleY + 0.5 );
+    const int nX = nRectX + (int)( vp.X * dScaleX + 0.5 );
+    // Direct3D measures the top edge from the top; GL measures the bottom edge
+    // from the bottom.
+    const int nY = nRectY +
+        (int)( ( nEngineHeight - (int)vp.Y - (int)vp.Height ) * dScaleY + 0.5 );
+    {
+        static int nShown = 0;
+        if ( nShown < 4 )
+        {
+            ++nShown;
+            __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
+                                 "viewport: engine %ux%u at %u,%u -> surface %dx%d at %d,%d "
+                                 "(present %dx%d, rect %dx%d at %d,%d)",
+                                 vp.Width, vp.Height, vp.X, vp.Y,
+                                 nWidth, nHeight, nX, nY,
+                                 nEngineWidth, nEngineHeight,
+                                 nRectWidth, nRectHeight, nRectX, nRectY );
+        }
+    }
+    glViewport( nX, nY, nWidth, nHeight );
+}
+
 HRESULT STDCALL SDevice::SetViewport( const D3DVIEWPORT8 *pViewport )
 {
     if ( pViewport == 0 )
         return D3DERR_INVALIDCALL;
     viewport = *pViewport;
-    glViewport( (GLint)viewport.X, (GLint)viewport.Y,
-                (GLsizei)viewport.Width, (GLsizei)viewport.Height );
+    ApplyViewport( viewport );
     glDepthRangef( viewport.MinZ, viewport.MaxZ );
     return D3D_OK;
 }
@@ -828,8 +874,28 @@ void SDevice::ApplyState()
         }
     }
 
+    // The engine draws at its own size and this puts the result on the surface,
+    // keeping its shape. Everything downstream is in engine coordinates, so
+    // this is the only place that knows about the scale -- along with
+    // Bk1SurfaceToEngine, which undoes it for touch.
+    {
+        // The engine's viewport if it has set one, and the whole frame if it
+        // has not -- either way through the same mapping.
+        D3DVIEWPORT8 vp = viewport;
+        if ( vp.Width == 0 || vp.Height == 0 )
+        {
+            int nEngineWidth = 0, nEngineHeight = 0;
+            Bk1GetPresentSize( &nEngineWidth, &nEngineHeight );
+            vp.X = 0;
+            vp.Y = 0;
+            vp.Width = (DWORD)nEngineWidth;
+            vp.Height = (DWORD)nEngineHeight;
+        }
+        ApplyViewport( vp );
+    }
+
     int nClientWidth = 0, nClientHeight = 0;
-    Bk1GetClientSize( &nClientWidth, &nClientHeight );
+    Bk1GetPresentSize( &nClientWidth, &nClientHeight );
     const GLint nViewportSize = glGetUniformLocation( program.nProgram, "uViewportSize" );
     glUniform2f( nViewportSize,
                  viewport.Width != 0 ? (float)viewport.Width : (float)nClientWidth,
@@ -1162,8 +1228,8 @@ struct SDirect3D : public IDirect3D8
         {
             pDevice->present = *pParameters;
             if ( pParameters->BackBufferWidth != 0 && pParameters->BackBufferHeight != 0 )
-                Bk1SetClientSize( (int)pParameters->BackBufferWidth,
-                                  (int)pParameters->BackBufferHeight );
+                Bk1SetPresentSize( (int)pParameters->BackBufferWidth,
+                                   (int)pParameters->BackBufferHeight );
         }
         *ppDevice = pDevice;
         return D3D_OK;

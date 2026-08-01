@@ -65,8 +65,89 @@ void ApplyClip()
 
 extern "C" {
 
+// See bk1_win32_window.h for why the engine's size and the surface's differ.
+namespace {
+int g_nPresentWidth = 0;
+int g_nPresentHeight = 0;
+}
+
+void Bk1SetPresentSize( int nWidth, int nHeight )
+{
+    g_nPresentWidth = nWidth;
+    g_nPresentHeight = nHeight;
+}
+
+void Bk1GetPresentSize( int *pnWidth, int *pnHeight )
+{
+    int nClientWidth = 0, nClientHeight = 0;
+    Bk1GetClientSize( &nClientWidth, &nClientHeight );
+    if ( pnWidth != 0 )
+        *pnWidth = ( g_nPresentWidth > 0 ) ? g_nPresentWidth : nClientWidth;
+    if ( pnHeight != 0 )
+        *pnHeight = ( g_nPresentHeight > 0 ) ? g_nPresentHeight : nClientHeight;
+}
+
+void Bk1GetPresentRect( int *pnX, int *pnY, int *pnWidth, int *pnHeight )
+{
+    int nSurfaceWidth = 0, nSurfaceHeight = 0;
+    Bk1GetClientSize( &nSurfaceWidth, &nSurfaceHeight );
+    int nEngineWidth = 0, nEngineHeight = 0;
+    Bk1GetPresentSize( &nEngineWidth, &nEngineHeight );
+
+    if ( nEngineWidth <= 0 || nEngineHeight <= 0 ||
+         nSurfaceWidth <= 0 || nSurfaceHeight <= 0 )
+    {
+        if ( pnX != 0 ) *pnX = 0;
+        if ( pnY != 0 ) *pnY = 0;
+        if ( pnWidth != 0 ) *pnWidth = nSurfaceWidth;
+        if ( pnHeight != 0 ) *pnHeight = nSurfaceHeight;
+        return;
+    }
+
+    // The largest rectangle of the engine's shape that fits, centred. Bars
+    // rather than a stretch: the menus are 4:3 and a phone is not, and
+    // stretching them would be the one thing that is visibly not the original.
+    const double dScale =
+        ( (double)nSurfaceWidth / nEngineWidth < (double)nSurfaceHeight / nEngineHeight )
+            ? (double)nSurfaceWidth / nEngineWidth
+            : (double)nSurfaceHeight / nEngineHeight;
+    const int nWidth = (int)( nEngineWidth * dScale + 0.5 );
+    const int nHeight = (int)( nEngineHeight * dScale + 0.5 );
+    if ( pnWidth != 0 ) *pnWidth = nWidth;
+    if ( pnHeight != 0 ) *pnHeight = nHeight;
+    if ( pnX != 0 ) *pnX = ( nSurfaceWidth - nWidth ) / 2;
+    if ( pnY != 0 ) *pnY = ( nSurfaceHeight - nHeight ) / 2;
+}
+
+void Bk1SurfaceToEngine( int nSurfaceX, int nSurfaceY, int *pnX, int *pnY )
+{
+    int nX = 0, nY = 0, nWidth = 0, nHeight = 0;
+    Bk1GetPresentRect( &nX, &nY, &nWidth, &nHeight );
+    int nEngineWidth = 0, nEngineHeight = 0;
+    Bk1GetPresentSize( &nEngineWidth, &nEngineHeight );
+
+    if ( nWidth <= 0 || nHeight <= 0 )
+    {
+        if ( pnX != 0 ) *pnX = nSurfaceX;
+        if ( pnY != 0 ) *pnY = nSurfaceY;
+        return;
+    }
+    // Outside the picture clamps to its edge, so a finger on a black bar still
+    // means the nearest thing the player can actually see.
+    long long nMappedX = (long long)( nSurfaceX - nX ) * nEngineWidth / nWidth;
+    long long nMappedY = (long long)( nSurfaceY - nY ) * nEngineHeight / nHeight;
+    if ( nMappedX < 0 ) nMappedX = 0;
+    if ( nMappedY < 0 ) nMappedY = 0;
+    if ( nMappedX > nEngineWidth - 1 ) nMappedX = nEngineWidth - 1;
+    if ( nMappedY > nEngineHeight - 1 ) nMappedY = nEngineHeight - 1;
+    if ( pnX != 0 ) *pnX = (int)nMappedX;
+    if ( pnY != 0 ) *pnY = (int)nMappedY;
+}
+
 void Bk1SetClientSize( int nWidth, int nHeight )
 {
+    __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg", "client size set to %dx%d",
+                         nWidth, nHeight );
     if ( nWidth > 0 && nHeight > 0 )
     {
         g_nClientWidth = nWidth;

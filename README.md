@@ -25,14 +25,18 @@ Measured on an arm64 emulator, not asserted:
 11 modules linked in
 audio started: 44100 Hz, 2 channels, 32 voices
 game data: 34 entries in /storage/emulated/0/Android/media/com.nival.blitzkrieg/data
-60.0 fps, worst frame 17.4 ms          <- menus
-35.8 fps, worst frame 41.7 ms          <- in a mission, 2700x1280
+60.0 fps, worst 17.4 ms                                    <- menus
+59.9 fps | step avg 15.1 | swap 1.6 | GL 14.3 ms, 180 draws <- in a mission
 ```
 
-The menus hold 60 fps. A mission at 2700x1280 runs at 30-36 fps *on the
-emulator*, whose GL is translated in software on the host; that figure says
-nothing about a real GPU, and I have not measured one, so I am not going to
-claim 60 fps in a mission until I have.
+The mission figure was 30 fps until the renderer stopped repeating itself. The
+frame was 30 ms of talking to GL for 180 draws and under a millisecond of the
+game thinking: every draw re-issued the whole pipeline whether or not anything
+had changed, including a string lookup for a uniform location. Sending only
+what actually changed halved it, and the picture is unchanged pixel for pixel.
+
+This is an emulator, whose GL is translated in software on the host. I have not
+measured a real device and will not pretend to have.
 
 Reached by touch and verified on screen: the main menu, New Game, Campaigns,
 the Allied campaign map, the chapter and mission briefings, a mission on the

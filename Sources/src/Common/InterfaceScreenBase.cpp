@@ -357,21 +357,48 @@ bool CInterfaceScreenBase::ProcessUIMessage( const SGameMessage &msg )
 				ProcessAndAdd( msg );
 			break;
 		case CMD_BEGIN_ACTION1:
+			{
+				// One call, and the result reported. The first version of this
+				// trace called OnLButtonDown itself and then let the real line
+				// call it again -- every press delivered twice, which is its
+				// own bug and a poor way to observe one.
+				const CVec2 vClick = GetPosFromMsg( pCursor, msg );
+				const bool bHit = pUIScreen->OnLButtonDown( vClick, E_LBUTTONDOWN );
 #ifndef _MSC_VER
 				{
-					// Bring-up on Android: where the interface thinks the
-					// click landed, and whether anything was under it.
-					const CVec2 v = GetPosFromMsg( pCursor, msg );
-					NStr::DebugTrace( "click at %d,%d -> %s\n", int(v.x), int(v.y),
-					                  pUIScreen->OnLButtonDown( v, E_LBUTTONDOWN ) ? "hit" : "miss" );
+					static int nShown = 0;
+					if ( nShown < 8 )
+					{
+						++nShown;
+						NStr::DebugTrace( "click at %d,%d -> %s\n", int(vClick.x),
+						                  int(vClick.y), bHit ? "hit" : "miss" );
+					}
 				}
 #endif
-				if ( pUIScreen->OnLButtonDown( GetPosFromMsg(pCursor, msg), E_LBUTTONDOWN ) == false )
+				if ( bHit == false )
 					ProcessAndAdd( msg );
+			}
 				break;
 			case CMD_END_ACTION1:
-				if ( pUIScreen->OnLButtonUp( GetPosFromMsg(pCursor, msg), E_MOUSE_FREE ) == false )
+			{
+				const CVec2 vRelease = GetPosFromMsg( pCursor, msg );
+				const bool bHit = pUIScreen->OnLButtonUp( vRelease, E_MOUSE_FREE );
+#ifndef _MSC_VER
+				{
+					// The release is what activates a menu button, so this is
+					// the half that matters for "the menu does not react".
+					static int nShown = 0;
+					if ( nShown < 8 )
+					{
+						++nShown;
+						NStr::DebugTrace( "release at %d,%d -> %s\n", int(vRelease.x),
+						                  int(vRelease.y), bHit ? "hit" : "miss" );
+					}
+				}
+#endif
+				if ( bHit == false )
 					ProcessAndAdd( msg );
+			}
 				break;
 			//правая мыша
 			case CMD_BEGIN_ACTION2:

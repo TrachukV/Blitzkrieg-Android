@@ -115,7 +115,10 @@ int CRecogniser::Tick( long long nTimeMs, SAction *pActions )
     int nCount = 0;
     // A finger held perfectly still sends no move events, so the hold has to
     // be noticed from outside the event stream.
-    if ( !bTwoFinger && !bLongPressFired && !bMovedPastSlop && bLeftDown &&
+    // nActiveId, not bLeftDown: the button is no longer pressed when a finger
+    // lands -- it waits for the lift, so that dragging the map clicks nothing --
+    // and using it as the "a finger is down" flag stopped the hold firing at all.
+    if ( !bTwoFinger && !bLongPressFired && !bMovedPastSlop && nActiveId >= 0 &&
          nTimeMs - nPressTime >= LONG_PRESS_MS )
     {
         bLongPressFired = true;
@@ -142,11 +145,18 @@ int CRecogniser::Handle( EPhase phase, const SFinger *pFingers, size_t nFingers,
         bMovedPastSlop = false;
         bLongPressFired = false;
         bTwoFinger = false;
-        // The cursor goes to the finger before the press, so the engine sees
-        // the button go down where it was touched.
+        bPanning = false;
+        bBoxSelect = false;
+        fPanAnchorX = fPressX;
+        fPanAnchorY = fPressY;
+        // The cursor goes to the finger, and nothing else happens yet.
+        //
+        // The button used to go down here, which was right when a drag meant a
+        // selection box. Now a drag means the map moves, and pressing on touch
+        // would mean every pan began by releasing a button at the point it
+        // started -- a click on whatever was under the finger. So the press
+        // waits until the finger lifts and the gesture is known to be a tap.
         pActions[nCount++] = Make( ACTION_CURSOR_TO, (int)fPressX, (int)fPressY );
-        pActions[nCount++] = Make( ACTION_LEFT_DOWN, 0, 0 );
-        bLeftDown = true;
         return nCount;
 
     case PHASE_SECOND_DOWN:
@@ -157,6 +167,9 @@ int CRecogniser::Handle( EPhase phase, const SFinger *pFingers, size_t nFingers,
         bLongPressFired = true;          // no order can come out of this now
         TwoFingerState( pFingers, nFingers, &fPinchCentreX, &fPinchCentreY,
                         &fPinchSpread );
+        fBoxAnchorX = fPinchCentreX;
+        fBoxAnchorY = fPinchCentreY;
+        bBoxSelect = false;
         return nCount;
 
     case PHASE_MOVE:
@@ -177,25 +190,39 @@ int CRecogniser::Handle( EPhase phase, const SFinger *pFingers, size_t nFingers,
                 fPinchSpread += nNotches * fPinchSlop;
             }
 
-            // --- scroll ---
-            // The map moves with the fingers, so dragging left brings the land
-            // on the right into view. That is how a map behaves, and it is the
-            // opposite of how a cursor would.
+            // --- the selection box ---
+            // Two fingers moving together draw it, because one finger is busy
+            // dragging the map. That is the swap: the commonest gesture goes to
+            // the commonest action, and the box -- which a player reaches for
+            // far less often -- takes the second finger.
+            //
+            // The box is anchored where the two fingers first touched and
+            // follows their midpoint, so it reads the same as dragging one out
+            // with a mouse.
             const float fSlop = MillimetresToPixels( TOUCH_SLOP_MM );
-            const float fDeltaX = fCentreX - fPinchCentreX;
-            const float fDeltaY = fCentreY - fPinchCentreY;
-            nCount = SetScroll( pActions, nCount, SCROLL_LEFT,  ACTION_SCROLL_LEFT,
-                                fDeltaX > fSlop );
-            nCount = SetScroll( pActions, nCount, SCROLL_RIGHT, ACTION_SCROLL_RIGHT,
-                                fDeltaX < -fSlop );
-            nCount = SetScroll( pActions, nCount, SCROLL_UP,    ACTION_SCROLL_UP,
-                                fDeltaY > fSlop );
-            nCount = SetScroll( pActions, nCount, SCROLL_DOWN,  ACTION_SCROLL_DOWN,
-                                fDeltaY < -fSlop );
-            if ( fabsf( fDeltaX ) > fSlop )
-                fPinchCentreX = fCentreX;
-            if ( fabsf( fDeltaY ) > fSlop )
-                fPinchCentreY = fCentreY;
+            const float fFromStartX = fCentreX - fBoxAnchorX;
+            const float fFromStartY = fCentreY - fBoxAnchorY;
+            if ( !bBoxSelect &&
+                 fFromStartX * fFromStartX + fFromStartY * fFromStartY > fSlop * fSlop )
+            {
+                // Put the cursor where the box begins before the button goes
+                // down, or the engine anchors it wherever the cursor last was.
+                pActions[nCount++] = Make( ACTION_CURSOR_TO, (int)fBoxAnchorX,
+                                           (int)fBoxAnchorY );
+                pActions[nCount++] = Make( ACTION_LEFT_DOWN, 0, 0 );
+                bLeftDown = true;
+                bBoxSelect = true;
+            }
+            if ( bBoxSelect )
+            {
+                pActions[nCount++] = Make( ACTION_MOUSE_MOVE,
+                                           (int)( fCentreX - fPinchCentreX ),
+                                           (int)( fCentreY - fPinchCentreY ) );
+                pActions[nCount++] = Make( ACTION_CURSOR_TO, (int)fCentreX,
+                                           (int)fCentreY );
+            }
+            fPinchCentreX = fCentreX;
+            fPinchCentreY = fCentreY;
             return nCount;
         }
 
@@ -221,6 +248,33 @@ int CRecogniser::Handle( EPhase phase, const SFinger *pFingers, size_t nFingers,
                 fLastX = fX;
                 fLastY = fY;
             }
+
+            // One finger drags the map, the way every map on this device does
+            // and every strategy game written for one. It is the commonest
+            // thing a player does, so it gets the commonest gesture; the
+            // selection box, which is rare, moved to two fingers.
+            //
+            // The land follows the finger: drag left and the ground on the
+            // right comes into view. A cursor would do the opposite, which is
+            // exactly why this is not left as a cursor drag.
+            if ( bMovedPastSlop && !bLongPressFired )
+            {
+                const float fDeltaFromAnchorX = fX - fPanAnchorX;
+                const float fDeltaFromAnchorY = fY - fPanAnchorY;
+                nCount = SetScroll( pActions, nCount, SCROLL_LEFT,  ACTION_SCROLL_LEFT,
+                                    fDeltaFromAnchorX > fSlop );
+                nCount = SetScroll( pActions, nCount, SCROLL_RIGHT, ACTION_SCROLL_RIGHT,
+                                    fDeltaFromAnchorX < -fSlop );
+                nCount = SetScroll( pActions, nCount, SCROLL_UP,    ACTION_SCROLL_UP,
+                                    fDeltaFromAnchorY > fSlop );
+                nCount = SetScroll( pActions, nCount, SCROLL_DOWN,  ACTION_SCROLL_DOWN,
+                                    fDeltaFromAnchorY < -fSlop );
+                if ( fabsf( fDeltaFromAnchorX ) > fSlop )
+                    fPanAnchorX = fX;
+                if ( fabsf( fDeltaFromAnchorY ) > fSlop )
+                    fPanAnchorY = fY;
+                bPanning = true;
+            }
         }
 
         // A finger held still long enough is an order rather than a selection.
@@ -239,11 +293,30 @@ int CRecogniser::Handle( EPhase phase, const SFinger *pFingers, size_t nFingers,
         return nCount;
 
     case PHASE_UP:
+        nCount = ReleaseScroll( pActions, nCount );
+        // A finger that went down, stayed put, and came up again is a tap --
+        // and only now is that known. The press and the release go out
+        // together, where the finger was.
+        if ( !bMovedPastSlop && !bLongPressFired && !bTwoFinger && !bLeftDown )
+        {
+            pActions[nCount++] = Make( ACTION_CURSOR_TO, (int)fPressX, (int)fPressY );
+            pActions[nCount++] = Make( ACTION_LEFT_DOWN, 0, 0 );
+            bLeftDown = true;
+        }
+        nCount = ReleaseLeft( pActions, nCount );
+        nActiveId = -1;
+        bTwoFinger = false;
+        bPanning = false;
+        bBoxSelect = false;
+        return nCount;
+
     case PHASE_CANCEL:
         nCount = ReleaseScroll( pActions, nCount );
         nCount = ReleaseLeft( pActions, nCount );
         nActiveId = -1;
         bTwoFinger = false;
+        bPanning = false;
+        bBoxSelect = false;
         return nCount;
     }
     return nCount;

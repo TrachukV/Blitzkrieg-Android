@@ -113,10 +113,19 @@ private:
     bool  bLongPressFired;
     bool  bLeftDown;
 
+    // One finger drags the map: where the drag was last accounted for.
+    bool  bPanning;
+    float fPanAnchorX, fPanAnchorY;
+
     bool  bTwoFinger;
     float fPinchCentreX, fPinchCentreY;
     float fPinchSpread;
     bool  bScrollHeld[4];
+
+    // Two fingers draw the selection box: where it was anchored, and whether
+    // it has started.
+    bool  bBoxSelect;
+    float fBoxAnchorX, fBoxAnchorY;
 };
 
 }   // namespace NBk1Touch

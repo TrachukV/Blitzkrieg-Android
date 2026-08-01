@@ -139,10 +139,22 @@ means "select". A touchscreen has none of them:
 | Gesture | Stands in for |
 | --- | --- |
 | one finger, tap | left click |
-| one finger, drag | button held down: the selection box |
+| one finger, drag | **the map moves with the finger** |
 | one finger, held still | right click: the order gesture |
-| two fingers, drag | scroll the camera |
+| two fingers, drag | the selection box |
 | two fingers, pinch | zoom |
+| three fingers | the screen keyboard, on and off |
+
+The first two are the way round every map on the device and every strategy game
+written for one has them: the commonest action gets the commonest gesture. The
+selection box, which a player reaches for far less often, took the second
+finger. This is the opposite of where the port started, and the swap is the
+single thing that stopped it feeling like a desktop game being poked at.
+
+One consequence worth naming: the left button no longer goes down when a finger
+lands. It waits for the lift. Pressing on touch was right while a drag meant a
+box; now that a drag moves the map, it would have meant every pan began by
+clicking whatever it started on.
 
 These feed the buffered mouse and keyboard the engine's own bindings read, so
 whatever the player has bound in the options still applies.

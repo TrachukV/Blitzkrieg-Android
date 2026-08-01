@@ -104,19 +104,18 @@ void Bk1GetPresentRect( int *pnX, int *pnY, int *pnWidth, int *pnHeight )
         return;
     }
 
-    // The largest rectangle of the engine's shape that fits, centred. Bars
-    // rather than a stretch: the menus are 4:3 and a phone is not, and
-    // stretching them would be the one thing that is visibly not the original.
-    const double dScale =
-        ( (double)nSurfaceWidth / nEngineWidth < (double)nSurfaceHeight / nEngineHeight )
-            ? (double)nSurfaceWidth / nEngineWidth
-            : (double)nSurfaceHeight / nEngineHeight;
-    const int nWidth = (int)( nEngineWidth * dScale + 0.5 );
-    const int nHeight = (int)( nEngineHeight * dScale + 0.5 );
-    if ( pnWidth != 0 ) *pnWidth = nWidth;
-    if ( pnHeight != 0 ) *pnHeight = nHeight;
-    if ( pnX != 0 ) *pnX = ( nSurfaceWidth - nWidth ) / 2;
-    if ( pnY != 0 ) *pnY = ( nSurfaceHeight - nHeight ) / 2;
+    // The whole surface. The interface is authored at 4:3 and a phone is not,
+    // so this stretches it -- a deliberate choice, asked for, and the cost is
+    // real: horizontal proportions are wrong on a wide screen. Keeping the
+    // shape would mean bars down both sides, which is the honest picture but
+    // not the one wanted.
+    //
+    // Bk1SurfaceToEngine inverts whatever this returns, so touch follows the
+    // stretch without knowing about it.
+    if ( pnX != 0 ) *pnX = 0;
+    if ( pnY != 0 ) *pnY = 0;
+    if ( pnWidth != 0 ) *pnWidth = nSurfaceWidth;
+    if ( pnHeight != 0 ) *pnHeight = nSurfaceHeight;
 }
 
 void Bk1SurfaceToEngine( int nSurfaceX, int nSurfaceY, int *pnX, int *pnY )

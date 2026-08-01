@@ -14,6 +14,13 @@
 #include <math.h>
 #include <string.h>
 
+// How much of a frame goes into talking to GL. The frame breakdown already
+// showed the cost sits inside the engine's step rather than at the swap; this
+// splits that step again, into the game thinking and the driver being told.
+// At global scope because the frame loop reads them.
+double g_fGLMs = 0.0;
+long long g_nDrawCalls = 0;
+
 namespace NBk1D3D {
 
 namespace {
@@ -142,6 +149,7 @@ struct SDevice : public IDirect3DDevice8
     STexture   *pStageTexture[MAX_STAGES];
 
     D3DMATRIX matWorld;
+    SGLCache  cache;
 
     // fixed-function lighting state
     enum { MAX_LIGHTS = 4 };
@@ -759,69 +767,138 @@ HRESULT STDCALL SDevice::SetTextureStageState( DWORD nStage,
 // ---------------------------------------------------------------------------
 // Drawing
 // ---------------------------------------------------------------------------
+static double GLNowMs()
+{
+    timespec ts;
+    clock_gettime( CLOCK_MONOTONIC, &ts );
+    return ts.tv_sec * 1000.0 + ts.tv_nsec / 1000000.0;
+}
+
+// Adds its lifetime to the GL account.
+struct SGLAccount
+{
+    double fEnter;
+    SGLAccount() : fEnter( GLNowMs() ) {}
+    ~SGLAccount() { g_fGLMs += GLNowMs() - fEnter; }
+};
+
 void SDevice::ApplyState()
 {
+
+    const bool bFresh = !cache.bValid;
+    cache.bValid = true;
+
     // depth
-    if ( renderStates[D3DRS_ZENABLE] != D3DZB_FALSE )
     {
-        glEnable( GL_DEPTH_TEST );
-        glDepthFunc( CompareFunc( renderStates[D3DRS_ZFUNC] ) );
+        const bool bTest = renderStates[D3DRS_ZENABLE] != D3DZB_FALSE;
+        if ( bFresh || bTest != cache.bDepthTest )
+        {
+            if ( bTest ) glEnable( GL_DEPTH_TEST ); else glDisable( GL_DEPTH_TEST );
+            cache.bDepthTest = bTest;
+        }
+        if ( bTest )
+        {
+            const GLenum eFunc = CompareFunc( renderStates[D3DRS_ZFUNC] );
+            if ( bFresh || eFunc != cache.eDepthFunc )
+            {
+                glDepthFunc( eFunc );
+                cache.eDepthFunc = eFunc;
+            }
+        }
+        const bool bMask = renderStates[D3DRS_ZWRITEENABLE] != 0;
+        if ( bFresh || bMask != cache.bDepthMask )
+        {
+            glDepthMask( bMask ? GL_TRUE : GL_FALSE );
+            cache.bDepthMask = bMask;
+        }
     }
-    else
-    {
-        glDisable( GL_DEPTH_TEST );
-    }
-    glDepthMask( renderStates[D3DRS_ZWRITEENABLE] ? GL_TRUE : GL_FALSE );
 
     // blending
-    if ( renderStates[D3DRS_ALPHABLENDENABLE] )
     {
-        glEnable( GL_BLEND );
-        glBlendFunc( BlendFactor( renderStates[D3DRS_SRCBLEND] ),
-                     BlendFactor( renderStates[D3DRS_DESTBLEND] ) );
-    }
-    else
-    {
-        glDisable( GL_BLEND );
+        const bool bBlend = renderStates[D3DRS_ALPHABLENDENABLE] != 0;
+        if ( bFresh || bBlend != cache.bBlend )
+        {
+            if ( bBlend ) glEnable( GL_BLEND ); else glDisable( GL_BLEND );
+            cache.bBlend = bBlend;
+        }
+        if ( bBlend )
+        {
+            const GLenum eSrc = BlendFactor( renderStates[D3DRS_SRCBLEND] );
+            const GLenum eDst = BlendFactor( renderStates[D3DRS_DESTBLEND] );
+            if ( bFresh || eSrc != cache.eSrcBlend || eDst != cache.eDstBlend )
+            {
+                glBlendFunc( eSrc, eDst );
+                cache.eSrcBlend = eSrc;
+                cache.eDstBlend = eDst;
+            }
+        }
     }
 
     // culling. Direct3D names the winding it discards; GLES names the face.
-    switch ( renderStates[D3DRS_CULLMODE] )
     {
-    case D3DCULL_NONE:
-        glDisable( GL_CULL_FACE );
-        break;
-    case D3DCULL_CW:
-        glEnable( GL_CULL_FACE );
-        glFrontFace( GL_CCW );
-        glCullFace( GL_BACK );
-        break;
-    default:
-        glEnable( GL_CULL_FACE );
-        glFrontFace( GL_CW );
-        glCullFace( GL_BACK );
-        break;
+        const int nCull = ( renderStates[D3DRS_CULLMODE] == D3DCULL_NONE ) ? 0
+                        : ( renderStates[D3DRS_CULLMODE] == D3DCULL_CW ) ? 1 : 2;
+        if ( bFresh || nCull != cache.nCull )
+        {
+            if ( nCull == 0 )
+                glDisable( GL_CULL_FACE );
+            else
+            {
+                glEnable( GL_CULL_FACE );
+                glFrontFace( nCull == 1 ? GL_CCW : GL_CW );
+                glCullFace( GL_BACK );
+            }
+            cache.nCull = nCull;
+        }
     }
 
     // stencil
-    if ( renderStates[D3DRS_STENCILENABLE] )
     {
-        glEnable( GL_STENCIL_TEST );
-        glStencilFunc( CompareFunc( renderStates[D3DRS_STENCILFUNC] ),
-                       (GLint)renderStates[D3DRS_STENCILREF],
-                       (GLuint)renderStates[D3DRS_STENCILMASK] );
-        glStencilOp( StencilOp( renderStates[D3DRS_STENCILFAIL] ),
-                     StencilOp( renderStates[D3DRS_STENCILZFAIL] ),
-                     StencilOp( renderStates[D3DRS_STENCILPASS] ) );
-        glStencilMask( (GLuint)renderStates[D3DRS_STENCILWRITEMASK] );
-    }
-    else
-    {
-        glDisable( GL_STENCIL_TEST );
+        const bool bStencil = renderStates[D3DRS_STENCILENABLE] != 0;
+        if ( bFresh || bStencil != cache.bStencil )
+        {
+            if ( bStencil ) glEnable( GL_STENCIL_TEST ); else glDisable( GL_STENCIL_TEST );
+            cache.bStencil = bStencil;
+        }
+        if ( bStencil )
+        {
+            const GLenum eFunc = CompareFunc( renderStates[D3DRS_STENCILFUNC] );
+            const GLint  nRef = (GLint)renderStates[D3DRS_STENCILREF];
+            const GLuint nMask = (GLuint)renderStates[D3DRS_STENCILMASK];
+            if ( bFresh || eFunc != cache.eStencilFunc || nRef != cache.nStencilRef ||
+                 nMask != cache.nStencilMask )
+            {
+                glStencilFunc( eFunc, nRef, nMask );
+                cache.eStencilFunc = eFunc;
+                cache.nStencilRef = nRef;
+                cache.nStencilMask = nMask;
+            }
+            const GLenum eFail = StencilOp( renderStates[D3DRS_STENCILFAIL] );
+            const GLenum eZFail = StencilOp( renderStates[D3DRS_STENCILZFAIL] );
+            const GLenum ePass = StencilOp( renderStates[D3DRS_STENCILPASS] );
+            if ( bFresh || eFail != cache.eStencilFail || eZFail != cache.eStencilZFail ||
+                 ePass != cache.eStencilPass )
+            {
+                glStencilOp( eFail, eZFail, ePass );
+                cache.eStencilFail = eFail;
+                cache.eStencilZFail = eZFail;
+                cache.eStencilPass = ePass;
+            }
+            const GLuint nWrite = (GLuint)renderStates[D3DRS_STENCILWRITEMASK];
+            if ( bFresh || nWrite != cache.nStencilWrite )
+            {
+                glStencilMask( nWrite );
+                cache.nStencilWrite = nWrite;
+            }
+        }
     }
 
     // the texture stages and their samplers
-    glUseProgram( program.nProgram );
+    if ( bFresh || program.nProgram != cache.nProgram )
+    {
+        glUseProgram( program.nProgram );
+        cache.nProgram = program.nProgram;
+    }
 
     GLint colorOps[2] = { (GLint)stages[0].dwColorOp, (GLint)stages[1].dwColorOp };
     GLint alphaOps[2] = { (GLint)stages[0].dwAlphaOp, (GLint)stages[1].dwAlphaOp };
@@ -829,57 +906,125 @@ void SDevice::ApplyState()
                            (GLint)stages[1].dwColorArg1, (GLint)stages[1].dwColorArg2 };
     GLint alphaArgs[4] = { (GLint)stages[0].dwAlphaArg1, (GLint)stages[0].dwAlphaArg2,
                            (GLint)stages[1].dwAlphaArg1, (GLint)stages[1].dwAlphaArg2 };
-    glUniform2iv( program.nStageOpUniform, 1, colorOps );
-    glUniform2iv( program.nAlphaOpUniform, 1, alphaOps );
-    glUniform4iv( program.nStageArgUniform, 1, colorArgs );
-    glUniform4iv( program.nAlphaArgUniform, 1, alphaArgs );
+    if ( bFresh || memcmp( colorOps, cache.colorOps, sizeof( colorOps ) ) != 0 )
+    {
+        glUniform2iv( program.nStageOpUniform, 1, colorOps );
+        memcpy( cache.colorOps, colorOps, sizeof( colorOps ) );
+    }
+    if ( bFresh || memcmp( alphaOps, cache.alphaOps, sizeof( alphaOps ) ) != 0 )
+    {
+        glUniform2iv( program.nAlphaOpUniform, 1, alphaOps );
+        memcpy( cache.alphaOps, alphaOps, sizeof( alphaOps ) );
+    }
+    if ( bFresh || memcmp( colorArgs, cache.colorArgs, sizeof( colorArgs ) ) != 0 )
+    {
+        glUniform4iv( program.nStageArgUniform, 1, colorArgs );
+        memcpy( cache.colorArgs, colorArgs, sizeof( colorArgs ) );
+    }
+    if ( bFresh || memcmp( alphaArgs, cache.alphaArgs, sizeof( alphaArgs ) ) != 0 )
+    {
+        glUniform4iv( program.nAlphaArgUniform, 1, alphaArgs );
+        memcpy( cache.alphaArgs, alphaArgs, sizeof( alphaArgs ) );
+    }
 
     const DWORD dwFactor = renderStates[D3DRS_TEXTUREFACTOR];
-    glUniform4f( program.nTextureFactorUniform,
-                 (float)( ( dwFactor >> 16 ) & 0xFF ) / 255.0f,
-                 (float)( ( dwFactor >> 8 ) & 0xFF ) / 255.0f,
-                 (float)( dwFactor & 0xFF ) / 255.0f,
-                 (float)( ( dwFactor >> 24 ) & 0xFF ) / 255.0f );
+    const float fFactor[4] = {
+        (float)( ( dwFactor >> 16 ) & 0xFF ) / 255.0f,
+        (float)( ( dwFactor >> 8 ) & 0xFF ) / 255.0f,
+        (float)( dwFactor & 0xFF ) / 255.0f,
+        (float)( ( dwFactor >> 24 ) & 0xFF ) / 255.0f };
+    if ( bFresh || memcmp( fFactor, cache.fFactor, sizeof( fFactor ) ) != 0 )
+    {
+        glUniform4f( program.nTextureFactorUniform,
+                     fFactor[0], fFactor[1], fFactor[2], fFactor[3] );
+        memcpy( cache.fFactor, fFactor, sizeof( fFactor ) );
+    }
 
-    glUniform3f( program.nAlphaTestUniform,
-                 renderStates[D3DRS_ALPHATESTENABLE] ? 1.0f : 0.0f,
-                 (float)renderStates[D3DRS_ALPHAFUNC],
-                 (float)renderStates[D3DRS_ALPHAREF] / 255.0f );
+    const float fAlphaTest[3] = {
+        renderStates[D3DRS_ALPHATESTENABLE] ? 1.0f : 0.0f,
+        (float)renderStates[D3DRS_ALPHAFUNC],
+        (float)renderStates[D3DRS_ALPHAREF] / 255.0f };
+    if ( bFresh || memcmp( fAlphaTest, cache.fAlphaTest, sizeof( fAlphaTest ) ) != 0 )
+    {
+        glUniform3f( program.nAlphaTestUniform,
+                     fAlphaTest[0], fAlphaTest[1], fAlphaTest[2] );
+        memcpy( cache.fAlphaTest, fAlphaTest, sizeof( fAlphaTest ) );
+    }
 
     for ( int i = 0; i < MAX_TEXTURE_UNITS; ++i )
     {
-        glActiveTexture( GL_TEXTURE0 + i );
+        // Texture parameters belong to the texture object, not the unit, so
+        // they only have to be set when this texture is new to us -- and the
+        // active unit only has to move when a call below actually needs it.
+        GLuint nTexture = 0;
         if ( pStageTexture[i] != 0 )
         {
             pStageTexture[i]->EnsureUploaded();
-            glBindTexture( GL_TEXTURE_2D, pStageTexture[i]->nGLTexture );
-            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                             AddressMode( stages[i].dwAddressU ) );
-            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                             AddressMode( stages[i].dwAddressV ) );
-            const GLenum eMag = ( stages[i].dwMagFilter == D3DTEXF_POINT )
-                                    ? GL_NEAREST : GL_LINEAR;
+            nTexture = pStageTexture[i]->nGLTexture;
+        }
+        const GLint nWrapS = pStageTexture[i] != 0 ? AddressMode( stages[i].dwAddressU ) : 0;
+        const GLint nWrapT = pStageTexture[i] != 0 ? AddressMode( stages[i].dwAddressV ) : 0;
+        GLint nMag = 0, nMin = 0;
+        if ( pStageTexture[i] != 0 )
+        {
+            nMag = ( stages[i].dwMagFilter == D3DTEXF_POINT ) ? GL_NEAREST : GL_LINEAR;
             // A single-level texture must not ask for a mip filter.
             const bool bMipped = pStageTexture[i]->levels.size() > 1;
-            GLenum eMin;
             if ( stages[i].dwMinFilter == D3DTEXF_POINT )
-                eMin = bMipped ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST;
+                nMin = bMipped ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST;
             else
-                eMin = bMipped ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
-            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, eMag );
-            glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, eMin );
+                nMin = bMipped ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR;
         }
-        else
+
+        const bool bBindChanged = bFresh || nTexture != cache.nTexture[i];
+        const bool bParamsChanged = pStageTexture[i] != 0 &&
+                                    ( bFresh || bBindChanged ||
+                                      nWrapS != cache.nWrapS[i] || nWrapT != cache.nWrapT[i] ||
+                                      nMag != cache.nMagFilter[i] || nMin != cache.nMinFilter[i] );
+        if ( bBindChanged || bParamsChanged )
         {
-            glBindTexture( GL_TEXTURE_2D, 0 );
+            const GLenum eUnit = (GLenum)( GL_TEXTURE0 + i );
+            if ( bFresh || eUnit != cache.eActiveUnit )
+            {
+                glActiveTexture( eUnit );
+                cache.eActiveUnit = eUnit;
+            }
+            if ( bBindChanged )
+            {
+                glBindTexture( GL_TEXTURE_2D, nTexture );
+                cache.nTexture[i] = nTexture;
+            }
+            if ( bParamsChanged )
+            {
+                glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, nWrapS );
+                glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, nWrapT );
+                glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, nMag );
+                glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, nMin );
+                cache.nWrapS[i] = nWrapS;
+                cache.nWrapT[i] = nWrapT;
+                cache.nMagFilter[i] = nMag;
+                cache.nMinFilter[i] = nMin;
+            }
         }
-        glUniform1i( program.nSamplerUniform[i], i );
     }
-    glActiveTexture( GL_TEXTURE0 );
+    // The sampler uniforms never change: unit i is always sampler i.
+    if ( !cache.bSamplersBound )
+    {
+        for ( int i = 0; i < MAX_TEXTURE_UNITS; ++i )
+            glUniform1i( program.nSamplerUniform[i], i );
+        cache.bSamplersBound = true;
+    }
     if ( program.nHasTextureUniform >= 0 )
-        glUniform2i( program.nHasTextureUniform,
-                     pStageTexture[0] != 0 ? 1 : 0,
-                     pStageTexture[1] != 0 ? 1 : 0 );
+    {
+        const GLint nHas[2] = { pStageTexture[0] != 0 ? 1 : 0,
+                                pStageTexture[1] != 0 ? 1 : 0 };
+        if ( bFresh || nHas[0] != cache.nHasTexture[0] || nHas[1] != cache.nHasTexture[1] )
+        {
+            glUniform2i( program.nHasTextureUniform, nHas[0], nHas[1] );
+            cache.nHasTexture[0] = nHas[0];
+            cache.nHasTexture[1] = nHas[1];
+        }
+    }
 
     // the transform, and the viewport the pre-transformed path maps against
     D3DMATRIX matWorldView, matCombined;
@@ -893,19 +1038,33 @@ void SDevice::ApplyState()
     // undoing exactly the thing that makes it correct: it put the translation
     // into the w column, w then varied per vertex, and every quad came out as a
     // projective wedge.
-    glUniformMatrix4fv( program.nTransformUniform, 1, GL_FALSE, &matCombined.m[0][0] );
+    if ( bFresh || memcmp( &matCombined.m[0][0], cache.matCombined, sizeof( cache.matCombined ) ) != 0 )
+    {
+        glUniformMatrix4fv( program.nTransformUniform, 1, GL_FALSE, &matCombined.m[0][0] );
+        memcpy( cache.matCombined, &matCombined.m[0][0], sizeof( cache.matCombined ) );
+    }
 
     // Lighting. The same convention as the combined matrix above: the D3D
     // matrix goes up unchanged and GLSL reads it as its own transpose, which is
     // exactly what turns Direct3D's row-vector multiply into GLSL's column one.
     {
         const bool bLighting = renderStates[D3DRS_LIGHTING] != 0;
-        if ( program.nLightingUniform >= 0 )
-            glUniform1i( program.nLightingUniform, bLighting ? 1 : 0 );
+        const GLint nLighting = bLighting ? 1 : 0;
+        if ( program.nLightingUniform >= 0 &&
+             ( bFresh || nLighting != cache.nLighting ) )
+        {
+            glUniform1i( program.nLightingUniform, nLighting );
+            cache.nLighting = nLighting;
+        }
         if ( bLighting )
         {
-            if ( program.nWorldUniform >= 0 )
+            if ( program.nWorldUniform >= 0 &&
+                 ( bFresh || memcmp( &matWorld.m[0][0], cache.matWorld,
+                                     sizeof( cache.matWorld ) ) != 0 ) )
+            {
                 glUniformMatrix4fv( program.nWorldUniform, 1, GL_FALSE, &matWorld.m[0][0] );
+                memcpy( cache.matWorld, &matWorld.m[0][0], sizeof( cache.matWorld ) );
+            }
             if ( program.nMatDiffuseUniform >= 0 )
                 glUniform4f( program.nMatDiffuseUniform, material.Diffuse.r, material.Diffuse.g,
                              material.Diffuse.b, material.Diffuse.a );
@@ -987,12 +1146,27 @@ void SDevice::ApplyState()
         ApplyViewport( vp );
     }
 
+    // Looked up once. glGetUniformLocation is a string lookup and this was
+    // doing one on every draw.
     int nClientWidth = 0, nClientHeight = 0;
     Bk1GetPresentSize( &nClientWidth, &nClientHeight );
-    const GLint nViewportSize = glGetUniformLocation( program.nProgram, "uViewportSize" );
-    glUniform2f( nViewportSize,
-                 viewport.Width != 0 ? (float)viewport.Width : (float)nClientWidth,
-                 viewport.Height != 0 ? (float)viewport.Height : (float)nClientHeight );
+    const float fViewport[2] = {
+        viewport.Width != 0 ? (float)viewport.Width : (float)nClientWidth,
+        viewport.Height != 0 ? (float)viewport.Height : (float)nClientHeight };
+    if ( bFresh || fViewport[0] != cache.fViewport[0] ||
+         fViewport[1] != cache.fViewport[1] )
+    {
+        static GLint nViewportSize = -2;
+        static GLuint nForProgram = 0;
+        if ( nViewportSize == -2 || nForProgram != program.nProgram )
+        {
+            nViewportSize = glGetUniformLocation( program.nProgram, "uViewportSize" );
+            nForProgram = program.nProgram;
+        }
+        glUniform2f( nViewportSize, fViewport[0], fViewport[1] );
+        cache.fViewport[0] = fViewport[0];
+        cache.fViewport[1] = fViewport[1];
+    }
 }
 
 // Bring-up diagnostic: the first few draws, with what they were given. A
@@ -1121,12 +1295,19 @@ void SDevice::BindVertexLayout( const SVertexLayout &layout, int nBaseOffset )
         }
     }
 
-    glUniform1i( program.nTransformedUniform, layout.bTransformed ? 1 : 0 );
+    const GLint nTransformed = layout.bTransformed ? 1 : 0;
+    if ( !cache.bValid || nTransformed != cache.nTransformed )
+    {
+        glUniform1i( program.nTransformedUniform, nTransformed );
+        cache.nTransformed = nTransformed;
+    }
 }
 
 HRESULT STDCALL SDevice::DrawPrimitive( D3DPRIMITIVETYPE type, UINT nStartVertex,
                                         UINT nPrimitiveCount )
 {
+    SGLAccount account;
+    ++g_nDrawCalls;
     EnsureProgram();
     if ( program.nProgram == 0 || pStream == 0 )
         return D3DERR_INVALIDCALL;
@@ -1151,6 +1332,8 @@ HRESULT STDCALL SDevice::DrawIndexedPrimitive( D3DPRIMITIVETYPE type, UINT,
                                                UINT, UINT nStartIndex,
                                                UINT nPrimitiveCount )
 {
+    SGLAccount account;
+    ++g_nDrawCalls;
     EnsureProgram();
     if ( program.nProgram == 0 || pStream == 0 || pIndices == 0 )
         return D3DERR_INVALIDCALL;

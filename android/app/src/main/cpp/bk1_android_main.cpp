@@ -9,6 +9,11 @@
 #include <android/log.h>
 #include <android/keycodes.h>
 #include <sys/system_properties.h>
+
+// Defined in compat/bk1_d3d8_device.cpp, at global scope: how long the frame
+// spent inside GL and how many draws it issued.
+extern double g_fGLMs;
+extern long long g_nDrawCalls;
 #include <android/native_window.h>
 #include <android_native_app_glue.h>
 
@@ -568,11 +573,15 @@ void ReportFrameRate( double fStepMs, double fSwapMs )
                             ( now.tv_nsec - lastReport.tv_nsec ) / 1000000000.0;
     if ( fElapsed >= 1.0 )
     {
-        LOGI( "%.1f fps, worst frame %.1f ms | step avg %.1f worst %.1f | "
-              "swap avg %.1f worst %.1f",
+        LOGI( "%.1f fps, worst %.1f ms | step avg %.1f worst %.1f | swap avg %.1f "
+              "| of the step, GL %.1f ms over %lld draws",
               nFrames / fElapsed, fWorstMs,
               nFrames > 0 ? fStepTotal / nFrames : 0.0, fStepWorst,
-              nFrames > 0 ? fSwapTotal / nFrames : 0.0, fSwapWorst );
+              nFrames > 0 ? fSwapTotal / nFrames : 0.0,
+              nFrames > 0 ? g_fGLMs / nFrames : 0.0,
+              nFrames > 0 ? g_nDrawCalls / nFrames : 0 );
+        g_fGLMs = 0.0;
+        g_nDrawCalls = 0;
         lastReport = now;
         fStepTotal = fSwapTotal = 0.0;
         fStepWorst = fSwapWorst = 0.0;

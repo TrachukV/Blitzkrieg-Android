@@ -10,6 +10,8 @@
 
 #include <GLES3/gl3.h>
 
+#include <string.h>
+
 #include <map>
 #include <string>
 #include <vector>
@@ -239,6 +241,67 @@ struct SProgram
     GLint  nLightAmbientUniform;
 
     SProgram() : nProgram( 0 ) {}
+};
+
+// What GL was last told.
+//
+// Every draw used to re-issue the whole pipeline: the program, four stage
+// uniforms, the texture factor, the alpha test, two texture binds with four
+// parameters each, the transform, the viewport, the attribute pointers -- some
+// forty-five calls, whether or not anything had changed. Measured on a mission
+// frame that was 180 draws and 29.8 ms of GL out of a 30.5 ms step, with the
+// game's own thinking under a millisecond of it. The calls were the frame.
+//
+// So each one is now compared against what was last sent and skipped when it
+// would say the same thing again. Nothing here changes what is drawn; it only
+// stops saying it twice.
+struct SGLCache
+{
+    bool   bValid;
+    GLuint nProgram;
+
+    bool   bDepthTest;
+    GLenum eDepthFunc;
+    bool   bDepthMask;
+
+    bool   bBlend;
+    GLenum eSrcBlend, eDstBlend;
+
+    int    nCull;                  // 0 none, 1 front CCW, 2 front CW
+
+    bool   bStencil;
+    GLenum eStencilFunc;
+    GLint  nStencilRef;
+    GLuint nStencilMask;
+    GLenum eStencilFail, eStencilZFail, eStencilPass;
+    GLuint nStencilWrite;
+
+    GLint  colorOps[2], alphaOps[2];
+    GLint  colorArgs[4], alphaArgs[4];
+    float  fFactor[4];
+    float  fAlphaTest[3];
+    GLint  nHasTexture[2];
+    bool   bSamplersBound;
+
+    GLuint nTexture[MAX_TEXTURE_UNITS];
+    GLint  nWrapS[MAX_TEXTURE_UNITS], nWrapT[MAX_TEXTURE_UNITS];
+    GLint  nMagFilter[MAX_TEXTURE_UNITS], nMinFilter[MAX_TEXTURE_UNITS];
+    GLenum eActiveUnit;
+
+    float  matCombined[16];
+    float  matWorld[16];
+    GLint  nTransformed;
+    float  fViewport[2];
+    GLint  nLighting;
+
+    // the vertex layout last bound, and the buffer it pointed into
+    GLuint nArrayBuffer;
+    int    nStride;
+    int    nBaseOffset;
+    DWORD  dwLayoutKey;
+
+    SGLCache() { Invalidate(); }
+    void Invalidate() { memset( this, 0, sizeof( *this ) ); bValid = false; }
 };
 
 bool BuildProgram( SProgram *pProgram );

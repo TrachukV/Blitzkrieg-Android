@@ -356,6 +356,13 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
         }
         pCursor->SetBounds( 0, 0, 1024, 768 );
         pCursor->SetMode( 0 );
+        // The finger is the position, so the cursor takes it absolutely rather
+        // than integrating relative motion. In UPDATE_MODE_INPUT the engine
+        // adds up mouse axis deltas from wherever the cursor happens to be --
+        // right for a mouse, wrong here, where a tap has no motion at all and
+        // the cursor would sit wherever it was last left. UPDATE_MODE_WINDOWS
+        // reads GetCursorPos, which is exactly what touch sets.
+        pCursor->SetUpdateMode( ICursor::UPDATE_MODE_WINDOWS );
     }
 
     // --- the interface font ---

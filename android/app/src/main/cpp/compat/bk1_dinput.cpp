@@ -282,6 +282,19 @@ struct SInputDevice : public IDirectInputDevice8
         while ( nCopied < *pdwInOut && !state.events.empty() )
         {
             const SEvent &e = state.events.front();
+            {
+                // Bring-up: what the engine is actually taking off the queue.
+                // An event that is queued and read but changes nothing is a
+                // different fault from one that never arrives.
+                static int nShown = 0;
+                if ( nShown < 24 )
+                {
+                    ++nShown;
+                    __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.input",
+                                         "read: device %d offset %u value %u",
+                                         nDevice, (unsigned)e.nOffset, (unsigned)e.nValue );
+                }
+            }
             DIDEVICEOBJECTDATA *pEntry = (DIDEVICEOBJECTDATA *)( pOut + nCopied * cbObjectData );
             pEntry->dwOfs = e.nOffset;
             pEntry->dwData = e.nValue;
@@ -299,8 +312,18 @@ struct SInputDevice : public IDirectInputDevice8
         return DI_OK;
     }
 
-    HRESULT STDCALL SetDataFormat( const DIDATAFORMAT * ) override { return DI_OK; }
-    HRESULT STDCALL SetCooperativeLevel( HWND, DWORD ) override { return DI_OK; }
+    HRESULT STDCALL SetDataFormat( const DIDATAFORMAT * ) override
+    {
+        __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.input",
+                             "SetDataFormat on device %d", nDevice );
+        return DI_OK;
+    }
+    HRESULT STDCALL SetCooperativeLevel( HWND, DWORD ) override
+    {
+        __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.input",
+                             "SetCooperativeLevel on device %d", nDevice );
+        return DI_OK;
+    }
     HRESULT STDCALL Poll() override { return DI_OK; }
 };
 
@@ -337,6 +360,8 @@ struct SDirectInput : public IDirectInput8
             return E_INVALIDARG;
         const int nDevice = ( guid == GUID_SysKeyboard ) ? BK1_INPUT_KEYBOARD
                                                          : BK1_INPUT_MOUSE;
+        __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.input", "CreateDevice -> %s",
+                             ( nDevice == BK1_INPUT_KEYBOARD ) ? "keyboard" : "mouse" );
         *ppDevice = new SInputDevice( nDevice );
         return DI_OK;
     }

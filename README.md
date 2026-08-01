@@ -34,7 +34,13 @@ emulator*, whose GL is translated in software on the host; that figure says
 nothing about a real GPU, and I have not measured one, so I am not going to
 claim 60 fps in a mission until I have.
 
-Two bugs found here are worth naming because neither is Android's fault:
+Reached by touch and verified on screen: the main menu, New Game, Campaigns,
+the Allied campaign map, the chapter and mission briefings, a mission on the
+battlefield, and Options down to the video page. In the mission, a one-finger
+drag selects the units it encloses and a hold orders them; both were watched
+happening rather than inferred.
+
+Three bugs found here are worth naming because none is Android's fault:
 
 - The engine truncates a locked texture's pointer to 32 bits --
   `reinterpret_cast<void*>( DWORD(lockinfo.pData) + i*nPitch )` in `CTextureLock`
@@ -44,6 +50,18 @@ Two bugs found here are worth naming because neither is Android's fault:
 - `config.cfg` and `defconf.cfg` are not in `Data`; they sit beside it and carry
   the control bindings. Without them the menus light up under the cursor and
   refuse every click -- input arrives, binds to nothing, and nothing says so.
+- Reporting one display mode -- the surface's own size, which is the only true
+  answer -- crashed Options. The screen lists the modes and then looks up the
+  *current* setting in that list, and the game's default is `1024x768x32`; a
+  list that cannot hold the value being searched for yields index -1, and the
+  read lands 24 bytes below zero. The adapter now reports the standard 4:3
+  ladder a card of that era did.
+
+The debug frame dump is off unless asked for -- `adb shell setprop
+debug.blitzkrieg.frames 1` -- because a debug harness should not run in a
+shipped game. I expected it to explain the missions' frame times and measured
+instead: with nothing written at all, the profile is unchanged. What costs
+those frames is still unmeasured.
 
 | Module | Units | Module | Units |
 | --- | --- | --- | --- |

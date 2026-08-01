@@ -487,7 +487,7 @@ public:
 		if ( pTexture->Lock( nLevel, &lockinfo ) )
 		{
 			for ( int i=0; i<rows.size(); ++i )
-				rows[i] = reinterpret_cast<void*>( DWORD(lockinfo.pData) + i*lockinfo.nPitch );
+				rows[i] = static_cast<BYTE*>( lockinfo.pData ) + i*lockinfo.nPitch;
 		}
 		else
 			rows.clear();
@@ -517,7 +517,7 @@ public:
 		if ( pSurface->Lock( &lockinfo ) )
 		{
 			for ( int i=0; i<rows.size(); ++i )
-				rows[i] = reinterpret_cast<void*>( DWORD(lockinfo.pData) + i*lockinfo.nPitch );
+				rows[i] = static_cast<BYTE*>( lockinfo.pData ) + i*lockinfo.nPitch;
 		}
 		else
 			rows.clear();

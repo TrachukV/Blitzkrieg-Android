@@ -146,7 +146,7 @@ bool CTexture::Load( const bool bPreLoad )
 			{
 				memcpy( lockinfo.pData, pData, nCopySize );
 				pData += nCopySize / sizeof( SColor );
-				lockinfo.pData = (void*)( DWORD(lockinfo.pData) + lockinfo.nPitch );
+				lockinfo.pData = static_cast<BYTE*>( lockinfo.pData ) + lockinfo.nPitch;
 			}
 		}
 		//

@@ -11,38 +11,39 @@ mouse and keyboard.
 This repository is a fork of [nival/Blitzkrieg](https://github.com/nival/Blitzkrieg);
 the original project README is kept as [README_Original.md](README_Original.md).
 
-## State: the whole engine builds, links and runs. It needs the game's data.
+## State: it plays
 
 Every module of Blitzkrieg compiles for arm64 and links into one Android
 library. The APK installs, opens a surface, starts the engine, brings up sound,
-holds 60 fps, and routes touch gestures into the engine's own input. It stops
-where it runs out of the game's data files, which this repository does not
-carry.
+and runs the game: the main menu, the campaign screen, the chapter and mission
+briefings, and a mission on the battlefield -- terrain, units, minimap, command
+panel -- reached entirely by touch, with no keyboard and no mouse.
 
 Measured on an arm64 emulator, not asserted:
 
 ```
 11 modules linked in
 audio started: 44100 Hz, 2 channels, 32 voices
-1 archives in .../files/data
-60.0 fps, worst frame 20.0 ms
-touch reaches the engine: cursor at 900, 640
-gesture: hold -> right click at 844, 700
-assert: pStream != 0 -- Can't open stream "consts.xml" (StructureSaver.h:200)
+game data: 34 entries in /storage/emulated/0/Android/media/com.nival.blitzkrieg/data
+60.0 fps, worst frame 17.4 ms          <- menus
+35.8 fps, worst frame 41.7 ms          <- in a mission, 2700x1280
 ```
 
-The last line is where it stands. `consts.xml` lives inside the game's `.pak`
-archives; the engine reads it while building the camera, and without it there is
-nothing further to run. Everything above that line is the port working.
+The menus hold 60 fps. A mission at 2700x1280 runs at 30-36 fps *on the
+emulator*, whose GL is translated in software on the host; that figure says
+nothing about a real GPU, and I have not measured one, so I am not going to
+claim 60 fps in a mission until I have.
 
-The machinery that reads those archives is verified, separately from having
-them. Putting a `.pak` on the device containing nothing but a well-formed
-`consts.xml` -- a test fixture, not game content -- takes the engine past
-`CCamera::Init` and on to the next file it wants, `cursor\1.xml`. That exercises
-the whole chain in one go: the zip reader, the MSXML replacement written for
-this port, and the data table on top of it. Startup from here is a walk through
-the game's own data, and each step now names the file it is missing rather than
-faulting.
+Two bugs found here are worth naming because neither is Android's fault:
+
+- The engine truncates a locked texture's pointer to 32 bits --
+  `reinterpret_cast<void*>( DWORD(lockinfo.pData) + i*nPitch )` in `CTextureLock`
+  and three places like it. Harmless on Win32, fatal on arm64, and it faulted the
+  moment a mission built its minimap. Now byte-pointer arithmetic, which compiles
+  to the same thing on Win32.
+- `config.cfg` and `defconf.cfg` are not in `Data`; they sit beside it and carry
+  the control bindings. Without them the menus light up under the cursor and
+  refuse every click -- input arrives, binds to nothing, and nothing says so.
 
 | Module | Units | Module | Units |
 | --- | --- | --- | --- |
@@ -64,18 +65,27 @@ the Windows shell, and `android_main` is what replaces them.
 ## Running it
 
 The game's data belongs to whoever owns a copy of Blitzkrieg. Copy the `Data`
-directory out of an installation:
+directory and the two config files out of an installation:
 
 ```bash
-adb push /path/to/Blitzkrieg/Data/. /sdcard/Android/data/com.nival.blitzkrieg/files/data/
+adb push /path/to/Blitzkrieg/Data/. /sdcard/Android/media/com.nival.blitzkrieg/data/
 ```
 
-The port looks for `*.pak` there, says so in the log if it finds none, and stays
-running rather than crashing so the message can be read.
+```bash
+adb push /path/to/Blitzkrieg/config.cfg /path/to/Blitzkrieg/defconf.cfg /sdcard/Android/media/com.nival.blitzkrieg/
+```
 
-I have not run the game itself. Without a legal copy of the data I cannot, and I
-will not describe menus or missions I have not seen working. What is written
-above is what a device actually printed.
+`Android/media`, not `Android/data`, and that is not a preference. Android gives
+an app a passthrough mount of its own `Android/data/<pkg>`, so the real uid on
+disk decides: `adb push` writes as shell, and the app -- neither the owner nor in
+the group -- gets `EACCES` on a directory whose contents `adb shell ls` prints
+happily. The modes are synthesised by FUSE, so `chmod` does not move them, and
+without root neither does `chown`. `Android/media/<pkg>` goes through
+MediaProvider instead, which grants an app its own package directory whatever
+uid wrote the bytes, and needs no permission at all.
+
+The port looks in both, plus `/sdcard/Blitzkrieg`, and says which one it took and
+why it passed over the others.
 
 ## Touch
 

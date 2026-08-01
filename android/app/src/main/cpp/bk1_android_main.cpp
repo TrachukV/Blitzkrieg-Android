@@ -7,6 +7,7 @@
 // tells the window layer how big the surface is, it turns fingers into the
 // mouse events the engine's bindings already read, and it presents each frame.
 #include <android/log.h>
+#include <android/keycodes.h>
 #include <android/native_window.h>
 #include <android_native_app_glue.h>
 
@@ -302,7 +303,27 @@ void PerformAll( const NBk1Touch::SAction *pActions, int nCount )
 int HandleInput( android_app *pApp, AInputEvent *pEvent )
 {
     SAppState *pState = (SAppState *)pApp->userData;
-    if ( pState == 0 || AInputEvent_getType( pEvent ) != AINPUT_EVENT_TYPE_MOTION )
+    if ( pState == 0 )
+        return 0;
+
+    // Back is Escape. Blitzkrieg closes every dialog, panel and menu with it,
+    // and a touchscreen has no key to send -- so the one button Android does
+    // give a game is bound to the one key the game uses for exactly this. It
+    // goes through the keyboard device, which is not emulated, so the buffered
+    // queue is the right road for it.
+    if ( AInputEvent_getType( pEvent ) == AINPUT_EVENT_TYPE_KEY )
+    {
+        if ( AKeyEvent_getKeyCode( pEvent ) != AKEYCODE_BACK )
+            return 0;
+        const int32_t nAction = AKeyEvent_getAction( pEvent );
+        if ( nAction == AKEY_EVENT_ACTION_DOWN )
+            Bk1PushInputEvent( BK1_INPUT_KEYBOARD, DIK_ESCAPE, 0x80 );
+        else if ( nAction == AKEY_EVENT_ACTION_UP )
+            Bk1PushInputEvent( BK1_INPUT_KEYBOARD, DIK_ESCAPE, 0 );
+        return 1;                       // handled: do not let it close the app
+    }
+
+    if ( AInputEvent_getType( pEvent ) != AINPUT_EVENT_TYPE_MOTION )
         return 0;
 
     const int32_t nAction = AMotionEvent_getAction( pEvent );

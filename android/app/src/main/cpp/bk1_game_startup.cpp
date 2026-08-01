@@ -14,6 +14,7 @@
 
 #include <android/log.h>
 #include <dirent.h>
+#include <errno.h>
 #include <unistd.h>
 #include <string.h>
 
@@ -57,6 +58,95 @@ bool Bk1GameHasFinished() { return g_bFinished; }
 // ---------------------------------------------------------------------------
 // Startup
 // ---------------------------------------------------------------------------
+// Where the game's data actually is.
+//
+// The obvious place -- the app's own external files directory -- is the one
+// place adb can write and the app then cannot read. Android gives an app a
+// passthrough mount of Android/data/<pkg> rather than the FUSE view, so the
+// real uid on disk decides, and "adb push" writes as shell (2000) with the
+// modes FUSE forces (0770 on directories, 0660 on files). The app is neither
+// the owner nor in that group, so opendir returns EACCES on a directory whose
+// contents are plainly there in "adb shell ls". chmod does not help: those
+// modes are synthesised, not stored.
+//
+// Android/media/<pkg> is not passthrough-mounted. It goes through MediaProvider,
+// which grants an app its own package directory whatever uid wrote the bytes,
+// and it needs no permission at all. That is where 2.6 GB of game data pushed
+// from a desktop can be read by the app that needs it.
+//
+// So rather than insist on one location, the port looks in the places the data
+// might reasonably be and takes the first that holds it. Each candidate is a
+// root: the engine chdirs there and writes its log, its config and its saved
+// games beside the data, so a candidate has to be writable as well as readable.
+static bool Bk1DirectoryHasEntries( const std::string &szHostPath, int *pnEntries, std::string *pszWhyNot )
+{
+    *pnEntries = 0;
+    DIR *pDir = opendir( szHostPath.c_str() );
+    if ( pDir == 0 )
+    {
+        *pszWhyNot = strerror( errno );
+        return false;
+    }
+    while ( dirent *pEntry = readdir( pDir ) )
+    {
+        if ( strcmp( pEntry->d_name, "." ) == 0 || strcmp( pEntry->d_name, ".." ) == 0 )
+            continue;
+        ++( *pnEntries );
+    }
+    closedir( pDir );
+    if ( *pnEntries == 0 )
+        *pszWhyNot = "empty";
+    return *pnEntries > 0;
+}
+
+// "/storage/emulated/0/Android/data/<pkg>/files" -> "<pkg>", empty if the path
+// is not of that shape.
+static std::string Bk1PackageFromExternalPath( const std::string &szPath )
+{
+    const char *pszMark = "/Android/data/";
+    const size_t nAt = szPath.find( pszMark );
+    if ( nAt == std::string::npos )
+        return std::string();
+    const size_t nStart = nAt + strlen( pszMark );
+    const size_t nEnd = szPath.find( '/', nStart );
+    return szPath.substr( nStart, nEnd == std::string::npos ? std::string::npos : nEnd - nStart );
+}
+
+// Returns the root to run from, or an empty string when no candidate holds the
+// data. Every candidate tried is logged with the reason it was rejected,
+// because "no game data" on its own has already cost enough time once.
+static std::string Bk1ResolveDataRoot( const std::string &szExternalFiles )
+{
+    std::vector<std::string> candidates;
+    candidates.push_back( szExternalFiles );
+
+    const std::string szPackage = Bk1PackageFromExternalPath( szExternalFiles );
+    if ( !szPackage.empty() )
+    {
+        const size_t nAndroid = szExternalFiles.find( "/Android/data/" );
+        const std::string szVolume = szExternalFiles.substr( 0, nAndroid );
+        candidates.push_back( szVolume + "/Android/media/" + szPackage );
+        // A plainly named folder, for anyone who has granted all-files access.
+        candidates.push_back( szVolume + "/Blitzkrieg" );
+    }
+
+    for ( size_t i = 0; i < candidates.size(); ++i )
+    {
+        // Through Bk1HostPath so that "Data" and "data" are both found, the way
+        // they would be on the filesystem the game was authored on.
+        const std::string szData = Bk1HostPath( ( candidates[i] + "\\data" ).c_str() );
+        int nEntries = 0;
+        std::string szWhyNot;
+        if ( Bk1DirectoryHasEntries( szData, &nEntries, &szWhyNot ) )
+        {
+            LOGI( "game data: %d entries in %s", nEntries, szData.c_str() );
+            return candidates[i];
+        }
+        LOGI( "not the game data: %s (%s)", szData.c_str(), szWhyNot.c_str() );
+    }
+    return std::string();
+}
+
 bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfaceHeight )
 {
     if ( g_bStarted )
@@ -84,7 +174,18 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
     // Bk1HostPath translates back at the one boundary where a path becomes a
     // system call. Every path the engine builds on top of this stays in the
     // shape the engine expects.
-    std::string szRoot = ( pszDataDirectory != 0 ) ? pszDataDirectory : ".";
+    const std::string szGiven = ( pszDataDirectory != 0 ) ? pszDataDirectory : ".";
+    std::string szRoot = Bk1ResolveDataRoot( szGiven );
+    if ( szRoot.empty() )
+    {
+        LOGE( "no game data. The Data tree was in none of the places this port" );
+        LOGE( "looks; the lines above name each one and why it was not it." );
+        LOGE( "Android will not let an app read its own Android/data directory" );
+        LOGE( "when adb wrote it, so push the data here instead:" );
+        LOGE( "  adb push <game>/Data/. /sdcard/Android/media/%s/data/",
+              Bk1PackageFromExternalPath( szGiven ).c_str() );
+        return false;
+    }
     for ( size_t i = 0; i < szRoot.size(); ++i )
     {
         if ( szRoot[i] == '/' )
@@ -138,7 +239,10 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
         // archive would refuse data the engine reads perfectly well.
         int nArchives = 0;
         int nEntries = 0;
-        if ( DIR *pDir = opendir( szHostDataDirectory.c_str() ) )
+        DIR *pDir = opendir( szHostDataDirectory.c_str() );
+        if ( pDir == 0 )
+            LOGE( "opendir(%s): %s", szHostDataDirectory.c_str(), strerror( errno ) );
+        if ( pDir )
         {
             while ( dirent *pEntry = readdir( pDir ) )
             {

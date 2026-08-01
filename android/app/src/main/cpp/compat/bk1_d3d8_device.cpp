@@ -876,6 +876,10 @@ void SDevice::ApplyState()
         glUniform1i( program.nSamplerUniform[i], i );
     }
     glActiveTexture( GL_TEXTURE0 );
+    if ( program.nHasTextureUniform >= 0 )
+        glUniform2i( program.nHasTextureUniform,
+                     pStageTexture[0] != 0 ? 1 : 0,
+                     pStageTexture[1] != 0 ? 1 : 0 );
 
     // the transform, and the viewport the pre-transformed path maps against
     D3DMATRIX matWorldView, matCombined;

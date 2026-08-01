@@ -707,6 +707,7 @@ const char *FRAGMENT_SOURCE =
     "uniform sampler2D uTexture0;\n"
     "uniform sampler2D uTexture1;\n"
     "uniform vec4  uTextureFactor;\n"
+    "uniform ivec2 uHasTexture;\n"
     "uniform ivec2 uColorOp;\n"     // one per stage
     "uniform ivec4 uColorArg;\n"    // arg1 and arg2 per stage
     "uniform ivec2 uAlphaOp;\n"
@@ -714,8 +715,16 @@ const char *FRAGMENT_SOURCE =
     "uniform vec3  uAlphaTest;\n"   // enabled, function, reference
     "out vec4 oColor;\n"
     "\n"
+    // A stage with no texture bound still answers D3DTA_TEXTURE, and Direct3D
+    // answers it with white -- so MODULATE against it is the identity. The
+    // engine leans on that: it draws a unit's shadow by drawing the unit again
+    // with no texture and a black, half-transparent material, and white times
+    // black is the shadow. Sampling an unbound sampler instead returns whatever
+    // the driver feels like, which is how the shadow came out as a second solid
+    // copy of the vehicle standing beside it.
     "vec4 Sample( int nStage )\n"
     "{\n"
+    "    if ( uHasTexture[nStage] == 0 ) return vec4( 1.0 );\n"
     "    return nStage == 0 ? texture( uTexture0, vTexCoord0 )\n"
     "                       : texture( uTexture1, vTexCoord1 );\n"
     "}\n"
@@ -862,6 +871,7 @@ bool BuildProgram( SProgram *pProgram )
     pProgram->nAlphaOpUniform = glGetUniformLocation( nProgram, "uAlphaOp" );
     pProgram->nAlphaArgUniform = glGetUniformLocation( nProgram, "uAlphaArg" );
     pProgram->nAlphaTestUniform = glGetUniformLocation( nProgram, "uAlphaTest" );
+    pProgram->nHasTextureUniform = glGetUniformLocation( nProgram, "uHasTexture" );
     pProgram->nLightingUniform = glGetUniformLocation( nProgram, "uLighting" );
     pProgram->nWorldUniform = glGetUniformLocation( nProgram, "uWorld" );
     pProgram->nMatDiffuseUniform = glGetUniformLocation( nProgram, "uMatDiffuse" );

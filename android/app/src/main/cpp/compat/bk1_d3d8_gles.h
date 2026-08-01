@@ -221,6 +221,7 @@ struct SProgram
     GLint  nAlphaOpUniform;
     GLint  nAlphaArgUniform;
     GLint  nAlphaTestUniform;      // enabled, function, reference
+    GLint  nHasTextureUniform;     // whether each stage has a texture at all
 
     // fixed-function lighting. The engine draws a unit's shadow by drawing the
     // unit again with a black, part-transparent material and every light off,

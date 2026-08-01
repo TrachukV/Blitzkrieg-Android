@@ -331,6 +331,21 @@ CVec2 GetPosFromMsg( ICursor *pCursor, const SGameMessage &msg )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CInterfaceScreenBase::ProcessUIMessage( const SGameMessage &msg )
 {
+#ifndef _MSC_VER
+	{
+		// Bring-up on Android: which messages the interface is actually given.
+		// A menu that does not react is either a message that never arrives or
+		// one that arrives and hits nothing.
+		// The idle traffic -- the per-frame tick and the empty id -- would
+		// fill this before a finger ever touched the screen.
+		static int nShown = 0;
+		if ( nShown < 16 && msg.nEventID != -1 && msg.nEventID != 31415 )
+		{
+			++nShown;
+			NStr::DebugTrace( "ui message: 0x%x\n", int(msg.nEventID) );
+		}
+	}
+#endif
 	if ( pUIScreen )
 	{
 		switch ( msg.nEventID )
@@ -342,6 +357,15 @@ bool CInterfaceScreenBase::ProcessUIMessage( const SGameMessage &msg )
 				ProcessAndAdd( msg );
 			break;
 		case CMD_BEGIN_ACTION1:
+#ifndef _MSC_VER
+				{
+					// Bring-up on Android: where the interface thinks the
+					// click landed, and whether anything was under it.
+					const CVec2 v = GetPosFromMsg( pCursor, msg );
+					NStr::DebugTrace( "click at %d,%d -> %s\n", int(v.x), int(v.y),
+					                  pUIScreen->OnLButtonDown( v, E_LBUTTONDOWN ) ? "hit" : "miss" );
+				}
+#endif
 				if ( pUIScreen->OnLButtonDown( GetPosFromMsg(pCursor, msg), E_LBUTTONDOWN ) == false )
 					ProcessAndAdd( msg );
 				break;

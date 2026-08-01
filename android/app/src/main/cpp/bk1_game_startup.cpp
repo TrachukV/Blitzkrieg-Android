@@ -401,6 +401,21 @@ bool Bk1GameStartup( const char *pszDataDirectory, int nSurfaceWidth, int nSurfa
     else
         LOGE( "no option system" );
 
+    // The hardware-cursor option, forced on, and it has to be after the option
+    // system has run -- it applies the saved setting and would otherwise put
+    // the cursor back into relative mode, where a tap (which carries no motion
+    // at all) leaves it wherever it was and every click lands at 0,0.
+    //
+    // This is the game's own "SetHWCursor ON" branch, not a workaround around
+    // it: the mouse is marked emulated so the engine takes its position rather
+    // than integrating axes, and the cursor reads that position. On a
+    // touchscreen there is no other honest setting -- the finger is the
+    // position.
+    if ( IInput *pInput = GetSingleton<IInput>() )
+        pInput->SetDeviceEmulationStatus( DEVICE_TYPE_MOUSE, true );
+    if ( ICursor *pCursor = GetSingleton<ICursor>() )
+        pCursor->SetUpdateMode( ICursor::UPDATE_MODE_WINDOWS );
+
     // NSysKeys::EnableSystemKeys is commented out in the original too.
 
     // --- the main loop ---

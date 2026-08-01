@@ -1137,6 +1137,22 @@ void CInputAPI::Convert2Text( const DIDEVICEOBJECTDATA *pData, int nNumElements 
 void CInputAPI::EventCame( const DIDEVICEOBJECTDATA *pEvent, const int nParam )
 {
 	CControl *pControl = controlIDs[pEvent->dwOfs];
+#ifndef _MSC_VER
+	{
+		// Bring-up on Android: an event whose offset is not in this table is
+		// dropped without a word, which looks exactly like input that never
+		// arrived.
+		static int nShown = 0;
+		// Only the presses: the initial state sweep sends one zero per control
+		// and would fill this before a finger ever touched the screen.
+		if ( nShown < 12 && pEvent->dwData != 0 )
+		{
+			++nShown;
+			NStr::DebugTrace( "event: ofs 0x%x data %d -> %s\n", int(pEvent->dwOfs),
+			                  int(pEvent->dwData), pControl ? "control" : "NOTHING" );
+		}
+	}
+#endif
 	if ( pControl == 0 )
 		return;
 	// для POV dwData выражается в сотых долях градуса. нам надо перевести это в две оси - X & Y

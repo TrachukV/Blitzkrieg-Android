@@ -2438,6 +2438,13 @@ int CInterfaceMission::Bk1PickPointKind( int nX, int nY )
 	// click on that panel, whatever is on the ground beneath it.
 	if ( pUIScreen != 0 && pUIScreen->PickElement( vPos, 16 ) != 0 )
 		return 1;
+	// A modal window takes everything, which is what modal means. Save and Load
+	// are such windows and PickElement does not report their contents, so their
+	// buttons were being handed a right click -- an order aimed at the ground
+	// behind the dialog -- and did nothing at all. Neither the confirm nor the
+	// cancel button could be pressed by finger while one was open.
+	if ( pUIScreen != 0 && pUIScreen->IsModal() )
+		return 1;
 	// Then the world. Only what is visible, because ordering units to a spot
 	// they cannot see is not what the finger meant.
 	CPickVisObjList picked;

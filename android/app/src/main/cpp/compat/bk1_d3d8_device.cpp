@@ -10,6 +10,7 @@
 #include "bk1_d3d8_gles.h"
 
 #include <android/log.h>
+#include <sys/system_properties.h>
 
 #include <math.h>
 #include <string.h>
@@ -1060,23 +1061,56 @@ void SDevice::ApplyState()
         // black is either drawing somewhere off screen or drawing nothing that
         // survives the transform, and these two numbers tell which.
         const int nThisDraw = nDrawInFrame++;
+        // Off unless asked for, like the frame dump. This is the tool the next
+        // attempt at the black-mission bug starts from, so it stays in the
+        // build; it just does not run in anyone's game.
+        //   adb shell setprop debug.blitzkrieg.draws 1
+        static int nWanted = -1;
+        if ( nWanted < 0 )
+        {
+            char szValue[PROP_VALUE_MAX] = { 0 };
+            __system_property_get( "debug.blitzkrieg.draws", szValue );
+            nWanted = ( szValue[0] != 0 && szValue[0] != '0' ) ? 1 : 0;
+        }
         // A spread of fixed positions, so the world pass is caught as well as the
         // interface one that opens every frame.
         const bool bSample = ( nThisDraw == 0 ) || ( nThisDraw == 20 ) ||
                              ( nThisDraw == 60 ) || ( nThisDraw == 100 ) ||
                              ( nThisDraw == 140 );
-        if ( ( nFrameIndex % 300 ) == 0 && bSample )
+        if ( nWanted != 0 && ( nFrameIndex % 300 ) == 0 && bSample )
         {
             // The three separately: a sign that flips in the combined matrix
             // came from one of them, and knowing which is the whole question.
             __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
-                "draw %d of the frame: world %.4f %.4f %.4f | view %.4f %.4f %.4f | "
-                "proj %.5f %.5f %.5f | combined %.5f %.5f",
+                "draw %d: combined %.5f %.5f | depth %s func %u write %u | "
+                "blend %s %u/%u | alphatest %u ref %u | cull %u | tex0 %s",
                 nThisDraw,
-                matWorld.m[0][0], matWorld.m[1][1], matWorld.m[2][2],
-                matView.m[0][0], matView.m[1][1], matView.m[2][2],
-                matProjection.m[0][0], matProjection.m[1][1], matProjection.m[2][2],
-                matCombined.m[0][0], matCombined.m[1][1] );
+                matCombined.m[0][0], matCombined.m[1][1],
+                renderStates[D3DRS_ZENABLE] != D3DZB_FALSE ? "on" : "off",
+                (unsigned)renderStates[D3DRS_ZFUNC],
+                (unsigned)renderStates[D3DRS_ZWRITEENABLE],
+                renderStates[D3DRS_ALPHABLENDENABLE] ? "on" : "off",
+                (unsigned)renderStates[D3DRS_SRCBLEND],
+                (unsigned)renderStates[D3DRS_DESTBLEND],
+                (unsigned)renderStates[D3DRS_ALPHATESTENABLE],
+                (unsigned)renderStates[D3DRS_ALPHAREF],
+                (unsigned)renderStates[D3DRS_CULLMODE],
+                pStageTexture[0] != 0 ? "bound" : "none" );
+            if ( pStageTexture[0] != 0 )
+            {
+                // What the bound texture actually holds. Every state matches
+                // between a mission that draws and one that is black, so the
+                // difference has to be in the data, and a texture that uploaded
+                // as nothing would look exactly like this.
+                const STexture *pTex = pStageTexture[0];
+                __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
+                    "    tex0: %ux%u, %u levels, level0 %zu bytes, gl name %u, uploaded %d",
+                    pTex->levels.empty() ? 0u : pTex->levels[0].nWidth,
+                    pTex->levels.empty() ? 0u : pTex->levels[0].nHeight,
+                    (unsigned)pTex->levels.size(),
+                    pTex->levels.empty() ? (size_t)0 : pTex->levels[0].data.size(),
+                    pTex->nGLTexture, pTex->bUploaded ? 1 : 0 );
+            }
         }
     }
     if ( bFresh || memcmp( &matCombined.m[0][0], cache.matCombined, sizeof( cache.matCombined ) ) != 0 )

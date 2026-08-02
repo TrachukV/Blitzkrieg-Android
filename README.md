@@ -152,10 +152,24 @@ Measured four times. What is ruled out, so nobody walks these again:
 - **Texture name reuse** after `glDeleteTextures`, for the same reason.
 - **The clear.** Both missions clear black with the same flags before drawing.
 
-What is left: the same passes, the same matrices, the same clear, 180 draws
-against 181 -- and one frame is visible while the other is black. The next thing
-to measure is what those draws are handed, not how they are set up: vertex
-counts, and whether the depth or the blend rejects everything.
+Two more measurements after those: at the same fixed positions, the depth test,
+the blend, the alpha test, the cull mode and the bound texture -- its size, its
+byte count, its GL name, its uploaded flag -- are identical in both missions
+as well.
+
+So everything this trace can see matches, and one frame draws while the other
+is black. The honest reading is that the trace is not yet looking at the pass
+that differs: the sampled textures are 256x512, 32x16, 128x128, which are
+interface and font sizes rather than terrain. Fixed draw positions compare like
+with like only if the frame has the same shape in both runs, and 180 draws
+against 181 says it does not, quite.
+
+The trace is off unless asked for and stays in the build, because it is where
+the next attempt starts:
+
+```bash
+adb shell setprop debug.blitzkrieg.draws 1
+```
 
 Two of the four readings were published here as findings before being checked
 against a like-for-like comparison. They are withdrawn.

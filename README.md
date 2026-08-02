@@ -322,6 +322,18 @@ guessed:
 | whose | one of `IGFX::DrawRects`' callers, `CTransition` excluded |
 | only | in the second mission of a run; the first has 180 draws, this has 181 |
 
+A candidate, marked as one: `CSimpleWindow::Draw` (`UI/UIBasic.cpp`) is the
+generic path by which a UI window draws its own rectangles, and a full-screen
+window would produce exactly this shape. It normally draws them textured, so
+this would be a window whose image is absent -- and with an unbound stage
+answering white, `MODULATE` leaves the diffuse alone: opaque black.
+
+That is a shape argument, not a measurement, and shape arguments are what the
+ten withdrawn readings above were made of. What would settle it is logging the
+identity of the element at the moment its texture comes up null, late in the
+frame -- and then why that image is present in the first mission and gone in the
+second.
+
 One warning, learned twice in one sitting: every one of these switches has to be
 **re-read**, not cached on the first draw of the run. A cached one cannot be
 armed for the case you want -- and its silence then reads exactly like code that

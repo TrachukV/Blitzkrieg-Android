@@ -8,6 +8,17 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 namespace NFile
 {
+#ifndef _MSC_VER
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Index of the last path separator, whichever kind the string uses.
+//
+// The engine writes Windows separators, but every path the host hands back has
+// POSIX ones, and code that splits on a backslash alone then finds nothing:
+// rfind returns npos, substr( 0, npos ) returns the whole string, and the strip
+// silently does not happen. That is what left the saved-games list empty with
+// seven saves on disk. Returns npos when there is no separator at all.
+size_t FindLastSeparator( const std::string &szPath );
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
 // **
@@ -163,7 +174,7 @@ public:
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // enumerate all files by mask.
-// при рекурсивной енумерации сначала входим в директорию, а потом только получаем её имя (при выходе из рекурсии)
+// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ (пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 template <class TEnumFunc>
 void EnumerateFiles( const char *pszStartDir, const char *pszMask, TEnumFunc callback, bool bRecurse )
 {
@@ -191,7 +202,7 @@ void EnumerateFiles( const char *pszStartDir, const char *pszMask, TEnumFunc cal
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Функтор для EnumerateFiles, перечисляет все файлы в директории
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ EnumerateFiles, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 class CGetAllFiles
 {
 	std::vector<std::string> *pFileVector;
@@ -206,7 +217,7 @@ public:
 		}
 	}
 };
-// Функтор для EnumerateFiles, перечисляет все файлы в директории и берёт их относительное имя
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ EnumerateFiles, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 class CGetAllFilesRelative
 {
 	std::vector<std::string> *pFileVector;
@@ -225,7 +236,7 @@ public:
 		}
 	}
 };
-// Функтор для EnumerateFiles, перечисляет все поддиректории в директории и берёт их относительное имя
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ EnumerateFiles, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 class CGetAllDirectoriesRelative
 {
 	std::vector<std::string> *pFileVector;
@@ -238,11 +249,11 @@ public:
 		if ( !it.IsDirectory() )
 		{
 			std::string szFileName = it.GetFilePath();
-			szFileName = szFileName.substr( szInitDir.size() );							//обрезаем начальную директорию
+			szFileName = szFileName.substr( szInitDir.size() );							//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			int nRes = szFileName.rfind( '\\' );
 			if ( nRes == std::string::npos )
 				return;
-			szFileName = szFileName.substr( 0, nRes );	//обрезаем имя файла, оставляя только директорию
+			szFileName = szFileName.substr( 0, nRes );	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			if ( szFileName.size() == 0 )
 				return;
 			

@@ -194,14 +194,30 @@ bool CFile::Remove( const char *pszFileName )
 	return ::DeleteFile( pszFileName ) != 0;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifndef _MSC_VER
+size_t NFile::FindLastSeparator( const std::string &szPath )
+{
+	const size_t nBack = szPath.rfind( '\\' );
+	const size_t nFwd = szPath.rfind( '/' );
+	if ( nBack == std::string::npos )
+		return nFwd;
+	if ( nFwd == std::string::npos )
+		return nBack;
+	return nBack > nFwd ? nBack : nFwd;
+}
+#define BK1_LAST_SEPARATOR( s ) NFile::FindLastSeparator( s )
+#else
+#define BK1_LAST_SEPARATOR( s ) ( s ).rfind( '\\' )
+#endif
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const std::string& CFile::GetFilePath() const { return szFilePath; }
 const std::string CFile::GetFileName() const
 {
-	return szFilePath.substr( szFilePath.rfind('\\') + 1 );
+	return szFilePath.substr( BK1_LAST_SEPARATOR( szFilePath ) + 1 );
 }
 const std::string CFile::GetFileTitle() const
 {
-	const int nNamePos = szFilePath.rfind( '\\' );
+	const int nNamePos = BK1_LAST_SEPARATOR( szFilePath );
 	const int nExtPos = szFilePath.rfind( '.' );
 	if ( (nNamePos != std::string::npos) && (nExtPos != std::string::npos) && (nExtPos > nNamePos) ) 
 		return szFilePath.substr( nNamePos + 1, nExtPos - nNamePos );
@@ -241,7 +257,7 @@ bool CFile::SetFileTime( const char *pszFileName,
 const CFileIterator& CFileIterator::FindFirstFile( const char *pszMask )
 {
 	szPath = pszMask;
-	int pos = szPath.rfind( '\\' );
+	int pos = BK1_LAST_SEPARATOR( szPath );
 	if ( pos == std::string::npos )
 	{
 		szMask = pszMask;

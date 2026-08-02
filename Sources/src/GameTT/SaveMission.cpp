@@ -65,15 +65,27 @@ void CInterfaceSaveMission::StartInterface()
 
 	IUIElement *pElement = pUIScreen->GetChildByID( 1000 );		// should be List Control
 	if ( !pElement )
-		return;			// не нашелся list control
+		return;			// пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ list control
 	IUIListControl *pList = checked_cast<IUIListControl*>( pElement );
 	
 	// enumerate all available saves
 	szSaves.clear();
 	std::string szMask = "*.sav";
 	std::string szBaseDir = std::string( GetSingleton<IDataStorage>()->GetName() );
+#ifndef _MSC_VER
+	// Two components come off the storage name to reach the game directory, and
+	// the separator is whatever the host uses. See NFile::FindLastSeparator.
+	for ( int nStrip = 0; nStrip < 2; ++nStrip )
+	{
+		const size_t nCut = NFile::FindLastSeparator( szBaseDir );
+		if ( nCut == std::string::npos )
+			break;
+		szBaseDir = szBaseDir.substr( 0, nCut );
+	}
+#else
 	szBaseDir = szBaseDir.substr( 0, szBaseDir.rfind('\\') );
 	szBaseDir = szBaseDir.substr( 0, szBaseDir.rfind('\\') );
+#endif
 	const std::string szModname = GetSingleton<IUserProfile>()->GetMOD();
 	szBaseDir += "\\";
 	if ( !szModname.empty() )
@@ -96,7 +108,7 @@ void CInterfaceSaveMission::StartInterface()
 		IUIStatic *pStatic = checked_cast<IUIStatic*> ( pRow->GetElement( 0 ) );
 		
 		szSaves.push_back( files[i].szFileName );
-		//отрежем extension
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ extension
 		std::wstring wszTemp;
 		NStr::ToUnicode( &wszTemp, files[i].szFileName.substr( 0, files[i].szFileName.rfind( '.' ) ) );
 		pStatic->SetWindowText( pStatic->GetState(), wszTemp.c_str() );
@@ -107,7 +119,7 @@ void CInterfaceSaveMission::StartInterface()
 	{
 		std::string szEdit = szSaves[0];
 		szEdit = szEdit.substr( 0, szEdit.rfind( '.' ) );
-		//отобразим этот элемент в сохраняемом имени
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 		IUIEditBox *pEdit = checked_cast<IUIEditBox*>( pUIScreen->GetChildByID( 2000 ) );
 		pEdit->SetWindowText( 0, NStr::ToUnicode(szEdit).c_str() );
 		pEdit->SetCursor( szEdit.size() );
@@ -132,18 +144,18 @@ bool CInterfaceSaveMission::ProcessMessage( const SGameMessage &msg )
 	{
 		case IMC_SELECTION_CHANGED:
 			{
-				//попробуем взять текущий selection из list control
+				//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ selection пїЅпїЅ list control
 				IUIElement *pElement = pUIScreen->GetChildByID( 1000 );		//should be List Control
 				IUIListControl *pList = checked_cast<IUIListControl*>( pElement );
 				if ( !pList )
-					return true;			//не нашелся list control
+					return true;			//пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ list control
 				int nSave = pList->GetSelectionItem();
 				if ( nSave == -1 )
 					return true;
 				
 				std::string szEdit = szSaves[nSave];
 				szEdit = szEdit.substr( 0, szEdit.rfind( '.' ) );
-				//отобразим этот элемент в загружаемом имени
+				//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 				IUIEditBox *pEdit = checked_cast<IUIEditBox*>( pUIScreen->GetChildByID( 2000 ) );
 				const std::wstring wszEditUnicode = NStr::ToUnicode(szEdit).c_str();
 				pEdit->SetWindowText( 0, wszEditUnicode.c_str() );
@@ -160,8 +172,8 @@ bool CInterfaceSaveMission::ProcessMessage( const SGameMessage &msg )
 				pInput->SetTextMode( INPUT_TEXT_MODE_NOTEXT );
 				IMainLoop *pML = GetSingleton<IMainLoop>();
 				CloseInterface();
-				pML->Command( MAIN_COMMAND_CMD, NStr::Format("%d", CMD_GAME_UNPAUSE_MENU) );	//уберем паузу
-//				pML->Command( MAIN_COMMAND_CMD, NStr::Format("%d", MC_SHOW_ESCAPE_MENU) );	//покажем escape menu
+				pML->Command( MAIN_COMMAND_CMD, NStr::Format("%d", CMD_GAME_UNPAUSE_MENU) );	//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+//				pML->Command( MAIN_COMMAND_CMD, NStr::Format("%d", MC_SHOW_ESCAPE_MENU) );	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ escape menu
 				return true;
 			}
 
@@ -173,11 +185,11 @@ bool CInterfaceSaveMission::ProcessMessage( const SGameMessage &msg )
 				NStr::TrimBoth( szEdit );
 				if ( szEdit.size() == 0 )
 				{
-					//введенная строчка пустая, попробуем взять текущий selection из list control
+					//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ selection пїЅпїЅ list control
 					IUIElement *pElement = pUIScreen->GetChildByID( 1000 );		//should be List Control
 					IUIListControl *pList = checked_cast<IUIListControl*>( pElement );
 					if ( !pList )
-						return true;			//не нашелся list control
+						return true;			//пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ list control
 					int nSave = pList->GetSelectionItem();
 					if ( nSave == -1 )
 						return true;
@@ -228,7 +240,7 @@ void CInterfaceSaveMission::OnSave()
 	pInput->SetTextMode( INPUT_TEXT_MODE_NOTEXT );
 	const std::string szSave = szProspecitveSave + ".sav";
 	pML->Command( MAIN_COMMAND_SAVE, szSave.c_str() );
-	pML->Command( MAIN_COMMAND_CMD, NStr::Format("%d", CMD_GAME_UNPAUSE_MENU) );	//уберем паузу
+	pML->Command( MAIN_COMMAND_CMD, NStr::Format("%d", CMD_GAME_UNPAUSE_MENU) );	//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CInterfaceSaveMission::StepLocal( bool bAppActive )

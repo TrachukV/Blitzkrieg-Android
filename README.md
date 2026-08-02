@@ -164,10 +164,23 @@ it. That is a full-screen quad, and the likeliest one is the transition fade:
 the game darkens the screen when a mission ends, and on the second mission it
 never comes back up.
 
-That last part is a hypothesis. What is proven is that the frame is painted
-black rather than left unpainted, which is the half of the question six earlier
-measurements could not answer, because comparing state can never tell "nothing
-drew" from "something drew black".
+That is proven. What paints it is now named, if not yet convicted.
+
+`CInterfaceScreenBase::OpenCurtains` runs when a screen starts, and the curtain
+it opens is not a video: `CTransition::Start` ignores the file name entirely,
+sets an alpha to fall from opaque to clear over a fixed duration, and returns
+that duration. So the transition is added to the scene whatever the state of
+the Bink replacement, and it begins **fully opaque**. A screen is black until
+the fade advances.
+
+Which makes the suspect a clock rather than a renderer. The curtain is timed,
+and the call beside it disables message processing and schedules its return for
+`timeGetTime() + length` -- and `timeGetTime` is Win32, replaced in this port.
+A fade that never advances stays at opaque, and that is a black screen over a
+frame that drew perfectly well underneath.
+
+Not proven. But it is the first lead in this chase that explains every
+measurement rather than one of them.
 
 Both switches stay in the build and are off unless asked for:
 

@@ -400,7 +400,10 @@ Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road
 after a mission is a test of the port and playing well enough to earn it is not.
 
-Known broken: **Restart Mission aborts.** Reproduced on the German campaign's
+**Fixed.** The repair is at the end of this section; the stack and the reasoning
+are kept because the reasoning was wrong twice before the stack settled it.
+
+Was broken: **Restart Mission aborts.** Reproduced on the German campaign's
 first mission -- End Mission, then Restart Mission -- and this is the captured
 stack, not a reconstruction:
 
@@ -446,28 +449,94 @@ owner, which is itself mid-destruction and already lowered to a base where
 `Release` is still pure. The cycle is not an inference about the ownership
 graph; it is what the instructions do.
 
-Not patched, and the reason is now checked rather than assumed. The textbook
-repair -- make the back-pointer non-owning -- is not free here, because
-`TurretSerialize.cpp` saves it:
+The textbook repair -- make the back-pointer non-owning -- is not available
+here, and that was checked rather than assumed. `TurretSerialize.cpp` saves it:
 
     saver.Add( 2, &pOwner );
 
 Changing its type changes the save format, so every existing save stops loading.
 For a port whose whole point is behaving as the original does, breaking saved
-games to fix a crash on one menu button is the wrong trade without a migration.
+games to fix a crash on one menu button is the wrong trade.
 
 Giving the pure virtuals safe defaults would silence the abort and leave the
 cycle in place, which is worse than a known crash.
 
-The repair that stays compatible is to break the cycle *before* the vtable
-lowers -- detach the turret's owner while the unit is still fully typed, on the
-teardown path that `NGlobalObjects::Clear` runs. Finding the right hook for that
-is unit-lifecycle work, not a one-line change, and it is where the next attempt
-should start.
+### The repair
 
-End Mission on its own tears down cleanly on the same build. The fault is
-specific to restart, which queues `MISSION_COMMAND_MISSION` while the old
-mission is still alive.
+Break the cycle *before* the vtable lowers: drop the turret's back-reference
+while the unit is still alive, fully typed, and held by the list, so the same
+release is an ordinary decrement.
+
+    CTurret::Bk1DetachOwner()             virtual, no-op
+    CUnitTurret::Bk1DetachOwner()         pOwner = 0
+    CAIUnit::Bk1DetachTurretOwners()      virtual, no-op
+    CMilitaryCar / CArtillery / CAviation walk their turrets
+    CUnits::Clear()                       walks the list, then DestroyContents
+
+`pOwner` keeps its type, so the save format is untouched.
+
+Verified on the emulator, German campaign, first mission: Restart Mission twice
+in a row with no abort where the same sequence killed the process before, 58.8
+-- 60.4 fps over 140 draws afterwards, units rendering with health bars,
+selection reporting stats, and a 3.8 MB autosave written during the run.
+
+Scope stated plainly: buildings own turrets too and live in `theStatObjs` rather
+than the units list, so they are not covered. No crash has been seen there, and
+an unmeasured pass would be guessing.
+
+End Mission on its own always tore down cleanly. The fault was specific to
+restart, which queues `MISSION_COMMAND_MISSION` while the old mission is still
+alive.
+
+Known broken: **saved games.** The list works now; nothing past it does.
+
+The list itself was empty with seven autosaves on disk, and the cause was the
+same MSVC/POSIX family as the `*.*` bug -- code splitting a path on a backslash
+alone. On a host path there is none, `rfind` returns `npos`, `substr( 0, npos )`
+hands the whole string back, and the strip silently does not happen. Fixed with
+`NFile::FindLastSeparator`, which takes whichever separator the string uses, at
+every place that splits one. Names were also being cut by the directory's
+*length*, which assumes the path came back character for character; it does not,
+so they read `\GERMAN Mission`. Taking the tail after the last separator does
+not care. The list now shows all seven with clean names.
+
+Two things past it still fail, both measured:
+
+**The tick button is not bound to touch.** Tapping it delivers no `IMC_OK` at
+all -- only `1000` (`IMC_SELECTION_CHANGED`) from the row and a stray `31415`.
+The config binds `load_mission` to `ENTER` and `NUM_ENTER` and to nothing else.
+Sending a real Enter proves the rest of the chain is sound:
+
+    load-msg  n=10002                                  IMC_OK arrives
+    load-ok   n=1                                      selection valid
+    load-cmd  path=[GERMAN Mission Start Auto.sav]     correct file
+
+That is a genuine gap in the touch adaptation rather than a mystery.
+
+**The load then aborts.**
+
+    Abort message: 'terminating due to uncaught exception of type std::bad_typeid'
+    __cxa_bad_typeid
+      CWorldBase::AddToWorld(IRefCount*, int, int, float)+636
+      CWorldBase::AIUpdateNewObjects(unsigned int const&)+440
+      CWorldBase::Update(unsigned int const&)+348
+
+`Common/WorldBase.cpp:349` builds its assert message with `typeid(*pAIObj)`,
+which dereferences the pointer, and `pAIObj` is null after a load. Worth saying
+plainly: that assert is *ours*, compiled in by `-D_DO_ASSERT`, and was not in
+the shipped game -- on Windows the null would have passed unnoticed instead of
+aborting. The null is still a real defect; our build is only what turns it into
+a crash.
+
+The null arrives through `AIUpdateNewObjects`, whose queue is fed from two
+places: the current complex updates, and suspended updates recalled later. The
+recalled branch is the one worth measuring first, since a load restores state
+around it -- but that is a guess about which branch, and it is written here as
+one. Manual Save Game likewise accepts a name and writes no file, and has not
+been traced yet.
+
+Binding the tick to a tap on its own would only make the abort reachable by
+finger, which is why neither is patched ahead of the other.
 
 Not verified, and I will not claim otherwise: no real device -- every figure
 here is from an arm64 emulator; no campaign played to the end, only its opening

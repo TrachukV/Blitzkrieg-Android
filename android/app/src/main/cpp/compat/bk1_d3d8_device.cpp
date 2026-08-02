@@ -1082,8 +1082,13 @@ void SDevice::ApplyState()
         // attempt at the black-mission bug starts from, so it stays in the
         // build; it just does not run in anyone's game.
         //   adb shell setprop debug.blitzkrieg.draws 1
-        static int nWanted = -1;
-        if ( nWanted < 0 )
+        // Re-read rather than cached, for the same reason the pixel watcher
+        // has to: a switch fixed on the first draw of the run cannot be armed
+        // for the thing you want to watch, and its silence then reads as the
+        // code never running. That mistake was made here twice.
+        static int nPropCounter = 0;
+        static int nWanted = 0;
+        if ( ( nPropCounter++ % 240 ) == 0 )
         {
             char szValue[PROP_VALUE_MAX] = { 0 };
             __system_property_get( "debug.blitzkrieg.draws", szValue );
@@ -1091,17 +1096,17 @@ void SDevice::ApplyState()
         }
         // A spread of fixed positions, so the world pass is caught as well as the
         // interface one that opens every frame.
-        const bool bSample = ( nThisDraw == 0 ) || ( nThisDraw == 20 ) ||
-                             ( nThisDraw == 60 ) || ( nThisDraw == 100 ) ||
-                             ( nThisDraw == 140 );
+        // The tail of the frame: the pixel watcher says the last draw is what
+        // blackens the screen, so this looks at the ones around it.
+        const bool bSample = ( nThisDraw >= 176 && nThisDraw <= 182 );
         if ( nWanted != 0 && ( nFrameIndex % 300 ) == 0 && bSample )
         {
             // The three separately: a sign that flips in the combined matrix
             // came from one of them, and knowing which is the whole question.
             __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
-                "draw %d: combined %.5f %.5f | depth %s func %u write %u | "
+                "draw %d: fvf 0x%x stride %d | combined %.5f %.5f | depth %s func %u write %u | "
                 "blend %s %u/%u | alphatest %u ref %u | cull %u | tex0 %s",
-                nThisDraw,
+                nThisDraw, (unsigned)dwFVF, (int)nStreamStride,
                 matCombined.m[0][0], matCombined.m[1][1],
                 renderStates[D3DRS_ZENABLE] != D3DZB_FALSE ? "on" : "off",
                 (unsigned)renderStates[D3DRS_ZFUNC],

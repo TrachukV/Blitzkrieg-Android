@@ -261,9 +261,15 @@ mission issues 180 draws a frame and the second 181. That extra draw is the one
 that covers the screen.
 
 So the remaining work is to identify one draw call -- the last of the frame,
-present only in the second mission -- and it can be identified the same way it
-was found, by watching rather than reasoning: log the vertex format, primitive
-count and bound texture of that draw and no other.
+present only in the second mission. Log the vertex format, stride and bound
+texture of the draws around index 180 and nothing else; the instrumentation for
+it is in the tree behind `debug.blitzkrieg.draws`.
+
+One warning, learned twice in one sitting: every one of these switches has to be
+**re-read**, not cached on the first draw of the run. A cached one cannot be
+armed for the case you want -- and its silence then reads exactly like code that
+never runs, which is how two of the withdrawn readings in this section happened.
+Both switches re-read now.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

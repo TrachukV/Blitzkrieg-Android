@@ -141,25 +141,24 @@ then loads, runs its script and holds 60 fps at 181 draws a frame, and the
 screen is black: 96 of 96 sampled pixels, read out of the framebuffer itself
 rather than through a screenshot.
 
-Measured three times, and the first two readings were wrong -- both because
-they compared different things and called the difference a finding.
+Measured four times. What is ruled out, so nobody walks these again:
 
-Sampling every N-th draw compares whatever happened to land there, and the
-engine draws the interface and the world in a fixed order, so one run's sample
-was one pass and the other's another. Naming a draw by its place in the frame
-fixes that. Comparing draw 0 with draw 0:
+- **The transforms.** Naming each draw by its place in the frame -- not sampling
+  every N-th one, which compares different passes and is what made the first two
+  readings wrong -- draws 0, 20, 60, 100 and 140 are identical to the last digit
+  in both missions, world, view and projection alike.
+- **The GL state cache.** Invalidating it on texture death was a real latent bug
+  and is fixed; it changed nothing here.
+- **Texture name reuse** after `glDeleteTextures`, for the same reason.
+- **The clear.** Both missions clear black with the same flags before drawing.
 
-    mission 1   world 1 1 1   view 1 -1 -9727   proj 0.00195 0.00260 -0.00010
-    mission 2   world 1 1 1   view 1 -1 -9727   proj 0.00195 0.00260 -0.00010
+What is left: the same passes, the same matrices, the same clear, 180 draws
+against 181 -- and one frame is visible while the other is black. The next thing
+to measure is what those draws are handed, not how they are set up: vertex
+counts, and whether the depth or the blend rejects everything.
 
-Identical to the last digit. Whatever makes the second mission black, it is not
-the transforms, and the two earlier claims in this file that it was have been
-withdrawn.
-
-What is not yet compared is the world pass: draws 0 to 2 are the interface, and
-the terrain and units come later in the frame. The same trace at a later fixed
-index is the next measurement, and it is a measurement rather than a suspicion,
-which is the whole lesson of the three before it.
+Two of the four readings were published here as findings before being checked
+against a like-for-like comparison. They are withdrawn.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

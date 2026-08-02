@@ -1060,7 +1060,12 @@ void SDevice::ApplyState()
         // black is either drawing somewhere off screen or drawing nothing that
         // survives the transform, and these two numbers tell which.
         const int nThisDraw = nDrawInFrame++;
-        if ( ( nFrameIndex % 300 ) == 0 && nThisDraw < 3 )
+        // A spread of fixed positions, so the world pass is caught as well as the
+        // interface one that opens every frame.
+        const bool bSample = ( nThisDraw == 0 ) || ( nThisDraw == 20 ) ||
+                             ( nThisDraw == 60 ) || ( nThisDraw == 100 ) ||
+                             ( nThisDraw == 140 );
+        if ( ( nFrameIndex % 300 ) == 0 && bSample )
         {
             // The three separately: a sign that flips in the combined matrix
             // came from one of them, and knowing which is the whole question.

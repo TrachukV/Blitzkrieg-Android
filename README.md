@@ -233,8 +233,27 @@ the "alpha 255 of 255, fifty-one seconds into a five-hundred millisecond fade"
 that started this.
 
 Six earlier readings all asked why the curtain was not lifted. The question is
-how an unstarted transition gets into the scene at all, and that is a different
-search.
+how an unstarted transition gets into the scene at all.
+
+Searching the four places that add scene objects turns up the mission's own, at
+`iMissionInternal.cpp:1535`, commented "darken screen in single player only" --
+but it adds a `SCENE_GAMMA_FADER`, and `CGammaFader` is a separate class that
+darkens through gamma correction rather than by drawing anything. Which would
+also explain the blue clear never reaching the readback: a gamma that maps
+everything to black does that without painting a single pixel.
+
+Except that this port's `SetGammaRamp` stores the ramp and applies it nowhere,
+so that path looks inert here -- and "looks" is exactly the word that has been
+wrong six times in this file. It needs measuring before it is believed.
+
+So two threads are open and both are honest:
+
+- where the unstarted `CTransition` comes from, since none of its entry points
+  run
+- whether the gamma fader does anything at all in this port, given the ramp is
+  stored and never applied
+
+Neither is a conclusion. Both are one measurement each.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

@@ -759,8 +759,25 @@ void CWorldClient::Update( const NTimer::STime &currTime )
 				// side; Lua carries it in a double, which holds every address
 				// this platform hands out.
 				for ( CMapObjectsList::const_iterator it = selList.begin(); it != selList.end(); ++it )
+				{
+#ifndef _MSC_VER
+					// Carrying the pointer whole did not stop the crash, and the
+					// new fault address is not sign-extended -- so the value may
+					// already be unusable here, before any formatting. This says
+					// which: the address as held, and whether it still answers as
+					// the type it claims to be. A dynamic_cast on a live object is
+					// safe; on a dead one this is where it dies, which is itself
+					// the answer.
+					{
+						IRefCount *pRaw = (*it)->pAIObj.GetPtr();
+						Bk1TracePath( "sel-ptr",
+						              pRaw == 0 ? "null" : "non-null",
+						              (int)( reinterpret_cast<uintptr_t>( pRaw ) & 0xffffffffu ) );
+					}
+#endif
 					szCmd += NStr::Format( "%llu,",
 					                       (unsigned long long)reinterpret_cast<uintptr_t>( (*it)->pAIObj.GetPtr() ) );
+				}
 				szCmd.resize( szCmd.size() - 1 );
 				szCmd += " )";
 

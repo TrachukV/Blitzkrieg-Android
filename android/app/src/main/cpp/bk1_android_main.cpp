@@ -304,7 +304,16 @@ void Perform( const NBk1Touch::SAction &action )
             break;
         }
         const int nOver = Bk1PickAt( action.nX, action.nY );
-        if ( nOver == BK1_PICK_GROUND )
+        // A latched modifier means the player has already said this tap is an
+        // order -- Ctrl to attack the spot, Alt to move ready to fight. Those
+        // only mean anything with an order, so the tap gives one even when it
+        // lands on a unit, which is what Ctrl and a click do on a keyboard.
+        // The command panel is left out: a modifier must not turn a button
+        // press into an order aimed at the button.
+        const bool bLatched = Bk1TouchPanelModifierLatched() != 0;
+        const bool bOrder   = ( nOver == BK1_PICK_GROUND ) ||
+                              ( bLatched && nOver != BK1_PICK_INTERFACE );
+        if ( bOrder )
         {
             Bk1EmulateMouseButton( DIMOFS_BUTTON1, true );
             Bk1EmulateMouseButton( DIMOFS_BUTTON1, false );
@@ -314,6 +323,9 @@ void Perform( const NBk1Touch::SAction &action )
             Bk1EmulateMouseButton( DIMOFS_BUTTON0, true );
             Bk1EmulateMouseButton( DIMOFS_BUTTON0, false );
         }
+        // After the click, never before: the key has to still be down while the
+        // engine reads the button, or the order arrives unmodified.
+        Bk1TouchPanelReleaseModifiers();
         break;
     }
     case NBk1Touch::ACTION_RIGHT_CLICK:

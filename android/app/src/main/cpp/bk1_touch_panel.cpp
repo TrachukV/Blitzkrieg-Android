@@ -2,6 +2,7 @@
 #include "bk1_touch_pick.h"
 
 #include "compat/bk1_d3d8_gles.h"
+#include "compat/dinput.h"
 
 #include <GLES3/gl3.h>
 
@@ -21,34 +22,47 @@ namespace
 const float ENGINE_WIDTH  = 1024.0f;
 const float ENGINE_HEIGHT = 768.0f;
 
-// Right edge, half way down, stacked. Measured against a running mission rather
-// than guessed: the top left is where the engine prints its own notices -- the
-// speed change says so itself -- the top right is the objectives window and its
-// scrollbar, the bottom left is the minimap and the bottom middle the command
-// panel, with the objectives button in the bottom right corner. The middle of
-// the right edge is the one strip that is map in every mission, and on a phone
-// held in landscape it is under the thumb already.
-const int BUTTON_SIZE   = 46;
-const int BUTTON_GAP    = 7;
-const int PANEL_MARGIN  = 12;
-const int BUTTON_COUNT  = 3;
+const int BUTTON_SIZE  = 46;
+const int BUTTON_GAP   = 7;
+const int PANEL_MARGIN = 12;
+
+// Where the interface already is, measured off a running mission rather than
+// guessed: the engine prints its own notices top left, the objectives window and
+// its scrollbar hold the top right, the minimap starts about 613 down the left
+// and the command panel fills the bottom middle. Both columns are placed to
+// clear all of it.
+const int MINIMAP_TOP = 613;
 
 // How long a pressed button stays lit. Long enough to be seen under a finger
 // that is already lifting, short enough not to lag behind a player tapping the
-// speed up three times in a row.
+// speed up three times in a row. Latched buttons stay lit until they let go,
+// which is a different thing and not on a timer.
 const long long PRESS_LIGHT_MS = 140;
+
+// What a button does when pressed.
+enum EKind
+{
+	KIND_COMMAND,		// posts an engine command id
+	KIND_MODIFIER,		// latches a key down until the next order is given
+	KIND_KEYSTROKE,		// presses and releases a combination once
+};
 
 struct SButton
 {
-	int nX, nY, nW, nH;
+	int    nX, nY, nW, nH;
+	EKind  kind;
+	int    nCommand;		// KIND_COMMAND
+	int    nKey;			// KIND_MODIFIER: the key held down
+	int    nKeys[3];		// KIND_KEYSTROKE: pressed in order, released in reverse
 };
 
-SButton g_buttons[BUTTON_COUNT];
+SButton g_buttons[BK1_PANEL_BUTTON_COUNT];
 bool    g_bLaidOut = false;
 
-int       g_nPressed    = BK1_PANEL_NONE;
-long long g_nPressedAt  = 0;
-int       g_nLastSpeed  = 0;
+int       g_nPressed   = BK1_PANEL_NONE;
+long long g_nPressedAt = 0;
+int       g_nLatched   = BK1_PANEL_NONE;
+int       g_nLastSpeed = 0;
 
 GLuint g_nProgram = 0;
 GLuint g_nVAO     = 0;
@@ -56,24 +70,59 @@ GLuint g_nVBO     = 0;
 bool   g_bTried   = false;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Set( int nButton, int nX, int nY, EKind kind, int nCommand, int nKey,
+          int nKey0 = 0, int nKey1 = 0, int nKey2 = 0 )
+{
+	SButton &b = g_buttons[nButton];
+	b.nX = nX;
+	b.nY = nY;
+	b.nW = BUTTON_SIZE;
+	b.nH = BUTTON_SIZE;
+	b.kind = kind;
+	b.nCommand = nCommand;
+	b.nKey = nKey;
+	b.nKeys[0] = nKey0;
+	b.nKeys[1] = nKey1;
+	b.nKeys[2] = nKey2;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void LayOut()
 {
 	if ( g_bLaidOut )
 		return;
-	const int nTotal = BUTTON_COUNT * BUTTON_SIZE + ( BUTTON_COUNT - 1 ) * BUTTON_GAP;
-	const int nLeft  = int( ENGINE_WIDTH ) - PANEL_MARGIN - BUTTON_SIZE;
-	const int nTop   = ( int( ENGINE_HEIGHT ) - nTotal ) / 2;
-	// Faster at the top, slower at the bottom, pause between them: the order a
-	// speed control has everywhere, so it needs no learning.
-	static const int nOrder[BUTTON_COUNT] = { BK1_PANEL_SPEED_UP, BK1_PANEL_PAUSE, BK1_PANEL_SPEED_DOWN };
-	for ( int i = 0; i < BUTTON_COUNT; ++i )
+
+	// Time, right edge, centred: faster at the top, slower at the bottom, pause
+	// between them -- the order a speed control has everywhere, so it needs no
+	// learning.
 	{
-		SButton &b = g_buttons[nOrder[i]];
-		b.nX = nLeft;
-		b.nY = nTop + i * ( BUTTON_SIZE + BUTTON_GAP );
-		b.nW = BUTTON_SIZE;
-		b.nH = BUTTON_SIZE;
+		const int nCount = 3;
+		const int nTotal = nCount * BUTTON_SIZE + ( nCount - 1 ) * BUTTON_GAP;
+		const int nLeft  = int( ENGINE_WIDTH ) - PANEL_MARGIN - BUTTON_SIZE;
+		const int nTop   = ( int( ENGINE_HEIGHT ) - nTotal ) / 2;
+		const int nStep  = BUTTON_SIZE + BUTTON_GAP;
+		Set( BK1_PANEL_SPEED_UP,   nLeft, nTop,             KIND_COMMAND, BK1_CMD_GAME_SPEED_INC, 0 );
+		Set( BK1_PANEL_PAUSE,      nLeft, nTop + nStep,     KIND_COMMAND, BK1_CMD_GAME_PAUSE,     0 );
+		Set( BK1_PANEL_SPEED_DOWN, nLeft, nTop + nStep * 2, KIND_COMMAND, BK1_CMD_GAME_SPEED_DEC, 0 );
 	}
+
+	// Orders, left edge, centred in the space above the minimap.
+	{
+		const int nCount = 4;
+		const int nTotal = nCount * BUTTON_SIZE + ( nCount - 1 ) * BUTTON_GAP;
+		const int nLeft  = PANEL_MARGIN;
+		const int nTop   = ( MINIMAP_TOP - nTotal ) / 2;
+		const int nStep  = BUTTON_SIZE + BUTTON_GAP;
+		// The keys these hold are the ones config.cfg binds: LCTRL forces an
+		// attack on the point, LALT moves ready to fight, LSHIFT adds to the
+		// order queue. Pressed as keys rather than sent as commands, so that a
+		// player who rebinds them in the options screen rebinds these with them.
+		Set( BK1_PANEL_FORCE_ATTACK,  nLeft, nTop,             KIND_MODIFIER, 0, DIK_LCONTROL );
+		Set( BK1_PANEL_AGGRESSIVE,    nLeft, nTop + nStep,     KIND_MODIFIER, 0, DIK_LMENU );
+		Set( BK1_PANEL_QUEUE,         nLeft, nTop + nStep * 2, KIND_MODIFIER, 0, DIK_LSHIFT );
+		Set( BK1_PANEL_CENTRE_CAMERA, nLeft, nTop + nStep * 3, KIND_KEYSTROKE, 0, 0,
+		     DIK_LCONTROL, DIK_LSHIFT, DIK_C );
+	}
+
 	g_bLaidOut = true;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -161,9 +210,9 @@ bool EnsureGL()
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Vertices are built into this each frame: six per rectangle, position and
-// colour interleaved. The panel is a handful of rectangles, so one buffer and
-// one draw call is the whole of it.
-const int MAX_RECTS    = 24;
+// colour interleaved. The panel is a few dozen rectangles, so one buffer and one
+// draw call is the whole of it.
+const int MAX_RECTS    = 64;
 const int FLOATS_PER_V = 6;
 float g_vertices[MAX_RECTS * 6 * FLOATS_PER_V];
 int   g_nVertices = 0;
@@ -190,15 +239,14 @@ void AddRect( float x, float y, float w, float h, float r, float g, float b, flo
 	g_nVertices += 6;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// The icons. Drawn from rectangles rather than set in a font: the engine's own
-// text goes through its texture and its own draw path, and reaching into that
-// from an overlay would tie the panel to the state cache it is trying not to
-// disturb. A minus, two bars and a cross read the same in every language, which
-// a word would not.
+// The icons, drawn from rectangles rather than set in a font: the engine's text
+// goes through its own texture and draw path, and reaching into that from an
+// overlay would tie the panel to the state cache it is trying not to disturb.
+// Shapes rather than words also read the same in every language the game ships.
 void AddIcon( const SButton &b, int nButton, float r, float g, float bl, float a )
 {
-	const float cx = float( b.nX ) + float( b.nW ) * 0.5f;
-	const float cy = float( b.nY ) + float( b.nH ) * 0.5f;
+	const float cx    = float( b.nX ) + float( b.nW ) * 0.5f;
+	const float cy    = float( b.nY ) + float( b.nH ) * 0.5f;
 	const float fArm  = float( b.nW ) * 0.28f;		// half the length of a stroke
 	const float fThin = float( b.nW ) * 0.09f;		// half its thickness
 
@@ -215,7 +263,56 @@ void AddIcon( const SButton &b, int nButton, float r, float g, float bl, float a
 		AddRect( cx - fArm, cy - fThin, fArm * 2.0f, fThin * 2.0f, r, g, bl, a );
 		AddRect( cx - fThin, cy - fArm, fThin * 2.0f, fArm * 2.0f, r, g, bl, a );
 		break;
+	// A cross of two diagonals would need triangles; a square cross turned into
+	// a target reads as "attack this spot" and is built from the same rectangles
+	// as everything else: a ring drawn as four bars, with a dot at the centre.
+	case BK1_PANEL_FORCE_ATTACK:
+		AddRect( cx - fArm, cy - fArm, fArm * 2.0f, fThin, r, g, bl, a );
+		AddRect( cx - fArm, cy + fArm - fThin, fArm * 2.0f, fThin, r, g, bl, a );
+		AddRect( cx - fArm, cy - fArm, fThin, fArm * 2.0f, r, g, bl, a );
+		AddRect( cx + fArm - fThin, cy - fArm, fThin, fArm * 2.0f, r, g, bl, a );
+		AddRect( cx - fThin, cy - fThin, fThin * 2.0f, fThin * 2.0f, r, g, bl, a );
+		break;
+	// Aggressive move: an arrow to the right, drawn as a shaft and a stepped
+	// head, so it says "go" while the target above says "shoot".
+	case BK1_PANEL_AGGRESSIVE:
+		AddRect( cx - fArm, cy - fThin * 0.6f, fArm * 1.5f, fThin * 1.2f, r, g, bl, a );
+		AddRect( cx + fArm * 0.2f, cy - fThin * 1.8f, fThin, fThin * 3.6f, r, g, bl, a );
+		AddRect( cx + fArm * 0.2f + fThin, cy - fThin, fThin, fThin * 2.0f, r, g, bl, a );
+		AddRect( cx + fArm * 0.2f + fThin * 2.0f, cy - fThin * 0.4f, fThin, fThin * 0.8f, r, g, bl, a );
+		break;
+	// Queue: three bars stacked, one order after another.
+	case BK1_PANEL_QUEUE:
+		AddRect( cx - fArm, cy - fArm * 0.85f, fArm * 2.0f, fThin, r, g, bl, a );
+		AddRect( cx - fArm, cy - fThin * 0.5f, fArm * 2.0f, fThin, r, g, bl, a );
+		AddRect( cx - fArm, cy + fArm * 0.65f, fArm * 2.0f, fThin, r, g, bl, a );
+		break;
+	// Centre camera: a frame with a dot in it.
+	case BK1_PANEL_CENTRE_CAMERA:
+		AddRect( cx - fArm, cy - fArm, fArm * 0.8f, fThin, r, g, bl, a );
+		AddRect( cx + fArm - fArm * 0.8f, cy - fArm, fArm * 0.8f, fThin, r, g, bl, a );
+		AddRect( cx - fArm, cy + fArm - fThin, fArm * 0.8f, fThin, r, g, bl, a );
+		AddRect( cx + fArm - fArm * 0.8f, cy + fArm - fThin, fArm * 0.8f, fThin, r, g, bl, a );
+		AddRect( cx - fArm, cy - fArm, fThin, fArm * 0.8f, r, g, bl, a );
+		AddRect( cx - fArm, cy + fArm - fArm * 0.8f, fThin, fArm * 0.8f, r, g, bl, a );
+		AddRect( cx + fArm - fThin, cy - fArm, fThin, fArm * 0.8f, r, g, bl, a );
+		AddRect( cx + fArm - fThin, cy + fArm - fArm * 0.8f, fThin, fArm * 0.8f, r, g, bl, a );
+		AddRect( cx - fThin * 0.8f, cy - fThin * 0.8f, fThin * 1.6f, fThin * 1.6f, r, g, bl, a );
+		break;
 	}
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void PressKey( int nKey, bool bDown )
+{
+	Bk1PushInputEvent( BK1_INPUT_KEYBOARD, (DWORD)nKey, bDown ? 0x80 : 0 );
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void Unlatch()
+{
+	if ( g_nLatched == BK1_PANEL_NONE )
+		return;
+	PressKey( g_buttons[g_nLatched].nKey, false );
+	g_nLatched = BK1_PANEL_NONE;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 } // anonymous namespace
@@ -225,7 +322,7 @@ extern "C" int Bk1TouchPanelHitTest( int nX, int nY )
 	if ( !Bk1IsMissionActive() )
 		return BK1_PANEL_NONE;
 	LayOut();
-	for ( int i = 0; i < BUTTON_COUNT; ++i )
+	for ( int i = 0; i < BK1_PANEL_BUTTON_COUNT; ++i )
 	{
 		const SButton &b = g_buttons[i];
 		if ( nX >= b.nX && nX < b.nX + b.nW && nY >= b.nY && nY < b.nY + b.nH )
@@ -236,23 +333,67 @@ extern "C" int Bk1TouchPanelHitTest( int nX, int nY )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 extern "C" void Bk1TouchPanelPress( int nButton, long long nNowMs )
 {
-	static const int nCommands[BUTTON_COUNT] =
-	{
-		BK1_CMD_GAME_SPEED_DEC,
-		BK1_CMD_GAME_PAUSE,
-		BK1_CMD_GAME_SPEED_INC,
-	};
-	if ( nButton < 0 || nButton >= BUTTON_COUNT )
+	if ( nButton < 0 || nButton >= BK1_PANEL_BUTTON_COUNT )
 		return;
+	LayOut();
+	const SButton &b = g_buttons[nButton];
 	g_nPressed   = nButton;
 	g_nPressedAt = nNowMs;
-	Bk1SendGameCommand( nCommands[nButton] );
+
+	switch ( b.kind )
+	{
+	case KIND_COMMAND:
+		Bk1SendGameCommand( b.nCommand );
+		break;
+	case KIND_MODIFIER:
+		// Pressing the latched one again lets it go: a player who armed the
+		// wrong modifier needs a way out that is not giving an order with it.
+		if ( g_nLatched == nButton )
+		{
+			Unlatch();
+			LOGI( "touch panel: modifier %d released by hand", nButton );
+		}
+		else
+		{
+			// Only one at a time. Holding Ctrl and Shift together is a thing a
+			// keyboard can do and two thumbs cannot, and pretending otherwise
+			// would leave keys stuck down.
+			Unlatch();
+			g_nLatched = nButton;
+			PressKey( b.nKey, true );
+			LOGI( "touch panel: modifier %d latched", nButton );
+		}
+		break;
+	case KIND_KEYSTROKE:
+		for ( int i = 0; i < 3; ++i )
+			if ( b.nKeys[i] != 0 )
+				PressKey( b.nKeys[i], true );
+		for ( int i = 2; i >= 0; --i )
+			if ( b.nKeys[i] != 0 )
+				PressKey( b.nKeys[i], false );
+		break;
+	}
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+extern "C" void Bk1TouchPanelReleaseModifiers( void )
+{
+	Unlatch();
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+extern "C" int Bk1TouchPanelModifierLatched( void )
+{
+	return g_nLatched != BK1_PANEL_NONE ? 1 : 0;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 extern "C" void Bk1TouchPanelDraw( int nSurfaceWidth, int nSurfaceHeight, long long nNowMs )
 {
 	if ( !Bk1IsMissionActive() )
+	{
+		// A mission that ends with a modifier still latched would leave that key
+		// down for whatever comes next.
+		Unlatch();
 		return;
+	}
 	if ( !EnsureGL() )
 		return;
 	LayOut();
@@ -275,13 +416,15 @@ extern "C" void Bk1TouchPanelDraw( int nSurfaceWidth, int nSurfaceHeight, long l
 	}
 
 	g_nVertices = 0;
-	for ( int i = 0; i < BUTTON_COUNT; ++i )
+	for ( int i = 0; i < BK1_PANEL_BUTTON_COUNT; ++i )
 	{
 		const SButton &b = g_buttons[i];
-		const bool bLit = ( i == g_nPressed );
+		const bool bLatched = ( i == g_nLatched );
+		const bool bLit     = ( i == g_nPressed ) || bLatched;
 		// Dark, mostly transparent plate so the map stays readable under it,
 		// with a lighter edge so the button has a shape against snow as well as
-		// against forest.
+		// against forest. A latched modifier stays lit, because the player has
+		// to be able to see that the next order carries it.
 		AddRect( float( b.nX ), float( b.nY ), float( b.nW ), float( b.nH ),
 		         bLit ? 0.55f : 0.06f, bLit ? 0.45f : 0.07f, bLit ? 0.16f : 0.06f, bLit ? 0.85f : 0.55f );
 		const float fEdge = 2.0f;
@@ -327,4 +470,5 @@ extern "C" void Bk1TouchPanelRelease( void )
 	g_nVBO     = 0;
 	g_bTried   = false;
 	g_nPressed = BK1_PANEL_NONE;
+	g_nLatched = BK1_PANEL_NONE;
 }

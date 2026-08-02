@@ -4,6 +4,10 @@
 #include "UIMessages.h"
 #include "..\GameTT\CommonId.h"
 
+#ifndef _MSC_VER
+#include "bk1_black_rect_probe.h"
+#endif
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int SUIListRow::operator &( IStructureSaver &ss )
 {
@@ -55,7 +59,7 @@ CUIList::CUIList() : pScrollBar( 0 ), nLeftSpace( 10 ), nTopSpace( 5 ), nItemHei
 	nSortedHeaderIndex( -1 ), bSortAscending( false ), nHeaderTopSpace( 0 ), nHSubSpace( 2 ),
 	nVSubSpace( 2 ), bLeftScrollBar( false ), nScrollBarWidth( 30 ), nSelection( -1 ), bScrollBarAlwaysVisible( true )
 {
-	SetMouseWheelMultiplyer( 25.0f/4.8f );		//методом подбора
+	SetMouseWheelMultiplyer( 25.0f/4.8f );		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CUIList::~CUIList()
@@ -119,7 +123,7 @@ int CUIList::operator&( IDataTree &ss )
 	
 	if ( saver.IsReading() )
 	{
-		//инициализируем массив headers
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ headers
 		//if ( nHeaderSize > 0 )
 		{
 			headers.subItems.resize( columnProperties.size() );
@@ -134,7 +138,7 @@ int CUIList::operator&( IDataTree &ss )
 		/*else
 			headers.subItems.clear();*/
 
-		//инициализируем pScrollBar
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ pScrollBar
 		pScrollBar = checked_cast<IUIScrollBar *> ( GetChildByID( 1 ) );
 		
 		std::string szName;
@@ -233,11 +237,11 @@ void CUIList::AddItem( int nData )
 	}
 	
 /*
-так делать плохо, потому что каждый раз при добавлении item будет происходить ресорт всего списка
-	//отсортируем items
+пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ item пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ items
 	if ( nSortedHeaderIndex != -1 )
 	{
-		bSortAscending = !bSortAscending;		//после вызова Sort() переменная инвертируется
+		bSortAscending = !bSortAscending;		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ Sort() пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		Sort( nSortedHeaderIndex );
 	}
 */
@@ -300,14 +304,14 @@ void CUIList::InitialUpdate()
 
 	if ( nSortedHeaderIndex != -1 )
 	{
-		bSortAscending = !bSortAscending;		//после вызова Sort() переменная инвертируется
+		bSortAscending = !bSortAscending;		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ Sort() пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		Sort( nSortedHeaderIndex );
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CUIList::UpdateItemsCoordinates()
 {
-	//Пересчитываем координаты для всех внутренних контролов
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	int nY = -pScrollBar->GetPosition();
 	CTRect<float> rect;
 	GetWindowPlacement( 0, 0, &rect );
@@ -324,7 +328,7 @@ void CUIList::UpdateItemsCoordinates()
 	{
 		if ( nY + nItemHeight - nVSubSpace < 0 || nY + nVSubSpace > rect.Height() - 2*nTopSpace )
 		{
-			//item не видимый
+			//item пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			for ( SUIListRow::CUIListSubItems::iterator it=(*item)->subItems.begin(); it!=(*item)->subItems.end(); ++it )
 			{
 				(*it)->ShowWindow( UI_SW_HIDE );
@@ -332,7 +336,7 @@ void CUIList::UpdateItemsCoordinates()
 		}
 		else
 		{
-			//item видимый
+			//item пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			int left = nLeftSpace;
 			if ( bLeftScrollBar && pScrollBar && pScrollBar->IsVisible() )
 				left += nScrollBarWidth;
@@ -386,7 +390,7 @@ void CUIList::Reposition( const CTRect<float> &rcParent )
 {
 	CTRect<float> rect = GetScreenRect();
 
-	//обновим позицию скроллбара
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	{
 		CVec2 size;
 		pScrollBar->GetWindowPlacement( 0, &size, 0 );
@@ -395,7 +399,7 @@ void CUIList::Reposition( const CTRect<float> &rcParent )
 		pScrollBar->SetWindowPlacement( &vOrigin, &vSize );
 	}
 
-	//перемещаем заголовки
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	int left = nLeftSpace;
 	CVec2 vPos, vSize;
 	vPos.y = nHeaderTopSpace;
@@ -434,7 +438,7 @@ void CUIList::EnsureSelectionVisible()
 {
 	CTRect<float> rect = GetScreenRect();
 
-	//рассчитаем позицию вывода selection
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ selection
 	int nY = -pScrollBar->GetPosition();
 	nY += nSelection * nItemHeight;
 
@@ -443,7 +447,7 @@ void CUIList::EnsureSelectionVisible()
 		nTemp = nTopSpace;
 	if ( nY >= nTemp && nY + nItemHeight <= rect.Height() - 2 * nTopSpace - nHeaderSize - nHeaderTopSpace )
 	{
-		//selection полностью видимый
+		//selection пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		return;
 	}
 
@@ -520,7 +524,7 @@ bool CUIList::OnChar( int nAsciiCode, int nVirtualKey, bool bPressed, DWORD keyS
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CUIList::ProcessMessage( const SUIMessage &msg )
 {
-	//ListControl обрабатывает NOTIFY сообщения от ScrollBar
+	//ListControl пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ NOTIFY пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ ScrollBar
 	switch( msg.nMessageCode )
 	{
 	case UI_NOTIFY_POSITION_CHANGED:
@@ -565,7 +569,7 @@ bool CUIList::ProcessMessage( const SUIMessage &msg )
 	case UI_NOTIFY_STATE_CHANGED_MESSAGE:
 		if ( msg.nFirst >= 10 && msg.nFirst < 10 + headers.subItems.size() )
 		{
-			//нажали на один из заголовков, попытаемся отсортировать этот столбец
+			//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			const int nColumn = msg.nFirst - 10;
 			Sort( nColumn );
 			//notify about resort
@@ -585,9 +589,9 @@ void CUIList::Visit( interface ISceneVisitor *pVisitor )
 {
 	if ( !IsVisible() )
 		return;
-	// Рисуем подложку
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	CSimpleWindow::Visit( pVisitor );
-	// Рисуем выделенную линию
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	CTRect<float> rect = GetScreenRect();
 	if ( pSelectionTexture && nSelection != -1 )
 	{
@@ -596,7 +600,7 @@ void CUIList::Visit( interface ISceneVisitor *pVisitor )
 
 		if ( nY + nItemHeight + nTopSpace + nHeaderSize + nHeaderTopSpace > 0 && nY < rect.Height() - nTopSpace - nHeaderSize - nHeaderTopSpace )
 		{
-			// selection виден
+			// selection пїЅпїЅпїЅпїЅпїЅ
 			if ( !selSubRects.empty() )
 			{
 				const int nSize = selSubRects.size();
@@ -616,7 +620,7 @@ void CUIList::Visit( interface ISceneVisitor *pVisitor )
 					rc.color = 0xffffffff;
 					rc.specular = 0xff000000;
 					
-					//проверим, вдруг видно только часть selection
+					//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ selection
 					int nAdd = 0;
 					if ( nHeaderSize > 0 )
 						nAdd = nHeaderSize + nHeaderTopSpace;
@@ -641,7 +645,7 @@ void CUIList::Visit( interface ISceneVisitor *pVisitor )
 		}
 	}
 	
-	// рисуем детей
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	for ( CWindowList::reverse_iterator ri = childList.rbegin(); ri != childList.rend(); ++ri )
 		(*ri)->Visit( pVisitor );
 }
@@ -654,11 +658,11 @@ void CUIList::Draw( IGFX *pGFX )
 	if ( !IsVisible() )
 		return;
 	
-	//Рисуем подложку
+	//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	pGFX->SetShadingEffect( 3 );
 	CSimpleWindow::Draw( pGFX );
 
-	//Рисуем выделенную линию
+	//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	CTRect<float> rect = GetScreenRect();
 	if ( pSelectionTexture && nSelection != -1 )
 	{
@@ -667,7 +671,7 @@ void CUIList::Draw( IGFX *pGFX )
 
 		if ( nY + nItemHeight + nTopSpace + nHeaderSize + nHeaderTopSpace > 0 && nY < rect.Height() - nTopSpace - nHeaderSize - nHeaderTopSpace )
 		{
-			//selection виден
+			//selection пїЅпїЅпїЅпїЅпїЅ
 			SGFXRect2 rc;
 			pGFX->SetTexture( 0, pSelectionTexture );
 			
@@ -690,7 +694,7 @@ void CUIList::Draw( IGFX *pGFX )
 					rc.color = 0xffffffff;
 					rc.specular = 0xff000000;
 					
-					//проверим, вдруг видно только часть selection
+					//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ selection
 					int nAdd = 0;
 					if ( nHeaderSize > 0 )
 						nAdd = nHeaderSize + nHeaderTopSpace;
@@ -715,41 +719,69 @@ void CUIList::Draw( IGFX *pGFX )
 		}
 	}
 	
-	//рисуем детей
+	//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	for ( CWindowList::reverse_iterator ri=childList.rbegin(); ri!=childList.rend(); ri++ )
 		(*ri)->Draw( pGFX );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CUIList::OnLButtonDown( const CVec2 &vPos, EMouseState mouseState )
 {
+#ifndef _MSC_VER
+	// Which of the two it is: the click never arriving, or arriving and leaving
+	// through one of the early returns below. Five explanations for the dead
+	// Confirm button have been discarded from outside; this is the first look
+	// from inside.
+	Bk1TracePath( "list-down", "entered", int( vPos.y ) );
+#endif
 	if ( pScrollBar->IsInside( vPos ) )
 		return CMultipleWindow::OnLButtonDown( vPos, mouseState );
 
 	bool bRet = CMultipleWindow::OnLButtonDown( vPos, mouseState );
 	if ( !bRet )
-		return bRet;			//мышка вне окошка
-	
-	//тут обрабатывается изменение Selection
+	{
+#ifndef _MSC_VER
+		// The parent says the click landed on nothing it owns. If the selection
+		// dies here, the row is not a child of the list as far as the click is
+		// concerned.
+		Bk1TracePath( "list-down", "parent said no", 0 );
+#endif
+		return bRet;			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+	}
+
+	//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Selection
 	CTRect<float> rect = GetScreenRect();
 	float fSelIndex = vPos.y - rect.y1 - nHeaderSize - nHeaderTopSpace;
-	//теперь fSelIndex содержит смещение мышки относительно начала items
-	//если fSelIndex < 0, значит нажато вне видимых items, например в область header
+	//пїЅпїЅпїЅпїЅпїЅпїЅ fSelIndex пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ items
+	//пїЅпїЅпїЅпїЅ fSelIndex < 0, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ items, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ header
 	if ( fSelIndex < 0 )
 		return true;
 	
 	fSelIndex = ( fSelIndex + pScrollBar->GetPosition() - nTopSpace ) / nItemHeight;
 	if ( fSelIndex < 0 || fSelIndex >= listItems.size() )
+	{
+#ifndef _MSC_VER
+		Bk1TracePath( "list-down", "index out of range", int( fSelIndex ) );
+#endif
 		return true;
-	
-	//теперь fSelIndex это индекс item под мышкой
+	}
+
+	//пїЅпїЅпїЅпїЅпїЅпїЅ fSelIndex пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ item пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	if ( nSelection == (int) fSelIndex )
-		return true;		//предыдущий видимый item имеет такой же индекс, ничего не изменилось
-	
-	//selection изменился
+	{
+#ifndef _MSC_VER
+		Bk1TracePath( "list-down", "already selected", nSelection );
+#endif
+		return true;		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ item пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	}
+
+	//selection пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	RemoveFocusFromItem( nSelection );
 	nSelection = fSelIndex;
 	NotifySelectionChanged();
-	
+#ifndef _MSC_VER
+	Bk1TracePath( "list-down", "SELECTED", nSelection );
+#endif
+
 	return true;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -760,13 +792,13 @@ bool CUIList::OnLButtonDblClk( const CVec2 &vPos )
 	
 	bool bRet = CMultipleWindow::OnLButtonDblClk( vPos );
 	if ( !bRet )
-		return bRet;			//мышка вне окошка
+		return bRet;			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 
-	//тут обрабатывается double click внутри списка
+	//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ double click пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	CTRect<float> rect = GetScreenRect();
 	float fSelIndex = vPos.y - rect.y1 - nHeaderSize - nHeaderTopSpace;
-	//теперь fSelIndex содержит смещение мышки относительно начала items
-	//если fSelIndex < 0, значит нажато вне видимых items, например в область header
+	//пїЅпїЅпїЅпїЅпїЅпїЅ fSelIndex пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ items
+	//пїЅпїЅпїЅпїЅ fSelIndex < 0, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ items, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ header
 	if ( fSelIndex < 0 )
 		return true;
 	
@@ -774,8 +806,8 @@ bool CUIList::OnLButtonDblClk( const CVec2 &vPos )
 	if ( fSelIndex < 0 || fSelIndex >= listItems.size() )
 		return true;
 	
-	//теперь fSelIndex это индекс item под мышкой
-	//посылаем сообщение о double click
+	//пїЅпїЅпїЅпїЅпїЅпїЅ fSelIndex пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ item пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ double click
 	NotifyDoubleClick( fSelIndex );
 	return true;
 }
@@ -804,11 +836,11 @@ public:
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CUIList::ReSort()
 {
-	//отсортируем items
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ items
 	if ( nSortedHeaderIndex == -1 )
-		return false;			//не знаем, по какому столбцу сортировать
+		return false;			//пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
-	bSortAscending = !bSortAscending;		//после вызова Sort() переменная инвертируется
+	bSortAscending = !bSortAscending;		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ Sort() пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	return Sort( nSortedHeaderIndex );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -822,14 +854,14 @@ bool CUIList::Sort( int nColumn, const int nSortType )
 	if ( !headers.subItems[nColumn].pSorter )
 		return false;
 
-	//перед сортировкой сохраним текущий выделенный элемент
+	//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	SUIListRow *pSelectedRow = 0;
 	if ( nSelection < listItems.size() && nSelection >= 0 )
 		pSelectedRow = listItems[nSelection].GetPtr();
 
 	if ( nSortedHeaderIndex != nColumn )
 	{
-		//сбросим выделение с nSortedHeaderIndex
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ nSortedHeaderIndex
 		if ( nSortedHeaderIndex != -1 )
 			headers.subItems[nSortedHeaderIndex].pElement->SetState( 0, false );
 		nSortedHeaderIndex = nColumn;
@@ -869,7 +901,7 @@ bool CUIList::Sort( int nColumn, const int nSortType )
 	std::stable_sort( listItems.begin(), listItems.end(), sw );
 	UpdateItemsCoordinates();
 
-	//восстанавливаем позицию selection
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ selection
 	if ( pSelectedRow )
 	{
 		int i = 0;

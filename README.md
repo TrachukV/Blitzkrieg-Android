@@ -196,46 +196,28 @@ The closing curtain of the finished mission is left in the scene, opaque,
 for ever. The first mission prints nothing at all, having no curtain to begin
 with.
 
-The chain from there is short and the engine is right at every step of it.
+What paints it is a `CTransition`: a full-screen quad whose alpha the trace
+caught at 255 of 255, fifty-one seconds into a five-hundred millisecond fade,
+still reporting itself alive because it was started infinite.
 
-The closing curtain is started deliberately infinite --
-`PlayOverInterface( "movies\\transition\\close.bik", PLAY_INFINITE, true )` --
-because it is meant to hold the black while the old screen is torn down. The
-screen that follows lifts it in `StartInterface`, which calls
-`RemoveTransition`, which calls `pScene->RemoveSceneObject( 0 )`. That 0 is not
-an index: `RemoveSceneObject` takes a pointer, and a null one means "remove them
-all". So the engine's design is sound and self-consistent.
+Where that transition comes from is **not** established, and two earlier
+readings in this file said otherwise. `PlayOverInterface` is the only place in
+`Common/` or `GameTT/` that creates one -- so the reasoning went, and from there
+to which screen ought to remove it and which scene it hangs in. Then tracing
+that creation site and `CScene::Clear` together printed nothing at all across a
+whole run, with the screen black and the transition demonstrably updating. So
+the transition is made somewhere else, and everything downstream of that
+assumption is withdrawn.
 
-Which leaves one line:
+What is measured and stands:
 
-```cpp
-void RemoveTransition() { if ( pScene ) pScene->RemoveSceneObject( 0 ); }
-```
+- the frame is painted over, not left empty (the blue-clear test)
+- the painter is a `CTransition`, opaque, infinite, never expiring
+- it is not created by `PlayOverInterface` in a run that shows the bug
+- `CScene::Clear`, which would drop it, does not run in that run either
 
-Measured, and it is not the guard. Tracing that line printed nothing at all,
-through a whole run: `RemoveTransition` is never reached. Neither path to it
-runs after a mission ends -- `CInterfaceScreenBase::StartInterface`, which every
-screen overrides without calling the base, nor `OpenCurtains`, which the screen
-after a mission does not call.
-
-There is no contradiction with the original, either: `CScene::Clear` does drop
-these objects, so on Windows the curtain goes when the next mission clears the
-scene, and nobody has to ask.
-
-In this port it survived both the statistics screen and a mission load -- the
-trace had it alive and opaque for fifty-one seconds straight. So the last link
-is narrow: either the scene is not cleared between missions here, or the curtain
-is hanging in a different scene from the one that gets cleared -- the interface's
-`pScene` and the scene the mission tears down being two objects rather than one.
-
-That is one check, and it is likely to be the fix as well.
-
-Both switches stay in the build and are off unless asked for:
-
-```bash
-adb shell setprop debug.blitzkrieg.draws 1        # what each draw is handed
-adb shell setprop debug.blitzkrieg.clearcolour 1  # clear to blue, not black
-```
+Where it is created is the next thing to find, and finding it is a search
+through the other modules rather than another guess about this one.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

@@ -23,6 +23,12 @@
 #include "..\Main\ScenarioTrackerTypes.h"
 #include "..\Main\iMainCommands.h"
 
+#ifndef _MSC_VER
+// The touch panel's copy of the command ids, so the two can be compared at the
+// bottom of this file. Android only; the MSVC build never sees it.
+#include "bk1_touch_pick.h"
+#endif
+
 #include "..\Image\Image.h"
 #include "..\RandomMapGen\IB_Types.h"
 #include "..\RandomMapGen\MiniMap_Types.h"
@@ -511,7 +517,7 @@ void CInterfaceMission::CMultiplayerScoresSmall::CReplayScoresState::Show( IUISc
 {
 	Init( pUIScreen );
 	ITextManager *pTM = GetSingleton<ITextManager>();
-	//скроем кнопочку показа SINGLE OBJECTIVE
+	//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ SINGLE OBJECTIVE
 	IUIElement *pSingleObjectiveButton = checked_cast<IUIElement*>( pUIScreen->GetChildByID( E_SINGLE_OBJECTIVE_BUTTON ) );
 	pSingleObjectiveButton->ShowWindow( UI_SW_HIDE );
 
@@ -600,7 +606,7 @@ void CInterfaceMission::CMultiplayerScoresSmall::CReplayScoresState::Init( IUISc
 void CInterfaceMission::CMultiplayerScoresSmall::CGameScoresState::Show( IUIScreen * pUIScreen )
 {
 	Init( pUIScreen );
-	//скроем кнопочку показа SINGLE OBJECTIVE
+	//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ SINGLE OBJECTIVE
 	IUIElement *pSingleObjectiveButton = checked_cast<IUIElement*>( pUIScreen->GetChildByID( E_SINGLE_OBJECTIVE_BUTTON ) );
 	pSingleObjectiveButton->ShowWindow( UI_SW_HIDE );
 
@@ -794,7 +800,7 @@ CInterfaceMission::CInterfaceMission()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CInterfaceMission::~CInterfaceMission() 
 {
-	// сначала необходимо освободить всю клиенсткую часть, а только потом звать очистку AI
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ AI
 	pFrameSelection = 0;
 	pWorld = 0;
 	if ( pScene )
@@ -978,7 +984,7 @@ void CInterfaceMission::Done()
 	GetSingleton<IMessageLinkContainer>()->SetInterface( 0 );
 	// remove mission temporary global variables
 	GetSingleton<IGlobalVars>()->RemoveVarsByMatch( "temp." );	
-	// сначала необходимо освободить всю клиенсткую часть, а только потом звать очистку AI
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ AI
 	pFrameSelection = 0;
 	pWorld = 0;
 	//
@@ -995,21 +1001,21 @@ void CInterfaceMission::Done()
 		pAckManager->Clear();
 		pAckManager = 0;
 	}
-	// очистим AI
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ AI
 	if ( pAILogic )
 	{
 		pAILogic->Clear();
 		pAILogic->Suspend();
 	}
-	// мы вышли из миссии
+	// пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	RemoveGlobalVar( "AreWeInMission" );
 	GetSingleton<IMainLoop>()->ClearResources( true );
 	multiplayerScoresSmall.Done();
 
-	// чистка переменных
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 /*
 	int nMulty = GetGlobalVar( "MultiplayerGame", 0 );
-	if ( !nMulty )		//если не в режиме multyplayer
+	if ( !nMulty )		//пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ multyplayer
 		GetSingleton<IMainLoop>()->Command( MAIN_COMMAND_CHANGE_TRANSCEIVER, NStr::Format("%d 0", MAIN_SP_TRANSCEIVER) );
 */
 	//
@@ -1231,7 +1237,7 @@ bool CInterfaceMission::NewMission( const std::string &_szMapName, bool _bCycled
 	GetSingleton<IMainLoop>()->Pause( false, PAUSE_TYPE_MP_LOADING );
 
 	//
-	// мы зашли в миссию
+	// пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	SetGlobalVar( "AreWeInMission", 1 );
 	// remove menu pause
 	GetSingleton<IMainLoop>()->Pause( false, PAUSE_TYPE_MENU );
@@ -1459,7 +1465,7 @@ bool CInterfaceMission::NewMission( const std::string &_szMapName, bool _bCycled
 			}
 
 			pUIMiniMap->SetBackgroundTexture( GetSingleton<ITextureManager>()->GetTexture( szTextureName.c_str() ) );
-			//показывание обжективов
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			std::string szMissionName = GetGlobalVar( "Mission.Current.Name" );
 			const SMissionStats *pMissionStats = NGDB::GetGameStats<SMissionStats>( szMissionName.c_str(), IObjectsDB::MISSION );
 			if ( pMissionStats != 0 )
@@ -1483,11 +1489,11 @@ bool CInterfaceMission::NewMission( const std::string &_szMapName, bool _bCycled
 	}
 	// CRAP}
 	//
-	// иницализация звуков от карты
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	if ( mapinfo.soundsList.size() )
 		pScene->InitMapSounds( &mapinfo.soundsList.front(), mapinfo.soundsList.size() );
 
-	// Инициализация музыки внутри игры
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 	pScene->InitMusic( GetSingleton<IScenarioTracker>()->GetUserPlayer()->GetGeneralSide() );
 	// add mission bonus
 	RemoveGlobalVar( "Mission.Current.Bonus" );
@@ -1523,7 +1529,7 @@ bool CInterfaceMission::NewMission( const std::string &_szMapName, bool _bCycled
 		pScene->AddUIScreen( pUIScreen );
 		pScene->SetMissionScreen( pUIScreen ); 
 	}
-	// заходим в игру
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ
 	pScene->SetSoundSceneMode( ESSM_INGAME );
 	pProgress->Step(); //12
 	pProgress->Stop();
@@ -1925,7 +1931,7 @@ void CInterfaceMission::SetMissionStatusObject( bool bStatus )
 			pElement->ShowWindow( UI_SW_HIDE );
 
 		//Hide armor and weapon stats
-		//я скрываю, чтобы не отображались тултипы на пустом фоне
+		//пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 		for ( int i = 0; i < 4; ++i )
 		{
 			if ( IUIElement *pElement = pDialog->GetChildByID(101 + i) )
@@ -2149,9 +2155,9 @@ bool CInterfaceMission::ProcessMessageLocal( const SGameMessage &msg )
 			//RR begin
 		case UI_NOTIFY_SELECTION_CHANGED:
 		case UI_NOTIFY_BAR_EXPAND:
-			if ( msg.nParam == 10 )		//это objectives Shortcut Bar
+			if ( msg.nParam == 10 )		//пїЅпїЅпїЅ objectives Shortcut Bar
 			{
-				//отобразим круги на минимапе
+				//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				IUIMiniMap *pUIMiniMap = checked_cast<IUIMiniMap*>( pUIScreen->GetChildByID( 20000 ) );
 				if ( pUIMiniMap )
 				{
@@ -2163,8 +2169,8 @@ bool CInterfaceMission::ProcessMessageLocal( const SGameMessage &msg )
 					pSB->GetSelectionItem( &nBar, &nItem );
 					if ( nBar != -1 && pSB->GetBarExpandState( nBar ) )
 					{
-						//nBar содержит номер выделенного objective
-						//получим статсы миссии
+						//nBar пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ objective
+						//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 						IUIElement *pBar = pSB->GetBar( nBar );
 						NI_ASSERT_T( pBar != 0, "Error in UI_NOTIFY_BAR_EXPAND" );
 						const int nObjectiveNumber = pBar->GetWindowID();
@@ -2469,6 +2475,46 @@ extern "C" int Bk1FinishMissionAsWin()
 extern "C" int Bk1PickAt( int nX, int nY )
 {
 	return g_pTouchMission != 0 ? g_pTouchMission->Bk1PickPointKind( nX, nY ) : 0;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// A keyboard sends a command by posting it; the panel does exactly the same and
+// then stays out of the way. Everything downstream -- the multiplayer send, the
+// clamp against maxspeed/minspeed, the on-screen notice naming the new speed --
+// is the engine's own code on the engine's own path, so an on-screen button and
+// the original hotkey cannot drift apart.
+//
+// Gated on a live mission for the same reason the picker is: these commands are
+// handled by the mission's message loop, and there is no mission behind a menu.
+// The panel names the commands by number so that its header stays free of the
+// engine's own. That is only safe if the two cannot drift, so they are compared
+// here, where both are visible, and a disagreement stops the build rather than
+// quietly sending the wrong command.
+static_assert( BK1_CMD_GAME_PAUSE      == CMD_GAME_PAUSE,      "touch panel pause id no longer matches the engine" );
+static_assert( BK1_CMD_GAME_SPEED_INC  == CMD_GAME_SPEED_INC,  "touch panel speed-up id no longer matches the engine" );
+static_assert( BK1_CMD_GAME_SPEED_DEC  == CMD_GAME_SPEED_DEC,  "touch panel speed-down id no longer matches the engine" );
+static_assert( BK1_CMD_RESTART_MISSION == CMD_RESTART_MISSION, "touch panel restart id no longer matches the engine" );
+static_assert( BK1_CMD_SAVE            == CMD_SAVE,            "touch panel save id no longer matches the engine" );
+static_assert( BK1_CMD_LOAD            == CMD_LOAD,            "touch panel load id no longer matches the engine" );
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+extern "C" int Bk1SendGameCommand( int nCommand )
+{
+	if ( g_pTouchMission == 0 )
+		return 0;
+	GetSingleton<IInput>()->AddMessage( SGameMessage( nCommand ) );
+	return 1;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// For drawing the current value on the panel. Read straight from the timer, so
+// what the button shows is what the game is actually running at, including the
+// speeds a save restores and the ones multiplayer forces.
+extern "C" int Bk1GetGameSpeed()
+{
+	return g_pTouchMission != 0 ? GetSingleton<IGameTimer>()->GetSpeed() : 0;
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+extern "C" int Bk1IsMissionActive()
+{
+	return g_pTouchMission != 0 ? 1 : 0;
 }
 #endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

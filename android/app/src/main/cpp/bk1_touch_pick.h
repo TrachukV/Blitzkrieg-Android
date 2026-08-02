@@ -33,6 +33,30 @@ int Bk1PickAt( int nX, int nY );
 //   adb shell setprop debug.blitzkrieg.winmission 1
 int Bk1FinishMissionAsWin( void );
 
+// Posts an engine command exactly as a hotkey does -- the ids are the ones in
+// Main/iMainCommands.h. The on-screen panel is a second way to reach commands
+// the game already has, not a second implementation of them, so nothing here
+// can behave differently from the keyboard.
+//
+// Returns 0 when no mission is running.
+int Bk1SendGameCommand( int nCommand );
+
+// The speed the game is running at right now, read from the timer rather than
+// counted by the panel, so a save that restores a speed shows the truth.
+int Bk1GetGameSpeed( void );
+
+int Bk1IsMissionActive( void );
+
+// Command ids the touch panel issues. Kept as literals rather than including
+// the engine header, which drags in the whole of Misc/Basic.h and its MSVC
+// expectations; the guard below fails the build if the two ever disagree.
+#define BK1_CMD_GAME_PAUSE      0x00100014
+#define BK1_CMD_GAME_SPEED_INC  0x00100015
+#define BK1_CMD_GAME_SPEED_DEC  0x00100016
+#define BK1_CMD_RESTART_MISSION 0x00110008
+#define BK1_CMD_SAVE            0x00100001
+#define BK1_CMD_LOAD            0x00100002
+
 #ifdef __cplusplus
 }
 #endif

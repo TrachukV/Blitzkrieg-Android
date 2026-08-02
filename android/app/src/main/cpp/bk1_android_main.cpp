@@ -11,6 +11,7 @@
 
 #include "bk1_android_keys.h"
 #include "bk1_touch_pick.h"
+#include "bk1_touch_panel.h"
 #include <sys/system_properties.h>
 
 // Defined in compat/bk1_d3d8_device.cpp, at global scope: how long the frame
@@ -226,6 +227,10 @@ bool CreateSurface( SAppState *pState )
 
 void DestroySurface( SAppState *pState )
 {
+    // The panel's program and buffers belong to the context that is about to
+    // go; their names have to be dropped before it does, or the next surface
+    // would find them set and draw through handles that no longer exist.
+    Bk1TouchPanelRelease();
     if ( pState->display != EGL_NO_DISPLAY )
     {
         eglMakeCurrent( pState->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT );
@@ -288,6 +293,16 @@ void Perform( const NBk1Touch::SAction &action )
     // Bk1PickAt says so, which is the menus' case.
     case NBk1Touch::ACTION_TAP:
     {
+        // The panel is above the game, so it is asked first. A tap it takes is
+        // finished here: letting it fall through as well would speed time up
+        // and, with a platoon selected, send that platoon into the corner of
+        // the map the button happens to sit over.
+        const int nPanel = Bk1TouchPanelHitTest( action.nX, action.nY );
+        if ( nPanel != BK1_PANEL_NONE )
+        {
+            Bk1TouchPanelPress( nPanel, NowMilliseconds() );
+            break;
+        }
         const int nOver = Bk1PickAt( action.nX, action.nY );
         if ( nOver == BK1_PICK_GROUND )
         {
@@ -829,6 +844,9 @@ extern "C" void android_main( android_app *pApp )
         }
 
         FinishMissionIfAsked();
+        // Over the finished frame, under nothing. The engine has drawn its own
+        // interface by now, so the panel sits on top of it the way it should.
+        Bk1TouchPanelDraw( g_state.nWidth, g_state.nHeight, NowMilliseconds() );
         SampleFrame();
         const double fSwapStart = MonotonicMs();
         eglSwapBuffers( g_state.display, g_state.surface );

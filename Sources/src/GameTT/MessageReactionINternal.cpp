@@ -5,6 +5,10 @@
 #include "..\Input\Input.h"
 #include "..\Misc\TypeConvertor.h"
 #include "..\Misc\WideString.h"
+
+#ifndef _MSC_VER
+#include "bk1_black_rect_probe.h"
+#endif
 #include "iMission.h"
 #include "..\UI\UIMessages.h"
 #include "MissionInterfaceEscapeMenu.h"
@@ -70,6 +74,21 @@ bool CMessageAtomReactionSetWindowText::Execute()
 	IText * pText = pTM->GetString( szTextKey.c_str() );
 	if ( pText )
 	{
+#ifndef _MSC_VER
+		// The tutorial's instruction is 198 characters in every copy of the data
+		// and reaches the screen as 99. This says which half of the road loses
+		// them: the length as the text manager hands it over, before the window
+		// or the renderer has touched it. Counted rather than measured with
+		// wcslen, which is the C library's and expects a 32-bit wchar_t.
+		{
+			const wchar_t *pszText = pText->GetString();
+			int nLength = 0;
+			if ( pszText != 0 )
+				while ( pszText[nLength] != 0 && nLength < 100000 )
+					++nLength;
+			Bk1TracePath( "window-text", szTextKey.c_str(), nLength );
+		}
+#endif
 		GetSingleton<IMessageLinkContainer>()->SetWindowText( nWindowID, pText->GetString() );
 	}
 	return true;

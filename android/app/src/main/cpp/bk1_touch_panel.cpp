@@ -212,7 +212,11 @@ bool EnsureGL()
 // Vertices are built into this each frame: six per rectangle, position and
 // colour interleaved. The panel is a few dozen rectangles, so one buffer and one
 // draw call is the whole of it.
-const int MAX_RECTS    = 64;
+// Seven buttons, each a plate, two edges, a shape and now a letter of up to
+// fifteen cells. AddRect drops anything past this without a word, which would
+// draw half a letter and look like a rendering fault rather than a full buffer,
+// so the room is counted rather than guessed: 7 * (3 + 5 + 15) = 161.
+const int MAX_RECTS    = 192;
 const int FLOATS_PER_V = 6;
 float g_vertices[MAX_RECTS * 6 * FLOATS_PER_V];
 int   g_nVertices = 0;
@@ -243,6 +247,50 @@ void AddRect( float x, float y, float w, float h, float r, float g, float b, flo
 // goes through its own texture and draw path, and reaching into that from an
 // overlay would tie the panel to the state cache it is trying not to disturb.
 // Shapes rather than words also read the same in every language the game ships.
+// A letter, drawn from the same rectangles as everything else.
+//
+// The shapes alone were not enough: a target, an arrow and three bars are only
+// obvious once you already know what they do, which is no help to the player
+// meeting them. A letter next to the shape says which order it is, and the
+// letters are the ones the game's own instructions use for these commands, so a
+// sentence that mentions the attack order and the button agree with each other.
+//
+// Five rows of three, one bit per cell. Enough for the four letters needed and
+// no more; a real font belongs to the engine and reaching into it from an
+// overlay would tie this to the state cache it stays clear of.
+struct SGlyph
+{
+	char ch;
+	unsigned char rows[5];		// low three bits, left to right
+};
+
+const SGlyph GLYPHS[] =
+{
+	{ 'A', { 0x2, 0x5, 0x7, 0x5, 0x5 } },		// .#. #.# ### #.# #.#
+	{ 'M', { 0x5, 0x7, 0x7, 0x5, 0x5 } },		// #.# ### ### #.# #.#
+	{ 'Q', { 0x2, 0x5, 0x5, 0x7, 0x3 } },		// .#. #.# #.# ### ..##
+	{ 'C', { 0x3, 0x4, 0x4, 0x4, 0x3 } },		// .## #.. #.. #.. .##
+};
+
+void AddLetter( char ch, float x, float y, float fCell, float r, float g, float b, float a )
+{
+	for ( int i = 0; i < (int)( sizeof( GLYPHS ) / sizeof( GLYPHS[0] ) ); ++i )
+	{
+		if ( GLYPHS[i].ch != ch )
+			continue;
+		for ( int nRow = 0; nRow < 5; ++nRow )
+		{
+			const unsigned char nBits = GLYPHS[i].rows[nRow];
+			for ( int nCol = 0; nCol < 3; ++nCol )
+			{
+				if ( ( nBits >> ( 2 - nCol ) ) & 1 )
+					AddRect( x + nCol * fCell, y + nRow * fCell, fCell, fCell, r, g, b, a );
+			}
+		}
+		return;
+	}
+}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void AddIcon( const SButton &b, int nButton, float r, float g, float bl, float a )
 {
 	const float cx    = float( b.nX ) + float( b.nW ) * 0.5f;
@@ -266,38 +314,37 @@ void AddIcon( const SButton &b, int nButton, float r, float g, float bl, float a
 	// A cross of two diagonals would need triangles; a square cross turned into
 	// a target reads as "attack this spot" and is built from the same rectangles
 	// as everything else: a ring drawn as four bars, with a dot at the centre.
+	// The four order buttons carry their letter as well as their shape. The
+	// shape is drawn small and high, the letter large and low, because the
+	// letter is what a player reads first and the shape is what they recognise
+	// once they know it.
 	case BK1_PANEL_FORCE_ATTACK:
-		AddRect( cx - fArm, cy - fArm, fArm * 2.0f, fThin, r, g, bl, a );
-		AddRect( cx - fArm, cy + fArm - fThin, fArm * 2.0f, fThin, r, g, bl, a );
-		AddRect( cx - fArm, cy - fArm, fThin, fArm * 2.0f, r, g, bl, a );
-		AddRect( cx + fArm - fThin, cy - fArm, fThin, fArm * 2.0f, r, g, bl, a );
-		AddRect( cx - fThin, cy - fThin, fThin * 2.0f, fThin * 2.0f, r, g, bl, a );
+		AddRect( cx - fArm * 0.7f, cy - fArm * 0.9f, fArm * 1.4f, fThin * 0.7f, r, g, bl, a );
+		AddRect( cx - fArm * 0.7f, cy - fArm * 0.2f, fArm * 1.4f, fThin * 0.7f, r, g, bl, a );
+		AddRect( cx - fArm * 0.7f, cy - fArm * 0.9f, fThin * 0.7f, fArm * 0.7f, r, g, bl, a );
+		AddRect( cx + fArm * 0.7f - fThin * 0.7f, cy - fArm * 0.9f, fThin * 0.7f, fArm * 0.7f, r, g, bl, a );
+		AddLetter( 'A', cx - fThin * 1.5f, cy + fThin * 0.2f, fThin, r, g, bl, a );
 		break;
 	// Aggressive move: an arrow to the right, drawn as a shaft and a stepped
 	// head, so it says "go" while the target above says "shoot".
 	case BK1_PANEL_AGGRESSIVE:
-		AddRect( cx - fArm, cy - fThin * 0.6f, fArm * 1.5f, fThin * 1.2f, r, g, bl, a );
-		AddRect( cx + fArm * 0.2f, cy - fThin * 1.8f, fThin, fThin * 3.6f, r, g, bl, a );
-		AddRect( cx + fArm * 0.2f + fThin, cy - fThin, fThin, fThin * 2.0f, r, g, bl, a );
-		AddRect( cx + fArm * 0.2f + fThin * 2.0f, cy - fThin * 0.4f, fThin, fThin * 0.8f, r, g, bl, a );
+		AddRect( cx - fArm * 0.7f, cy - fArm * 0.6f, fArm * 1.1f, fThin * 0.7f, r, g, bl, a );
+		AddRect( cx + fArm * 0.35f, cy - fArm * 0.9f, fThin * 0.7f, fThin * 2.2f, r, g, bl, a );
+		AddLetter( 'M', cx - fThin * 1.5f, cy + fThin * 0.2f, fThin, r, g, bl, a );
 		break;
-	// Queue: three bars stacked, one order after another.
+	// Queue: bars stacked, one order after another, with its letter below.
 	case BK1_PANEL_QUEUE:
-		AddRect( cx - fArm, cy - fArm * 0.85f, fArm * 2.0f, fThin, r, g, bl, a );
-		AddRect( cx - fArm, cy - fThin * 0.5f, fArm * 2.0f, fThin, r, g, bl, a );
-		AddRect( cx - fArm, cy + fArm * 0.65f, fArm * 2.0f, fThin, r, g, bl, a );
+		AddRect( cx - fArm * 0.7f, cy - fArm * 0.9f, fArm * 1.4f, fThin * 0.6f, r, g, bl, a );
+		AddRect( cx - fArm * 0.7f, cy - fArm * 0.45f, fArm * 1.4f, fThin * 0.6f, r, g, bl, a );
+		AddLetter( 'Q', cx - fThin * 1.5f, cy + fThin * 0.2f, fThin, r, g, bl, a );
 		break;
 	// Centre camera: a frame with a dot in it.
 	case BK1_PANEL_CENTRE_CAMERA:
-		AddRect( cx - fArm, cy - fArm, fArm * 0.8f, fThin, r, g, bl, a );
-		AddRect( cx + fArm - fArm * 0.8f, cy - fArm, fArm * 0.8f, fThin, r, g, bl, a );
-		AddRect( cx - fArm, cy + fArm - fThin, fArm * 0.8f, fThin, r, g, bl, a );
-		AddRect( cx + fArm - fArm * 0.8f, cy + fArm - fThin, fArm * 0.8f, fThin, r, g, bl, a );
-		AddRect( cx - fArm, cy - fArm, fThin, fArm * 0.8f, r, g, bl, a );
-		AddRect( cx - fArm, cy + fArm - fArm * 0.8f, fThin, fArm * 0.8f, r, g, bl, a );
-		AddRect( cx + fArm - fThin, cy - fArm, fThin, fArm * 0.8f, r, g, bl, a );
-		AddRect( cx + fArm - fThin, cy + fArm - fArm * 0.8f, fThin, fArm * 0.8f, r, g, bl, a );
-		AddRect( cx - fThin * 0.8f, cy - fThin * 0.8f, fThin * 1.6f, fThin * 1.6f, r, g, bl, a );
+		AddRect( cx - fArm * 0.7f, cy - fArm * 0.9f, fArm * 0.5f, fThin * 0.6f, r, g, bl, a );
+		AddRect( cx + fArm * 0.2f, cy - fArm * 0.9f, fArm * 0.5f, fThin * 0.6f, r, g, bl, a );
+		AddRect( cx - fArm * 0.7f, cy - fArm * 0.9f, fThin * 0.6f, fArm * 0.5f, r, g, bl, a );
+		AddRect( cx + fArm * 0.7f - fThin * 0.6f, cy - fArm * 0.9f, fThin * 0.6f, fArm * 0.5f, r, g, bl, a );
+		AddLetter( 'C', cx - fThin * 1.5f, cy + fThin * 0.2f, fThin, r, g, bl, a );
 		break;
 	}
 }

@@ -42,6 +42,14 @@ RULES = [
     (r"press\s+the\s+button\s+at\s+the\s+bottom\s+or\s+the\s+<ESC>\s+key",
      "press the button at the bottom or the Back gesture"),
 
+    # The phrasing these files actually use, read out of them rather than
+    # imagined: "left click on X button (or press the <K> key on the keyboard)
+    # and right click on ...". The parenthetical is the part that has no meaning
+    # on a phone.
+    (r"\s*\(or\s+press\s+the\s+<[A-Z0-9]{1,6}>\s+key\s+on\s+the\s+keyboard\)", ""),
+    (r"\s*\(<[A-Z0-9]{1,6}>\s+key\)", ""),
+    (r"\s*or\s+press\s+the\s+<[A-Z0-9]{1,6}>\s+key", ""),
+
     # Then the bare key names, for the sentences not covered above.
     (r"<CTRL>\s+key", "A button on the left"),
     (r"<SHIFT>\s+key", "Q button on the left"),
@@ -84,8 +92,12 @@ def main(roots):
                     raw = open(path, "rb").read()
                 except OSError:
                     continue
-                # Only the wide-string text files; anything else is left alone.
-                if len(raw) < 2 or raw[1] != 0:
+                # Only the wide-string text files. They begin with a UTF-16LE
+                # byte-order mark; my first attempt tested raw[1] != 0 and so
+                # rejected every one of them, rewriting nothing and reporting
+                # success. The mark is kept on the way out, because the engine
+                # reads it.
+                if raw[:2] != b"\xff\xfe":
                     continue
                 try:
                     text = raw.decode("utf-16-le")

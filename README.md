@@ -224,49 +224,31 @@ traces in all four places at once, counted over one run:
 The tracing works -- `Update` fires more than a thousand times. And `Start`
 never runs at all.
 
-So the thing covering the screen is a `CTransition` that was **never started**.
-It is not a curtain that failed to lift; it is an object sitting in whatever
-state it was constructed in. `Start` is what sets `fAlphaStart`, `fAlphaEnd` and
-`timeStart`, and without it `Update` measures elapsed time from a value that was
-never set, gets an enormous ratio, and clamps to full opacity -- which is exactly
-the "alpha 255 of 255, fifty-one seconds into a five-hundred millisecond fade"
-that started this.
+`CTransition` turned out to have no constructor at all: `timeStart`,
+`fAlphaStart`, `fAlphaEnd`, `fAlpha` and `bInfinite` are set only by `Start`,
+which never runs. So an unstarted one carries whatever was in the memory it got,
+and the "alpha 255, infinite, fifty-one seconds into a five-hundred millisecond
+fade" was that garbage being read as fields. It now has a constructor, because
+uninitialised members are a defect whatever else is true.
 
-Six earlier readings all asked why the curtain was not lifted. The question is
-how an unstarted transition gets into the scene at all.
+It did not fix the black screen. Which retires the whole line: seeing a
+`CTransition` update and concluding it was what covered the screen was an
+inference, not a measurement -- nothing ever showed it drawing. With its alpha
+now zero and its lifetime finite, the frame is still black on all 96 samples.
 
-Searching the four places that add scene objects turns up the mission's own, at
-`iMissionInternal.cpp:1535`, commented "darken screen in single player only" --
-but it adds a `SCENE_GAMMA_FADER`, and `CGammaFader` is a separate class that
-darkens through gamma correction rather than by drawing anything. Which would
-also explain the blue clear never reaching the readback: a gamma that maps
-everything to black does that without painting a single pixel.
+Seven readings of this bug, seven withdrawn. The pattern never varied: a fact
+from a measurement, a few steps of reading code, and the conclusion carried out
+with the weight of the fact. What is actually known is small and has not moved
+in a while:
 
-Except that this port's `SetGammaRamp` stores the ramp and applies it nowhere,
-so that path looks inert here -- and "looks" is exactly the word that has been
-wrong six times in this file. It needs measuring before it is believed.
+- the frame is black while 180 draws happen and the states, transforms and
+  textures all match a mission that renders
+- `Clear` runs, and its colour does not survive to the readback
+- nothing yet identified accounts for that
 
-The gamma thread closes by reading rather than measuring, and closes both ends
-at once: `CGraphicsEngine::SetGammaCorrectionValues` only records the numbers
-into members, and this port's `SetGammaRamp` only records the table. Neither
-half applies anything, so the fader darkens nothing here and the black screen
-is not its doing.
-
-Which leaves exactly one thread, and it is the one the measurements point at:
-a `CTransition` that updates more than a thousand times a run, was never
-started, and cannot have come from any entry point that was traced. Where it is
-constructed is the question, and it is a question rather than a theory.
-
-The obvious answer -- that the scene object factory hands back the wrong class
-for `SCENE_GAMMA_FADER`, which the mission does create at start -- is wrong on
-reading: the ids are 16, 17 and 18 and each is registered to its own class. If
-anything is confusing them it is at runtime, not in the source, and that is
-where a measurement would have to look.
-
-**Start there, and start by proving the instrument fires.** Six readings in this
-section were withdrawn, and the one that finally moved things forward was
-checking that the traces worked at all -- which showed `CTransition::Update`
-firing 1377 times while `Start` never fired once.
+The next attempt should find what covers the screen by *watching it get
+covered* -- reading the framebuffer back between draws until it goes black --
+rather than by reasoning about which object might be responsible.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

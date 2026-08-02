@@ -213,29 +213,23 @@ The trace was not the problem, though: a trace in that same file printed
 perfectly well during bring-up, so `DebugTrace` from `Common` does reach the
 log and the silence was real. `PlayOverInterface` genuinely does not run.
 
-Which leaves one way for a transition to exist without being created, and the
-code has it. `CTransition` declares serialisation and saves `fAlphaStart`,
-`fAlphaEnd`, `fAlpha` and `bInfinite`; `CScene` saves the list that holds it,
-`saver.Add( 49, &alwaysObjects )`. So the closing curtain -- opaque, infinite --
-goes into the scene's saved state and comes back when the next mission's scene
-is restored. No creation call, which is why the trace is silent, and no
-`CScene::Clear`, because the scene is deserialised rather than emptied.
+Serialisation was the next candidate -- `CTransition` saves `fAlpha` and
+`bInfinite`, `CScene` saves the list that holds it -- and it is wrong too. A
+trace on that path printed nothing across a whole run either.
 
-That is a hypothesis, and it is labelled one. But it is the first in this chase
-that contradicts none of the measurements: the frame painted over, the
-transition opaque and never expiring, the creation site quiet, the clear quiet.
-Proving it means catching the deserialisation restoring an `alwaysObjects` entry
-with `bInfinite` set.
+Which leaves a plain contradiction, and it is more useful written down than
+explained away:
 
-What is measured and stands:
+- `CTransition::Update` prints, so a transition exists and is being updated,
+  opaque, infinite, never expiring
+- `PlayOverInterface` does not print, and it is the only place one is created
+- `CTransition::operator&` does not print, so it is not coming from saved state
 
-- the frame is painted over, not left empty (the blue-clear test)
-- the painter is a `CTransition`, opaque, infinite, never expiring
-- it is not created by `PlayOverInterface` in a run that shows the bug
-- `CScene::Clear`, which would drop it, does not run in that run either
-
-Where it is created is the next thing to find, and finding it is a search
-through the other modules rather than another guess about this one.
+Three traces, two silent, and the object is there regardless. One of them is
+lying, and the next step is not a seventh theory -- it is proving that each
+trace fires at all before anything is concluded from its silence. Twice in this
+chase a trace was budgeted to a fixed number of lines and had quietly spent it,
+which looks exactly like this.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

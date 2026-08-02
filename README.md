@@ -173,14 +173,19 @@ that duration. So the transition is added to the scene whatever the state of
 the Bink replacement, and it begins **fully opaque**. A screen is black until
 the fade advances.
 
-Which makes the suspect a clock rather than a renderer. The curtain is timed,
-and the call beside it disables message processing and schedules its return for
-`timeGetTime() + length` -- and `timeGetTime` is Win32, replaced in this port.
-A fade that never advances stays at opaque, and that is a black screen over a
-frame that drew perfectly well underneath.
+A fade that never advances stays opaque, and that is a black screen over a frame
+that drew perfectly well underneath. It explains every measurement in this chase
+rather than one of them.
 
-Not proven. But it is the first lead in this chase that explains every
-measurement rather than one of them.
+The clock was the obvious suspect and it checks out: `timeGetTime` here is
+`steady_clock` in milliseconds truncated to 32 bits -- monotonic, counting from
+boot, the same shape and the same width as the Win32 original, and it cannot
+return the zero that `CTransition::Update` uses as its "not started" sentinel.
+
+So the fade is the mechanism and the clock is not the reason. What remains to
+check is whether the curtain is ever removed: `RemoveTransition` deletes scene
+object 0 of whatever scene the *new* screen holds, and a curtain left in the
+old one has nothing to do with that index.
 
 Both switches stay in the build and are off unless asked for:
 

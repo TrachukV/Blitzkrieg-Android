@@ -150,6 +150,8 @@ struct SDevice : public IDirect3DDevice8
 
     D3DMATRIX matWorld;
     SGLCache  cache;
+    int       nDrawInFrame;
+    int       nFrameIndex;
 
     // fixed-function lighting state
     enum { MAX_LIGHTS = 4 };
@@ -311,6 +313,14 @@ struct SDevice : public IDirect3DDevice8
     HRESULT STDCALL BeginScene() override
     {
         EnsureProgram();
+        // The frame boundary, so a trace can name a draw by its place in the
+        // frame. Sampling every N-th draw compares whatever happened to land
+        // there, and the engine draws terrain and meshes in a fixed order --
+        // so one run's sample was terrain and another's a mesh, which carry
+        // different world matrices by design. Comparing draw 0 with draw 0
+        // compares the same pass.
+        nDrawInFrame = 0;
+        ++nFrameIndex;
         return D3D_OK;
     }
     HRESULT STDCALL EndScene() override { return D3D_OK; }
@@ -394,6 +404,8 @@ SDevice::SDevice()
       pIndices( 0 ), nBaseVertexIndex( 0 ), dwFVF( 0 ), nVertexArray( 0 )
 {
     g_pLiveDevice = this;
+    nDrawInFrame = 0;
+    nFrameIndex = 0;
     memset( &present, 0, sizeof( present ) );
     memset( renderStates, 0, sizeof( renderStates ) );
     memset( pStageTexture, 0, sizeof( pStageTexture ) );
@@ -1047,14 +1059,15 @@ void SDevice::ApplyState()
         // What the draws are actually being handed. A frame that is busy and
         // black is either drawing somewhere off screen or drawing nothing that
         // survives the transform, and these two numbers tell which.
-        static int nSeen = 0;
-        if ( ( ++nSeen % 4000 ) == 0 )
+        const int nThisDraw = nDrawInFrame++;
+        if ( ( nFrameIndex % 300 ) == 0 && nThisDraw < 3 )
         {
             // The three separately: a sign that flips in the combined matrix
             // came from one of them, and knowing which is the whole question.
             __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
-                "draw state: world %.4f %.4f %.4f | view %.4f %.4f %.4f | "
+                "draw %d of the frame: world %.4f %.4f %.4f | view %.4f %.4f %.4f | "
                 "proj %.5f %.5f %.5f | combined %.5f %.5f",
+                nThisDraw,
                 matWorld.m[0][0], matWorld.m[1][1], matWorld.m[2][2],
                 matView.m[0][0], matView.m[1][1], matView.m[2][2],
                 matProjection.m[0][0], matProjection.m[1][1], matProjection.m[2][2],

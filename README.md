@@ -141,25 +141,25 @@ then loads, runs its script and holds 60 fps at 181 draws a frame, and the
 screen is black: 96 of 96 sampled pixels, read out of the framebuffer itself
 rather than through a screenshot.
 
-Measured, and the first reading of that measurement was wrong. Logging the
-combined matrix showed its diagonal changing sign between the two missions, and
-I wrote that down as the projection being mirrored. Splitting the three matrices
-apart says otherwise:
+Measured three times, and the first two readings were wrong -- both because
+they compared different things and called the difference a finding.
 
-    mission 1   view 0.7071 0.3536 0.5000   proj 0.00195 0.00260 -0.00010
-    mission 2   view 0.7071 0.3536 0.5000   proj 0.00195 0.00260 -0.00010
+Sampling every N-th draw compares whatever happened to land there, and the
+engine draws the interface and the world in a fixed order, so one run's sample
+was one pass and the other's another. Naming a draw by its place in the frame
+fixes that. Comparing draw 0 with draw 0:
 
-The view and the projection are identical. What differs is the world matrix,
-which carries a rotation of about 87 degrees in the second mission where the
-first had identity -- and the sign I had read off the combined diagonal was that
-rotation, not a mirror. A rotated matrix says nothing useful through its
-diagonal alone.
+    mission 1   world 1 1 1   view 1 -1 -9727   proj 0.00195 0.00260 -0.00010
+    mission 2   world 1 1 1   view 1 -1 -9727   proj 0.00195 0.00260 -0.00010
 
-That is still not a diagnosis. The trace samples every four-thousandth draw, so
-one mission's sample may have landed on terrain and the other's on a mesh, and
-those carry different world matrices by design. The next measurement has to
-compare like with like -- the same pass in both runs -- before anything is
-concluded from it.
+Identical to the last digit. Whatever makes the second mission black, it is not
+the transforms, and the two earlier claims in this file that it was have been
+withdrawn.
+
+What is not yet compared is the world pass: draws 0 to 2 are the interface, and
+the terrain and units come later in the frame. The same trace at a later fixed
+index is the next measurement, and it is a measurement rather than a suspicion,
+which is the whole lesson of the three before it.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

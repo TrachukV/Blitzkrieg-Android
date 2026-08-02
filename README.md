@@ -277,7 +277,19 @@ diffuse is the diffuse -- black, with whatever alpha the vertex carries. The
 screen is black, so the alpha arriving at the blend is opaque when it should be
 clear.
 
-The next measurement is one value: the diffuse colour of that draw.
+And that value, read:
+
+    untextured quad at draw 180: diffuse b=0 g=0 r=0 a=255
+
+Black, and fully opaque, and present only in the second mission. With
+SRCALPHA/INVSRCALPHA blending an alpha of 255 is a solid fill, and the alpha
+test at reference 1 lets it through. So the frame is covered by an opaque black
+full-screen quad -- measured, not inferred.
+
+It is also **not** the `CTransition` given a constructor earlier the same day:
+that one's alpha would be zero. Whatever draws this is something else, and it is
+now described exactly rather than guessed at -- the frame's only untextured
+draw, last in order, opaque black, absent from the mission that renders.
 
 One warning, learned twice in one sitting: every one of these switches has to be
 **re-read**, not cached on the first draw of the run. A cached one cannot be

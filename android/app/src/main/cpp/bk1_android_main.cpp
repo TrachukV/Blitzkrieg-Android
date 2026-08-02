@@ -12,6 +12,7 @@
 #include "bk1_android_keys.h"
 #include "bk1_touch_pick.h"
 #include "bk1_touch_panel.h"
+#include "bk1_immersive.h"
 #include <sys/system_properties.h>
 
 // Defined in compat/bk1_d3d8_device.cpp, at global scope: how long the frame
@@ -341,6 +342,11 @@ void Perform( const NBk1Touch::SAction &action )
         break;
     case NBk1Touch::ACTION_WHEEL:
         Bk1PushInputEvent( BK1_INPUT_MOUSE, DIMOFS_Z, (DWORD)action.nX );
+        break;
+    // The ground travels with the finger. Straight to the camera rather than
+    // through the arrow keys, which advanced it at a key's repeat rate.
+    case NBk1Touch::ACTION_PAN:
+        Bk1ScrollCameraBy( (float)action.nX, (float)action.nY );
         break;
     case NBk1Touch::ACTION_SCROLL_LEFT:
         Bk1PushInputEvent( BK1_INPUT_KEYBOARD, DIK_LEFT, action.nX ? 0x80 : 0 );
@@ -714,6 +720,7 @@ void HandleCommand( android_app *pApp, int32_t nCommand )
     case APP_CMD_INIT_WINDOW:
         if ( pApp->window != 0 )
             CreateSurface( pState );
+        Bk1GoImmersive( pApp->activity );
         break;
 
     case APP_CMD_TERM_WINDOW:
@@ -722,6 +729,9 @@ void HandleCommand( android_app *pApp, int32_t nCommand )
 
     case APP_CMD_GAINED_FOCUS:
         Bk1SoundSetSuspended( false );
+        // A swipe from the edge brings the bars back and nothing puts them away
+        // again, so this is asked for afresh every time focus returns.
+        Bk1GoImmersive( pApp->activity );
         break;
 
     case APP_CMD_WINDOW_RESIZED:

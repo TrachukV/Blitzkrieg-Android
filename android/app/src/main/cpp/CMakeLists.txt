@@ -278,6 +278,7 @@ add_library( blitzkrieg SHARED
     bk1_game_startup.cpp
     bk1_touch_gestures.cpp
     bk1_touch_panel.cpp
+    bk1_immersive.cpp
     bk1_module_registry.cpp
     ${COMPAT_SOURCES}
     ${ENGINE_SOURCES}

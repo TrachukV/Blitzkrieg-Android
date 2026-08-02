@@ -47,6 +47,14 @@ int Bk1GetGameSpeed( void );
 
 int Bk1IsMissionActive( void );
 
+// Moves the camera by a drag, in the engine's 1024x768 screen units.
+//
+// The touch layer used to scroll by holding the arrow keys, which scrolls at the
+// key's repeat rate -- the camera ratchets along instead of travelling with the
+// finger, and that is what made panning feel jerky. This offsets the camera's
+// own anchor instead, so the engine keeps doing the bounds and the smoothing.
+void Bk1ScrollCameraBy( float fScreenDX, float fScreenDY );
+
 // Command ids the touch panel issues. Kept as literals rather than including
 // the engine header, which drags in the whole of Misc/Basic.h and its MSVC
 // expectations; the guard below fails the build if the two ever disagree.

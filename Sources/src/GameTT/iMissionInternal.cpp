@@ -2523,6 +2523,39 @@ extern "C" int Bk1IsMissionActive()
 {
 	return g_pTouchMission != 0 ? 1 : 0;
 }
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Moves the camera by a finger's worth of drag.
+//
+// The touch layer used to scroll by holding the arrow keys down, which is how a
+// keyboard scrolls: the camera creeps at the key's repeat rate and stops and
+// starts with it, so dragging the map felt like ratcheting rather than moving.
+// A finger expects the ground to travel with it.
+//
+// Done by offsetting the camera's own anchor, so the engine's bounds, height
+// following and smoothing all still apply -- this only says where to look, it
+// does not re-implement looking.
+//
+// The view is a fixed isometric one, so screen axes map to world axes by a
+// constant. Dragging right must carry the ground right, which means the camera
+// goes the other way; hence the negation.
+extern "C" void Bk1ScrollCameraBy( float fScreenDX, float fScreenDY )
+{
+	if ( g_pTouchMission == 0 )
+		return;
+	ICamera *pCamera = GetSingleton<ICamera>();
+	if ( pCamera == 0 )
+		return;
+
+	// Tuned against the 1024x768 space the finger is reported in. One screen
+	// width of drag moves the view about one screen width of ground, which is
+	// what "the map follows my finger" means.
+	const float fWorldPerPixel = 0.09f;
+
+	CVec3 vAnchor = pCamera->GetAnchor();
+	vAnchor.x -= fScreenDX * fWorldPerPixel;
+	vAnchor.y -= fScreenDY * fWorldPerPixel;
+	pCamera->SetAnchor( vAnchor );
+}
 #endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CInterfaceMission::PickObjects( CPickVisObjList *pPickedObjects, const CVec2 &point, EObjGameType type, bool bVisible )

@@ -45,6 +45,12 @@ enum EActionKind
     ACTION_SCROLL_RIGHT,
     ACTION_SCROLL_UP,
     ACTION_SCROLL_DOWN,
+    // How far the finger moved since the last report, in engine pixels. The
+    // four above scroll by holding an arrow key, which advances the camera at
+    // the key's repeat rate: it ratchets rather than travels, and dragging the
+    // map felt jerky for that reason. This carries the movement itself, so the
+    // ground can keep up with the finger.
+    ACTION_PAN,
 };
 
 struct SAction

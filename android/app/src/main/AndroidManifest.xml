@@ -12,10 +12,14 @@
     <uses-feature android:glEsVersion="0x00030000" android:required="true" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="true" />
 
+    <!-- isGame is the older attribute and is still read; appCategory is the one
+         modern Android sorts by, and it is what makes the launcher, the battery
+         screen and Game Mode treat this as a game rather than an ordinary app. -->
     <application
         android:label="Blitzkrieg"
         android:hasCode="false"
         android:isGame="true"
+        android:appCategory="game"
         android:allowBackup="true"
         android:extractNativeLibs="true">
 

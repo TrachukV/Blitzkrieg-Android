@@ -259,20 +259,22 @@ int CRecogniser::Handle( EPhase phase, const SFinger *pFingers, size_t nFingers,
             // exactly why this is not left as a cursor drag.
             if ( bMovedPastSlop && !bLongPressFired )
             {
+                // The movement itself, every time it is reported. The four
+                // arrow-key scrolls this replaced only ever said "keep going
+                // left", so the camera advanced at the key's repeat rate and in
+                // steps of the slop threshold -- it ratcheted instead of
+                // following, which is what made panning feel jerky. Reported as
+                // a delta, the ground travels exactly as far as the finger.
                 const float fDeltaFromAnchorX = fX - fPanAnchorX;
                 const float fDeltaFromAnchorY = fY - fPanAnchorY;
-                nCount = SetScroll( pActions, nCount, SCROLL_LEFT,  ACTION_SCROLL_LEFT,
-                                    fDeltaFromAnchorX > fSlop );
-                nCount = SetScroll( pActions, nCount, SCROLL_RIGHT, ACTION_SCROLL_RIGHT,
-                                    fDeltaFromAnchorX < -fSlop );
-                nCount = SetScroll( pActions, nCount, SCROLL_UP,    ACTION_SCROLL_UP,
-                                    fDeltaFromAnchorY > fSlop );
-                nCount = SetScroll( pActions, nCount, SCROLL_DOWN,  ACTION_SCROLL_DOWN,
-                                    fDeltaFromAnchorY < -fSlop );
-                if ( fabsf( fDeltaFromAnchorX ) > fSlop )
+                if ( fDeltaFromAnchorX != 0.0f || fDeltaFromAnchorY != 0.0f )
+                {
+                    pActions[nCount++] = Make( ACTION_PAN,
+                                               (int)fDeltaFromAnchorX,
+                                               (int)fDeltaFromAnchorY );
                     fPanAnchorX = fX;
-                if ( fabsf( fDeltaFromAnchorY ) > fSlop )
                     fPanAnchorY = fY;
+                }
                 bPanning = true;
             }
         }

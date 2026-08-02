@@ -257,6 +257,17 @@ a `CTransition` that updates more than a thousand times a run, was never
 started, and cannot have come from any entry point that was traced. Where it is
 constructed is the question, and it is a question rather than a theory.
 
+The obvious answer -- that the scene object factory hands back the wrong class
+for `SCENE_GAMMA_FADER`, which the mission does create at start -- is wrong on
+reading: the ids are 16, 17 and 18 and each is registered to its own class. If
+anything is confusing them it is at runtime, not in the source, and that is
+where a measurement would have to look.
+
+**Start there, and start by proving the instrument fires.** Six readings in this
+section were withdrawn, and the one that finally moved things forward was
+checking that the traces worked at all -- which showed `CTransition::Update`
+firing 1377 times while `Start` never fired once.
+
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road
 after a mission is a test of the port and playing well enough to earn it is not.

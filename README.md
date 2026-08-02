@@ -329,10 +329,17 @@ this would be a window whose image is absent -- and with an unbound stage
 answering white, `MODULATE` leaves the diffuse alone: opaque black.
 
 That is a shape argument, not a measurement, and shape arguments are what the
-ten withdrawn readings above were made of. What would settle it is logging the
-identity of the element at the moment its texture comes up null, late in the
-frame -- and then why that image is present in the first mission and gone in the
-second.
+ten withdrawn readings above were made of. Tracing `CSimpleWindow::DrawBackground`
+for a full-screen rectangle printed nothing, so the quad does not come through
+that function -- one candidate eliminated, and the trace taken back out.
+
+This is where the investigation stopped. Seven instrumentation attempts in a row
+missed -- a cached switch, the same cache again, a limiter on the wrong counter,
+a limiter on the wrong draw, a log on one draw path of two, a compile error
+fixing that, and finally a trace in a function the draw does not pass through.
+Each cost a full cycle and each produced a silence indistinguishable from a
+finding. The bug is described exactly above; naming its owner needs a different
+approach than more traces from inside the engine.
 
 One warning, learned twice in one sitting: every one of these switches has to be
 **re-read**, not cached on the first draw of the run. A cached one cannot be

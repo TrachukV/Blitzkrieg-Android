@@ -2,6 +2,10 @@
 
 #include <time.h>
 
+#ifndef _MSC_VER
+#include "bk1_black_rect_probe.h"
+#endif
+
 #include "BaseList.h"
 #include "SaveLoadCommon.h"
 #include "CommonId.h"
@@ -37,7 +41,7 @@ void CInterfaceBaseList::FillListFromCurrentDir()
 	IUIListControl *pList = checked_cast<IUIListControl*>( pUIScreen->GetChildByID( 1000 ) );
 	NI_ASSERT( pList != 0 );
 	
-	//удаляем все items из ListControl
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ items пїЅпїЅ ListControl
 	for ( int i = pList->GetNumberOfItems() - 1; i >= 0; i-- )
 	{
 		pList->RemoveItem( i );
@@ -46,7 +50,7 @@ void CInterfaceBaseList::FillListFromCurrentDir()
 	// enumerate all available files and dirs
 	dirsList.clear();
 	filesList.clear();
-	std::vector< std::string > dirs;		//временное хранилище директорий
+	std::vector< std::string > dirs;		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	std::vector< std::string > files;
 
 	if ( bStorageFiles )
@@ -60,14 +64,14 @@ void CInterfaceBaseList::FillListFromCurrentDir()
 		{
 			const SStorageElementStats *pStats = pEnumerator->GetStats();
 			if ( strncmp( pStats->pszName, szCurrentDir.c_str(), szCurrentDir.size() ) )
-				continue;			//не равны
+				continue;			//пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 
-			//проверим, что справа нету вложенных директорий
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			std::string szCurrentName = pStats->pszName + szCurrentDir.size();
 			int nPos = szCurrentName.rfind( '\\' );
-			if ( nPos != std::string::npos )		//правее есть еще директории
+			if ( nPos != std::string::npos )		//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			{
-				//возьмем имя директории
+				//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				szCurrentName = szCurrentName.substr( 0, szCurrentName.find('\\') );
 				setOfDirs.insert( szCurrentName );
 				continue;
@@ -76,7 +80,7 @@ void CInterfaceBaseList::FillListFromCurrentDir()
 			nPos = szCurrentName.rfind( '.' );
 			if ( nPos == std::string::npos )
 			{
-				//это директория, добавляем ее в список директорий
+				//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				dirs.push_back( szCurrentName );
 			}
 			std::string szExtension = szCurrentName.substr( nPos );
@@ -84,7 +88,7 @@ void CInterfaceBaseList::FillListFromCurrentDir()
 			{
 				if ( szExtension == fileMasks[k].c_str() + 1 )
 				{
-					//совпадает маска файла, добавляем в список файлов
+					//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 					files.push_back( szCurrentName );
 				}
 			}
@@ -97,11 +101,11 @@ void CInterfaceBaseList::FillListFromCurrentDir()
 	}
 	else
 	{
-		//директории
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		NFile::EnumerateFiles( szCurrentDir.c_str(), "*.*", CGetAllDirsRelative(szCurrentDir.c_str(), &dirs), false );
 		//	std::sort( dirs.begin(), dirs.end() );
 		
-		//файлы
+		//пїЅпїЅпїЅпїЅпїЅ
 		switch ( nSortType )
 		{
 		case E_SORT_BY_NAME:
@@ -146,7 +150,7 @@ void CInterfaceBaseList::FillListFromCurrentDir()
 	
 	if ( szCurrentDir.size() > szTopDir.size() )
 	{
-		//добавляем директорию путь наверх
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		dirs.insert( dirs.begin(), ".." );
 	}
 	
@@ -157,7 +161,7 @@ void CInterfaceBaseList::FillListFromCurrentDir()
 		IUIListRow *pRow = pList->GetItem( i );
 		pRow->SetUserData( i );
 		
-		//установим имя директории
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		IUIContainer *pContainer = checked_cast<IUIContainer*> ( pRow->GetElement( 0 ) );
 		dirsList.push_back( dirs[i] );
 		std::wstring wszTemp;
@@ -166,7 +170,7 @@ void CInterfaceBaseList::FillListFromCurrentDir()
 		
 		IUIElement *pElement = pContainer->GetChildByID( 1 );
 		NI_ASSERT_T( pElement != 0, "Invalid list control name dialog, it should contain icon" );
-		pElement->SetState( 0 );			//директория
+		pElement->SetState( 0 );			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		
 		std::string szFullName = szCurrentDir;
 		szFullName += dirs[i];
@@ -182,18 +186,18 @@ void CInterfaceBaseList::FillListFromCurrentDir()
 		IUIListRow *pRow = pList->GetItem( nItemNumber );
 		pRow->SetUserData( nItemNumber );
 		
-		//установим имя файла
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 		IUIContainer *pContainer = checked_cast<IUIContainer*> ( pRow->GetElement( 0 ) );
 		filesList.push_back( files[i] );
-		//отрежем extension
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ extension
 		std::wstring wszTemp;
 		NStr::ToUnicode( &wszTemp, files[i].substr( 0, files[i].rfind( '.' ) ) );
 		pContainer->SetWindowText( 0, wszTemp.c_str() );
 		
 		IUIElement *pElement = pContainer->GetChildByID( 1 );
 		NI_ASSERT_T( pElement != 0, "Invalid list control name dialog, it should contain icon" );
-		pElement->SetState( 1 );			//файл
-		//TODO вместо 1 ставить соответствующее маске
+		pElement->SetState( 1 );			//пїЅпїЅпїЅпїЅ
+		//TODO пїЅпїЅпїЅпїЅпїЅпїЅ 1 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 
 		std::string szFullName = szCurrentDir;
 		szFullName += files[i];
@@ -209,7 +213,7 @@ void CInterfaceBaseList::FillListFromCurrentDir()
 
 	pList->InitialUpdate();
 	
-	//Определим текущий выделенный элемент
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	if ( !bSelected )
 	{
 		if ( pList->GetNumberOfItems() < nBeginSelItem )
@@ -238,7 +242,7 @@ void CInterfaceBaseList::StartInterface()
 	pUIScreen->Reposition( pGFX->GetScreenRect() );
 
 	IUIListControl *pList = checked_cast<IUIListControl*>( pUIScreen->GetChildByID( 1000 ) );
-	pList->Sort( nFirstSortColumn );		//сортируем по данному столбцу
+	pList->Sort( nFirstSortColumn );		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 	FillListFromCurrentDir();
 
@@ -262,30 +266,40 @@ bool CInterfaceBaseList::ProcessMessage( const SGameMessage &msg )
 	{
 		case IMC_OK:
 			{
-				//попробуем взять текущий selection из list control
+				//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ selection пїЅпїЅ list control
 				IUIElement *pElement = pUIScreen->GetChildByID( 1000 );		//should be List Control
 				IUIListControl *pList = checked_cast<IUIListControl*>( pElement );
-				
+#ifndef _MSC_VER
+				// With the selection now being set, this is the remaining
+				// question: does the button's command arrive here at all, and
+				// what does the handler see when it does.
+				Bk1TracePath( "ok-pressed",
+				              pElement == 0 ? "no child 1000" : ( pList == 0 ? "child is not a list" : "list found" ),
+				              pList != 0 ? pList->GetSelectionItem() : -999 );
+#endif
 				if ( IsIgnoreSelection() )
 				{
+#ifndef _MSC_VER
+					Bk1TracePath( "ok-pressed", "IsIgnoreSelection -> OnOk()", 0 );
+#endif
 					OnOk();
 					return true;
 				}
 
 				if ( !pList )
-					return true;			//не нашелся list control
-				int nSelItem = pList->GetSelectionItem();			//индекс в списке
+					return true;			//пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ list control
+				int nSelItem = pList->GetSelectionItem();			//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 				if ( nSelItem == -1 )
 					return true;
-				
+
 				IUIListRow *pSelRow = pList->GetItem( nSelItem );
-				int nSel = pSelRow->GetUserData();						//индекс в массиве
+				int nSel = pSelRow->GetUserData();						//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				if ( nSel < dirsList.size() )
 				{
-					//сменим текущую директорию
+					//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 					if ( dirsList[ nSel ] == ".." )
 					{
-						//поднимемся наверх
+						//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 						NI_ASSERT_T( !stack.empty(), "Popup stack is empty" );
 						nBeginSelItem = stack.back();
 						stack.pop_back();
@@ -324,7 +338,7 @@ bool CInterfaceBaseList::StepLocal( bool bAppActive )
 	//
 	const CVec2 vPos = pCursor->GetPos();
 	CInterfaceScreenBase::OnCursorMove( vPos );
-	if ( pUIScreen )		//в некоторых экранах pUIScreen нету
+	if ( pUIScreen )		//пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ pUIScreen пїЅпїЅпїЅпїЅ
 		pUIScreen->Update( pTimer->GetAbsTime() );
 	return true;
 }

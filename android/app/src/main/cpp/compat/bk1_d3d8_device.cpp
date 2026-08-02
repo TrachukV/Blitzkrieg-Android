@@ -645,6 +645,23 @@ HRESULT STDCALL SDevice::UpdateTexture( IDirect3DBaseTexture8 *pSource,
 HRESULT STDCALL SDevice::Clear( DWORD, const void *, DWORD dwFlags, D3DCOLOR color,
                                 float fZ, DWORD dwStencil )
 {
+    // Splits the black-mission question in half without sampling anything.
+    // Clearing to a colour nothing in this game paints with: if the frame comes
+    // out that colour, nothing drew at all; if it comes out black, something
+    // painted over everything. Comparing states could not tell those apart.
+    //   adb shell setprop debug.blitzkrieg.clearcolour 1
+    {
+        static int nWanted = -1;
+        if ( nWanted < 0 )
+        {
+            char szValue[PROP_VALUE_MAX] = { 0 };
+            __system_property_get( "debug.blitzkrieg.clearcolour", szValue );
+            nWanted = ( szValue[0] != 0 && szValue[0] != '0' ) ? 1 : 0;
+        }
+        if ( nWanted != 0 )
+            color = 0xFF004080;              // a blue no unit or terrain uses
+    }
+
     GLbitfield nMask = 0;
     if ( dwFlags & D3DCLEAR_TARGET )
     {

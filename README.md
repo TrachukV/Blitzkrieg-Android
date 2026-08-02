@@ -152,27 +152,29 @@ Measured four times. What is ruled out, so nobody walks these again:
 - **Texture name reuse** after `glDeleteTextures`, for the same reason.
 - **The clear.** Both missions clear black with the same flags before drawing.
 
-Two more measurements after those: at the same fixed positions, the depth test,
-the blend, the alpha test, the cull mode and the bound texture -- its size, its
-byte count, its GL name, its uploaded flag -- are identical in both missions
-as well.
+Then a measurement that splits the question instead of comparing samples.
+Forcing the clear to a blue nothing in the game paints with:
 
-So everything this trace can see matches, and one frame draws while the other
-is black. The honest reading is that the trace is not yet looking at the pass
-that differs: the sampled textures are 256x512, 32x16, 128x128, which are
-interface and font sizes rather than terrain. Fixed draw positions compare like
-with like only if the frame has the same shape in both runs, and 180 draws
-against 181 says it does not, quite.
+    mission 1   #000607, #00060d   the blue shows through the dark
+    mission 2   #000000 on 96 of 96 samples
 
-The trace is off unless asked for and stays in the build, because it is where
-the next attempt starts:
+The clear never reaches the screen in the second mission, and `Clear` is called
+in both with the same flags -- so something paints the whole frame black over
+it. That is a full-screen quad, and the likeliest one is the transition fade:
+the game darkens the screen when a mission ends, and on the second mission it
+never comes back up.
+
+That last part is a hypothesis. What is proven is that the frame is painted
+black rather than left unpainted, which is the half of the question six earlier
+measurements could not answer, because comparing state can never tell "nothing
+drew" from "something drew black".
+
+Both switches stay in the build and are off unless asked for:
 
 ```bash
-adb shell setprop debug.blitzkrieg.draws 1
+adb shell setprop debug.blitzkrieg.draws 1        # what each draw is handed
+adb shell setprop debug.blitzkrieg.clearcolour 1  # clear to blue, not black
 ```
-
-Two of the four readings were published here as findings before being checked
-against a like-for-like comparison. They are withdrawn.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

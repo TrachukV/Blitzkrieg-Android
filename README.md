@@ -200,14 +200,19 @@ What paints it is a `CTransition`: a full-screen quad whose alpha the trace
 caught at 255 of 255, fifty-one seconds into a five-hundred millisecond fade,
 still reporting itself alive because it was started infinite.
 
-Where that transition comes from is **not** established, and two earlier
-readings in this file said otherwise. `PlayOverInterface` is the only place in
-`Common/` or `GameTT/` that creates one -- so the reasoning went, and from there
-to which screen ought to remove it and which scene it hangs in. Then tracing
-that creation site and `CScene::Clear` together printed nothing at all across a
-whole run, with the screen black and the transition demonstrably updating. So
-the transition is made somewhere else, and everything downstream of that
-assumption is withdrawn.
+Where that transition comes from took three readings, two of them wrong, and the
+correction of the second was wrong as well.
+
+Tracing the creation site and `CScene::Clear` together printed nothing across a
+whole run, with the screen black and the transition demonstrably updating -- so
+I withdrew the creation site. Then searching the entire tree rather than two
+directories: `Common/InterfaceScreenBase.cpp:164` is the *only* place a
+transition is created anywhere in the engine.
+
+Which makes the silent trace the thing to doubt, not the code path. An absent
+line means the trace did not fire, and that is not the same as the event not
+happening -- a mistake made twice already in this chase with traces that were
+budgeted to a fixed count and had spent it.
 
 What is measured and stands:
 

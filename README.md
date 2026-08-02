@@ -529,11 +529,23 @@ aborting. The null is still a real defect; our build is only what turns it into
 a crash.
 
 The null arrives through `AIUpdateNewObjects`, whose queue is fed from two
-places: the current complex updates, and suspended updates recalled later. The
-recalled branch is the one worth measuring first, since a load restores state
-around it -- but that is a guess about which branch, and it is written here as
-one. Manual Save Game likewise accepts a name and writes no file, and has not
-been traced yet.
+places: the current complex updates, and suspended updates recalled later. This
+file used to guess that the recalled branch was responsible. It was measured,
+and the guess was wrong -- across the load the counts read:
+
+    recalled      n=0
+    complex       n=1235
+    complex-NULL  n=107
+
+The recalled branch contributes nothing. 107 of the 1235 objects the complex
+branch reports come out with a null `pObj`, and `pObj` is set by the object
+itself, down in `GetPlacement`. Four classes assign it -- `CAIUnit`,
+`CExistingObject`, `CAviation`, `CShell` -- and `CFormation` sets it directly.
+Which type accounts for the 107 is the next measurement: log `dbID` for the null
+entries and the database names them.
+
+Manual Save Game likewise accepts a name and writes no file, and has not been
+traced yet.
 
 Binding the tick to a tap on its own would only make the abort reachable by
 finger, which is why neither is patched ahead of the other.

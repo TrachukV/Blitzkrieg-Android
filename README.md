@@ -431,11 +431,39 @@ owns turret, turret owns unit -- a cycle. Releasing it from inside the owner's
 destructor reaches an object whose vtable has already dropped to `CTurret`,
 where seven accessors are pure.
 
-Not patched. The right repair is to make the turret's back-pointer non-owning,
-but `pOwner` is serialized and read across AILogic, so changing what keeps a
-unit alive needs testing far wider than the single path reproducible here.
+The disassembly settles it at instruction level. `~CUnitTurret()+60` is exactly
+the `blr` below:
+
+    ldr  x0, [x0, #96]                 ; pOwner
+    str  x8, [x19]                     ; vtable already lowered to CTurret
+    bl   CastToRefCountImpl<CAIUnit>
+    ldr  x8, [x0]                      ; the *owner's* vtable
+    ldr  x8, [x8, #8]                  ; second slot: Release
+    blr  x8                            ; +60 -- aborts here
+
+So the turret releases its reference and the call goes through the vtable of the
+owner, which is itself mid-destruction and already lowered to a base where
+`Release` is still pure. The cycle is not an inference about the ownership
+graph; it is what the instructions do.
+
+Not patched, and the reason is now checked rather than assumed. The textbook
+repair -- make the back-pointer non-owning -- is not free here, because
+`TurretSerialize.cpp` saves it:
+
+    saver.Add( 2, &pOwner );
+
+Changing its type changes the save format, so every existing save stops loading.
+For a port whose whole point is behaving as the original does, breaking saved
+games to fix a crash on one menu button is the wrong trade without a migration.
+
 Giving the pure virtuals safe defaults would silence the abort and leave the
 cycle in place, which is worse than a known crash.
+
+The repair that stays compatible is to break the cycle *before* the vtable
+lowers -- detach the turret's owner while the unit is still fully typed, on the
+teardown path that `NGlobalObjects::Clear` runs. Finding the right hook for that
+is unit-lifecycle work, not a one-line change, and it is where the next attempt
+should start.
 
 End Mission on its own tears down cleanly on the same build. The fault is
 specific to restart, which queues `MISSION_COMMAND_MISSION` while the old

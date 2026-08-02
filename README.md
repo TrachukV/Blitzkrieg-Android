@@ -209,10 +209,23 @@ I withdrew the creation site. Then searching the entire tree rather than two
 directories: `Common/InterfaceScreenBase.cpp:164` is the *only* place a
 transition is created anywhere in the engine.
 
-Which makes the silent trace the thing to doubt, not the code path. An absent
-line means the trace did not fire, and that is not the same as the event not
-happening -- a mistake made twice already in this chase with traces that were
-budgeted to a fixed count and had spent it.
+The trace was not the problem, though: a trace in that same file printed
+perfectly well during bring-up, so `DebugTrace` from `Common` does reach the
+log and the silence was real. `PlayOverInterface` genuinely does not run.
+
+Which leaves one way for a transition to exist without being created, and the
+code has it. `CTransition` declares serialisation and saves `fAlphaStart`,
+`fAlphaEnd`, `fAlpha` and `bInfinite`; `CScene` saves the list that holds it,
+`saver.Add( 49, &alwaysObjects )`. So the closing curtain -- opaque, infinite --
+goes into the scene's saved state and comes back when the next mission's scene
+is restored. No creation call, which is why the trace is silent, and no
+`CScene::Clear`, because the scene is deserialised rather than emptied.
+
+That is a hypothesis, and it is labelled one. But it is the first in this chase
+that contradicts none of the measurements: the frame painted over, the
+transition opaque and never expiring, the creation site quiet, the clear quiet.
+Proving it means catching the deserialisation restoring an `alwaysObjects` entry
+with `bInfinite` set.
 
 What is measured and stands:
 

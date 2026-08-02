@@ -212,9 +212,16 @@ Which leaves one line:
 void RemoveTransition() { if ( pScene ) pScene->RemoveSceneObject( 0 ); }
 ```
 
-If `pScene` is null when the new screen starts, the lift is skipped in silence
-and the curtain stays. That is the last link to test, and it is one line rather
-than a phenomenon.
+Measured, and it is not the guard. Tracing that line printed nothing at all,
+through a whole run: `RemoveTransition` is never reached. Neither path to it
+runs after a mission ends -- `CInterfaceScreenBase::StartInterface`, which every
+screen overrides without calling the base, nor `OpenCurtains`, which the screen
+after a mission does not call.
+
+So the curtain is left up because nobody asks for it to come down. That is the
+end of the diagnosis and the beginning of the fix, and the fix is a decision
+about which screen should be lifting it rather than a defect to correct in
+place.
 
 Both switches stay in the build and are off unless asked for:
 

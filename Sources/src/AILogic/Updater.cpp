@@ -569,7 +569,13 @@ void CUpdater::GetNewStaticObjects( struct SNewUnitInfo **pObjects, int *pnLen )
 		for ( int i = nAfterRecalled; i < *pnLen; ++i )
 		{
 			if ( (*pObjects)[i].pObj == 0 )
+			{
+				// The database index names the type; only the first few are needed
+				// and 107 lines of the same thing help nobody.
+				if ( nNullLoop < 8 )
+					Bk1TracePath( "null-dbid", "", (int)(*pObjects)[i].dbID );
 				++nNullLoop;
+			}
 		}
 		Bk1TracePath( "complex", "", *pnLen - nAfterRecalled );
 		if ( nNullLoop != 0 )

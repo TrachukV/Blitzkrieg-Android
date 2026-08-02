@@ -287,9 +287,19 @@ test at reference 1 lets it through. So the frame is covered by an opaque black
 full-screen quad -- measured, not inferred.
 
 It is also **not** the `CTransition` given a constructor earlier the same day:
-that one's alpha would be zero. Whatever draws this is something else, and it is
-now described exactly rather than guessed at -- the frame's only untextured
-draw, last in order, opaque black, absent from the mission that renders.
+that one packs its alpha into the colour and would now be zero. Whatever draws
+this is something else, and it is described exactly rather than guessed at --
+the frame's only untextured draw, last in order, opaque black, absent from the
+mission that renders.
+
+Full-screen coloured rectangles come from `IGFX::DrawRects`, and its callers are
+enumerable: a dozen UI elements, `Scene/SquadVisObj.cpp`, and the transition
+that the alpha rules out. Picking one from that list by its name would be the
+tenth theory in this section; the nine before it were all withdrawn.
+
+The measurement that would settle it is the rectangle's own coordinates, logged
+from the same place the colour was. That names the owner by its geometry instead
+of by a guess.
 
 One warning, learned twice in one sitting: every one of these switches has to be
 **re-read**, not cached on the first draw of the run. A cached one cannot be

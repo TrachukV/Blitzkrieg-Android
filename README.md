@@ -213,23 +213,28 @@ The trace was not the problem, though: a trace in that same file printed
 perfectly well during bring-up, so `DebugTrace` from `Common` does reach the
 log and the silence was real. `PlayOverInterface` genuinely does not run.
 
-Serialisation was the next candidate -- `CTransition` saves `fAlpha` and
-`bInfinite`, `CScene` saves the list that holds it -- and it is wrong too. A
-trace on that path printed nothing across a whole run either.
+Then the tool itself was checked, which is what should have come first. Entry
+traces in all four places at once, counted over one run:
 
-Which leaves a plain contradiction, and it is more useful written down than
-explained away:
+    CTransition::Update                  1377
+    CTransition::Start                      0
+    CTransition::operator&                  0
+    CInterfaceScreenBase::PlayOverInterface 0
 
-- `CTransition::Update` prints, so a transition exists and is being updated,
-  opaque, infinite, never expiring
-- `PlayOverInterface` does not print, and it is the only place one is created
-- `CTransition::operator&` does not print, so it is not coming from saved state
+The tracing works -- `Update` fires more than a thousand times. And `Start`
+never runs at all.
 
-Three traces, two silent, and the object is there regardless. One of them is
-lying, and the next step is not a seventh theory -- it is proving that each
-trace fires at all before anything is concluded from its silence. Twice in this
-chase a trace was budgeted to a fixed number of lines and had quietly spent it,
-which looks exactly like this.
+So the thing covering the screen is a `CTransition` that was **never started**.
+It is not a curtain that failed to lift; it is an object sitting in whatever
+state it was constructed in. `Start` is what sets `fAlphaStart`, `fAlphaEnd` and
+`timeStart`, and without it `Update` measures elapsed time from a value that was
+never set, gets an enormous ratio, and clamps to full opacity -- which is exactly
+the "alpha 255 of 255, fifty-one seconds into a five-hundred millisecond fade"
+that started this.
+
+Six earlier readings all asked why the curtain was not lifted. The question is
+how an unstarted transition gets into the scene at all, and that is a different
+search.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

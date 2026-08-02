@@ -13,29 +13,29 @@ class CFormation;
 class CArtillery;
 class CEntrenchmentTankPit;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// просто военная машинка, базовый класс
+// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 class CMilitaryCar : public CAIUnit
 {
 	DECLARE_SERIALIZE;
 
 	CGDBPtr<SMechUnitRPGStats> pStats;
 
-	// орудийные стволы
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	CPtr<CUnitGuns> pGuns;
 
-	// вращающаяся пушка
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	std::vector< CObj<CTurret> > turrets;
 	
-	// пассажиры
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	std::list<CPtr<CSoldier> > pass;
 	
 	CPtr<CFormation> pLockingUnit;
 	float fDispersionBonus;
-	NTimer::STime timeLastHeal;						// последнее время лечения
+	NTimer::STime timeLastHeal;						// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	NTimer::STime lastResupplyMorale;			// last morale addition time
 	
 	//
-	// координаты пассажира n
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ n
 	const CVec2 GetPassengerCoordinates( const int n );
 protected:
 	virtual void InitGuns();
@@ -43,17 +43,21 @@ protected:
 	virtual class CUnitGuns* GetGuns() { return pGuns; }
 	virtual void PrepareToDelete();
 public:
-	// эту функцию переопределяем в подклассах
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual void Init( const CVec2 &center, const int z, const SUnitBaseRPGStats *pStats, const float fHP, const WORD dir, const BYTE player, const WORD id, EObjVisType eVisType, const int dbID );
 
 	void Lock( class CFormation *_pLockingUnit );
 	bool IsLocked() const { return pLockingUnit != 0; }
 	void Unlock() { pLockingUnit = 0; }
-	
+#ifndef _MSC_VER
+	// Defined in Technics.cpp: CTurret is only forward-declared here.
+	virtual void Bk1DetachTurretOwners();
+#endif
+
 	virtual const SUnitBaseRPGStats* GetStats() const { return pStats; }	
 	virtual IStatesFactory* GetStatesFactory() const =0;
 
-	// расстояние от центра до точки, откуда можно напрямую бежать к entrance point
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ entrance point
 	virtual float GetDistanceToLandPoint() const;
 
 	virtual BYTE GetNAvailableSeats() const { return pStats->nPassangers - pass.size(); }
@@ -63,7 +67,7 @@ public:
 
 	const CVec2 GetEntrancePoint() const;
 
-	// удалить всех пассажиров
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual void ClearAllPassengers();
 	virtual void DelPassenger( const int n );
 	virtual void DelPassenger( class CSoldier *pSoldier );
@@ -93,7 +97,7 @@ public:
 
 	virtual bool IsMech() const { return true; }
 
-	// бонусы
+	// пїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual const float GetDispersionBonus() const;
 	virtual const void SetDispersionBonus( const float fBonus ) { fDispersionBonus = fBonus; }
 
@@ -114,14 +118,14 @@ public:
 	virtual CFormation * GetTowedArtilleryCrew()  { return 0; }
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// может сидеть в TankPit. при любой команде, которая может привести к движению этого юнита
-// нужно сначала выполнить команду выхода из TankPit.
+// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ TankPit. пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ TankPit.
 class CTank : public CMilitaryCar
 {
 	OBJECT_COMPLETE_METHODS( CTank );
 	DECLARE_SERIALIZE;
 
-	bool bTrackDamaged; // true если у танка перебита гусеница
+	bool bTrackDamaged; // true пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	
 	WORD wDangerousDir;
 	bool bDangerousDirSet;
@@ -139,7 +143,7 @@ public:
 	virtual IStatesFactory* GetStatesFactory() const;
 
 	bool IsTrackDamaged() const { return bTrackDamaged; }
-	void RepairTrack() ;// починили гусеницу
+	void RepairTrack() ;// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 	virtual void TakeDamage( const float fDamage, const SWeaponRPGStats::SShell *pShell, const int nPlayerOfShoot, CAIUnit *pShotUnit );
 	virtual bool CanMove() const;
@@ -167,33 +171,33 @@ public:
 	virtual bool CanMoveAfterUserCommand() const;
 };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// транспорт, перевозит марериальные ресурсы, 
-// может цеплять пушки
+// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, 
+// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 class CAITransportUnit : public CMilitaryCar
 {
 	OBJECT_COMPLETE_METHODS( CAITransportUnit );
 	DECLARE_SERIALIZE;
 
-	float fResursUnits; // количество RU, которые есть у грузовичка
+	float fResursUnits; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ RU, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	CPtr<CArtillery> pTowedArtillery;
 	CPtr<CAIUnit> pMustTow;			// artillery, that this truck must tow (for general intendant)
 
 	typedef std::list< CPtr<CFormation> > CExternLoaders;
-	CExternLoaders externLoaders; // дошоняющие гранспорт грузчики
+	CExternLoaders externLoaders; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	CPtr<CFormation> pTowedArtilleryCrew;	// when artillery is attached the crew.
 
-	// для группового подцепления артиллерии, 
-	// выбирает юнит из нашей группы, ближайший к артиллерии и возвращает его nUniqueId
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, 
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ nUniqueId
 	const int GetNUnitToTakeArtillery( bool bPlaceInQueue, CAIUnit *pUnitToTake );
 public:
 	void Init( const CVec2 &center, const int z, const SUnitBaseRPGStats *pStats, const float fHP, const WORD dir, const BYTE player, const WORD id, EObjVisType eVisType, const int dbID );
 
-	// для процесса ремонта. грузчики расходуют RU в процессе починки и перезарядки
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ RU пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	float GetResursUnitsLeft() const { return fResursUnits; }
 	void SetResursUnitsLeft( float _fResursUnits );
 	void DecResursUnitsLeft( float dRU );
 
-	// буксировка
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual bool IsTowing() const;
 	virtual class CArtillery* GetTowedArtillery() const { return pTowedArtillery; }
 	void SetTowedArtillery( class CArtillery *pTowedArtillery);

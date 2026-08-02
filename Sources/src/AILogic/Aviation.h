@@ -84,7 +84,7 @@ public:
 	}
 	virtual interface ISmoothPath* GetCurPath() const;
 
-	// ну и уродство
+	// пїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual const WORD GetID() const { NI_ASSERT_T( false, "WRONG CALL"); return 0; }
 	virtual const float GetRotateSpeed() const { NI_ASSERT_T( false, "WRONG CALL"); return 0; }
 	virtual const float GetMaxSpeedHere( const CVec2 &point, bool bAdjust = true ) const { NI_ASSERT_T( false, "WRONG CALL"); return 0; }
@@ -143,13 +143,13 @@ class CAviation : public CAIUnit, public IAviationUnit
 	
 	CGDBPtr<SMechUnitRPGStats> pStats;
 
-	// орудийные стволы
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	CPtr<CUnitGuns> pGuns;
 
-	// вращающаяся пушка
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	std::vector< CObj<CTurret> > turrets;
 
-	// для формации самолетов
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	CPtr<CPlanesFormation> pFormation;
 	CVec2 vPlanesShift;										// shift in formation
 
@@ -158,11 +158,11 @@ class CAviation : public CAIUnit, public IAviationUnit
 	CVec3 vNormal, vFormerNormal;
 	float fFormerCurvatureSign;
 
-	float fTiltAnge;											//угол наклона при повороте
-	NTimer::STime timeLastTilt;						// пследний расчет угла наклона
+	float fTiltAnge;											//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	NTimer::STime timeLastTilt;						// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
-	CVec2 vSpeedHorVer;										//разложение скорости на горизонтальную и вертикальную составляющие
-	CVec2 vFormerHorVerSpeed;							//для пикирующих бомберов
+	CVec2 vSpeedHorVer;										//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	CVec2 vFormerHorVerSpeed;							//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	CVec2 vFormerDir;
 	
 	int /*SUCAviation::AIRCRAFT_TYPE*/ eAviationType;
@@ -175,9 +175,13 @@ public:
 
 	virtual int GetMovingType() const ;
 	virtual void Init( const CVec2 &center, const int z, const SUnitBaseRPGStats *pStats, const float fHP, const WORD dir, const BYTE player, const WORD id, EObjVisType eVisType, const int dbID );
+#ifndef _MSC_VER
+	// Defined in Aviation.cpp: CTurret is only forward-declared here.
+	virtual void Bk1DetachTurretOwners();
+#endif
 
 	// IAviationUnit implementation
-	// для вертикальной скорости
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual const CVec3 &GetNewPoint() const { NI_ASSERT_T(false, "wrong call"); return lastPos; }
 	virtual const CVec2 &GetSpeedHorVer() const { return vSpeedHorVer; }
 	void SetSpeedHorVer( const class CVec2 &_vSpeedHorVer){vSpeedHorVer=_vSpeedHorVer;}
@@ -197,7 +201,7 @@ public:
 	virtual class CTurret* GetTurret( const int nTurret ) const { return turrets[nTurret]; }
 	virtual const int GetNTurrets() const { return turrets.size(); }
 	
-	// для стрельбы
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual void GetShotInfo( struct SAINotifyMechShot *pShotInfo ) const { pShotInfo->typeID = GetShootAction(); pShotInfo->pObj = const_cast<CAviation*>(this); }
 	virtual const EActionNotify GetShootAction() const { return ACTION_NOTIFY_MECH_SHOOT; }
 	virtual const EActionNotify GetAimAction() const { return ACTION_NOTIFY_AIM; }
@@ -218,7 +222,7 @@ public:
 	
 	virtual NTimer::STime GetDisappearInterval() const { return 0; }
 
-	// для получения нормали у истребителей.
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 	virtual float GetTerrainHeight( const float x, const float y, const NTimer::STime timeDiff ) const { return 0; }
 
 	virtual void GetPlacement( struct SAINotifyPlacement *pPlacement, const NTimer::STime timeDiff );
@@ -234,11 +238,11 @@ public:
 	virtual void StopUnit() { }
 	virtual void Disappear();
 	
-	// залокать unit ( если уже был залокана, то старый lock исчезает )
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ unit ( пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ lock пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ )
 	virtual void Lock( const CBasicGun *pGun ) { }
-	// unlock unit ( если залокан другим gun-ом, то ничего не делается )
+	// unlock unit ( пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ gun-пїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ )
 	virtual void Unlock( const CBasicGun *pGun ) { }
-	// залокан ли каким-либо gun-ом, не равным pGun
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅ gun-пїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ pGun
 	virtual bool IsLocked( const CBasicGun *pGun ) const { return true; }
 	
 	// plane's formation, to force planes keep parade during flight.

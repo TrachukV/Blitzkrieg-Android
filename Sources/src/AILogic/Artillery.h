@@ -22,19 +22,19 @@ class CArtillery : public CAIUnit
 
 	int nInitialPlayer;
 
-	// орудийные стволы
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	CPtr<CMechUnitGuns> pGuns;
 
-	// вращающаяся пушка
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	std::vector< CObj<CTurret> > turrets;
 
 	EActionNotify eCurInstallAction, eNextInstallAction;
-	// в каком из install/uninstall мы сейчас находимся
+	// пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ install/uninstall пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	EActionNotify eCurrentStateOfInstall;
 
 	bool bInstalled;
 	NTimer::STime installActionTime;
-	bool bInstallActionInstant;						// для того, чтобы артиллерию можно было создать в непроинсталлированном состоянии
+	bool bInstallActionInstant;						// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 	float fDispersionBonus;
 	
@@ -42,11 +42,11 @@ class CArtillery : public CAIUnit
 	CVec2 vShift;
 	CPtr<IPath> pIPathToSend;
 
-	CPtr<CFormation> pCapturingUnit;			// взвод, который бежит захватывать пушку.
-	CPtr<CFormation> pCrew;								// взвод, который пушку обслуживает
-	float fOperable; // часть команды, которая обслуживает пушку
+	CPtr<CFormation> pCapturingUnit;			// пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ.
+	CPtr<CFormation> pCrew;								// пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	float fOperable; // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 
-	CPtr<CAIUnit> pSlaveTransport; // транспорт, который работает на эту пушку
+	CPtr<CAIUnit> pSlaveTransport; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	CPtr<CAIUnit> pHookingTransport;	// transport, that is hooking this artillery.
 	
 	CObj<CArtilleryBulletStorage> pBulletStorage;
@@ -55,10 +55,10 @@ class CArtillery : public CAIUnit
 
 	NTimer::STime behUpdateDuration;
 
-	// создаёт ammo box для AI, но не посылает его на визуализацию
+	// пїЅпїЅпїЅпїЅпїЅпїЅ ammo box пїЅпїЅпїЅ AI, пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	void CreateAmmoBox();
 
-	// видет ли ammo box игроку
+	// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ ammo box пїЅпїЅпїЅпїЅпїЅпїЅ
 	void ShowAmmoBox();
 	void HideAmmoBox();
 
@@ -76,6 +76,10 @@ public:
 	
 	virtual const SUnitBaseRPGStats* GetStats() const { return pStats; }
 	virtual IStatesFactory* GetStatesFactory() const;
+#ifndef _MSC_VER
+	// Defined in Artillery.cpp: CTurret is only forward-declared here.
+	virtual void Bk1DetachTurretOwners();
+#endif
 
 	virtual void Segment();
 	virtual void SetSelectable	( bool bSelectable );
@@ -103,9 +107,9 @@ public:
 	virtual bool IsUninstalled() const { return !bInstalled && eCurInstallAction == ACTION_NOTIFY_NONE && eNextInstallAction == ACTION_NOTIFY_NONE; }
 	bool IsInInstallAction() const { return eCurInstallAction != ACTION_NOTIFY_NONE || eNextInstallAction != ACTION_NOTIFY_NONE; }
 
-	void InstallBack( bool bAlreadyDone ); // инсталлировать артиллерию обратно, если она не деинсталлирована - то ошибка.
+	void InstallBack( bool bAlreadyDone ); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.
 	virtual void InstallAction( const EActionNotify eInstallAction, bool bAlreadyDone = false );
-	// проинсталлировать прямо сейчас
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	void ForceInstallAction();
 
 	virtual const bool NeedDeinstall() const;
@@ -123,7 +127,7 @@ public:
 	virtual float GetMaxFireRange() const;
 	virtual void GetRangeArea( struct SShootAreas *pRangeArea ) const;
 		
-	// бонусы
+	// пїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual const float GetDispersionBonus() const;
 	virtual const void SetDispersionBonus( const float fBonus ) { fDispersionBonus = fBonus; }
 
@@ -132,7 +136,7 @@ public:
 	virtual bool TurnToDir( const WORD &newDir, const bool bCanBackward = true, const bool bForward = true );
 	virtual bool TurnToUnit( const CVec2 &targCenter );
 
-	// обслуживание пушки артиллеристами
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual void ChangePlayer( const BYTE cPlayer );
 	virtual void SetCrew( class CFormation * _pCrew, const bool bCapture = true );
 	virtual void DelCrew();
@@ -144,10 +148,10 @@ public:
 
 	virtual void Disappear();
 
-	//для буксировки
+	//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual CVec2 GetTowPoint();
 	
-	//CRAP { к майлстоуну заплатка
+	//CRAP { пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual void SetSlaveTransport( class CAIUnit* _pSlaveTransport ){ pSlaveTransport = _pSlaveTransport; }
 	virtual bool HasSlaveTransport();
 	virtual class CAIUnit* GetSlaveTransport() { return pSlaveTransport; }
@@ -158,10 +162,10 @@ public:
 	virtual const float GetMaxSpeedHere( const CVec2 &point, bool bAdjust = true ) const;
 	virtual const float GetRotateSpeed() const;
 
-	// разрещает / запрещает  всем Gun у данной пушки стрелять
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ / пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ  пїЅпїЅпїЅпїЅ Gun пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual void DoAllowShoot( bool allow );
 
-	// у всех пушек очищает флаг на ожидание перезарядки
+	// пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual void ClearWaitForReload();
 	
 	virtual bool IsColliding() const;

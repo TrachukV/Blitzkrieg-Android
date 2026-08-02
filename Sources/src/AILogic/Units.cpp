@@ -30,6 +30,31 @@ const bool CUnits::IsUnitInCell( const int nUnitID ) const
 {
 	return posUnitInCell[nUnitID].nUnitPos != 0 || posUnitInCell[nUnitID].nCellID != 0;
 }
+#ifndef _MSC_VER
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Walked immediately before the units are destroyed, while each one is still
+// alive, fully typed, and held by this list -- so dropping the turret's counted
+// reference here is an ordinary decrement rather than a call into a vtable that
+// has already been lowered. See the note beside CUnits::Clear.
+//
+// Buildings own turrets too, and they live in theStatObjs rather than here, so
+// they are not covered. No crash has been observed on that path, and adding an
+// unmeasured pass to it would be guessing.
+void CUnits::Bk1DetachAllTurretOwners()
+{
+	for ( int nList = 0; nList < units.GetListsNum(); ++nList )
+	{
+		for ( CListsSet< CObj<CAIUnit> >::tEnumerator it = units.begin( nList );
+					it != units.end();
+					it = units.GetNext( it ) )
+		{
+			CAIUnit *pUnit = units.GetEl( it );
+			if ( pUnit != 0 )
+				pUnit->Bk1DetachTurretOwners();
+		}
+	}
+}
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CUnits::Init()
 {
@@ -127,11 +152,11 @@ const int CUnits::GetVisIndex( CAIUnit *pUnit )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CUnits::AddUnitToConcreteCell( CAIUnit *pUnit, const SVector &cell, bool bWithLeveledCelles )
 {
-	// если юнит единственный в свой ячейке, записать ячейку в список
+	// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	if ( ++nUnitsCell[cell.y][cell.x] == 1 )
 		nCell[cell.y][cell.x] = cellsIds.GetFreeId();
 	
-	// добавить юнит в список стоящих на этой ячейке
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	const int newId = nCell[cell.y][cell.x] * 2 * 3 + ( 2 * pUnit->GetParty() + BYTE( pUnit->GetStats()->IsInfantry() ) ) + 1;
 
 	if ( newId >= unitsInCells[0].GetListsNum() || newId >= unitsInCells[1].GetListsNum() )
@@ -212,7 +237,7 @@ void CUnits::AddUnitToMap( CAIUnit *pUnit )
 	if ( nUnitID >= posUnitInCell.size() )
 		posUnitInCell.resize( nUnitID * 1.5 );
 
-	// нужно добавить в ячейку
+	// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	if ( !pUnit->IsInSolidPlace() )
 		AddUnitToCell( pUnit, true );
 
@@ -236,7 +261,7 @@ void CUnits::DeleteUnitFromMap( CAIUnit *pUnit )
 	}
 
 	const int nUnitID = pUnit->GetID();
-	// ещё не удалён из ячеек
+	// пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	if ( units.GetEl( nUnitID ) != 0 )
 	{
 		DelUnitFromCell( pUnit, true );
@@ -313,7 +338,7 @@ void CUnits::ChangePlayer( CAIUnit *pUnit, const BYTE cNewPlayer )
 {
 	if ( pUnit->GetPlayer() != cNewPlayer )
 	{
-		// чтобы не удалился		
+		// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ		
 		CObj<CAIUnit> pSaveUnit = pUnit;
 		DeleteUnitFromMap( pUnit );
 		FullUnitDelete( pUnit );

@@ -19,9 +19,9 @@ class CAIUnit: public CCommonUnit
 
 	BYTE player;
 
-	// половина угла обзора
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	WORD wVisionAngle;
-	// умножитель зрения
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	float fSightMultiplier;
 	
 	bool bUnitUnderSupply;
@@ -36,11 +36,11 @@ class CAIUnit: public CCommonUnit
 	NTimer::STime timeLastmoraleUpdate;
 
 	float fMorale;
-	bool bHasMoraleSupport;								// рядом с этим юнитом находится юнит, оддерживающий мораль
+	bool bHasMoraleSupport;								// пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 
 	NTimer::STime lastTimeOfVis;
 
-	//окоп, в котором этот юнит тусуется
+	//пїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	CPtr<CExistingObject> pTankPit; 
 
 	NTimer::STime camouflateTime;
@@ -84,7 +84,7 @@ protected:
 
 	bool bAlive;
 	float fCamouflage;
-	// необходимые действия перед смертью/исчезновением с карты
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ
 	virtual void PrepareToDelete();
 	void DieTrain( const float fDamage );
 	
@@ -102,7 +102,7 @@ public:
 	void SetScenarioStats();
 
 	void SetRightDir( bool _bRightDir);
-	// для updater-а
+	// пїЅпїЅпїЅ updater-пїЅ
 	virtual bool IsAlive() const { return bAlive; }
 	virtual void GetNewUnitInfo( struct SNewUnitInfo *pNewUnitInfo );
 	virtual void GetRPGStats( struct SAINotifyRPGStats *pStats );
@@ -110,7 +110,7 @@ public:
 	virtual void GetSpeed3( CVec3 *pSpeed ) const;
 	virtual const NTimer::STime GetTimeOfDeath() const { return timeToDeath; }
 
-		// когда танк въехал в TankPit или его окопали вызывается эта функция
+		// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ TankPit пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	void SetInTankPit( CExistingObject *pTankPit );
 	void SetOffTankPit();
 	class CExistingObject* GetTankPit() const { return pTankPit; }
@@ -125,21 +125,29 @@ public:
 	virtual const WORD GetID() const { return id; }
 	virtual const SUnitBaseRPGStats* GetStats() const = 0;
 
-	// в месте, где его никто не видит и он никого не видит
+	// пїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	virtual bool IsInSolidPlace() const { return false; }
 	virtual bool IsInFirePlace() const { return false; }
 	virtual bool IsFree() const { return true; }
 
-	// обработка команд
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual void Segment();
 	virtual void FreezeSegment();
+#ifndef _MSC_VER
+	// Turrets hold a counted reference back to the unit that owns them. Releasing
+	// that from inside the unit's own destructor dispatches through a vtable that
+	// has already been lowered, where the accessor is still pure, and aborts.
+	// CUnits::Clear breaks the cycle here first, while every unit is still alive
+	// and fully typed. Units without turrets do nothing.
+	virtual void Bk1DetachTurretOwners() {  }
+#endif
 	bool IsPossibleChangeAction() const	{ return bAlive; }
 	virtual void Die( const bool fromExplosion, const float fDamage );
 	virtual void Disappear();
 
-	// виден ли данной дипломатической стороной
+	// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual const bool IsVisible( const BYTE party ) const;
-	// для отложенных updates
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ updates
 	virtual void GetTilesForVisibility( CTilesSet *pTiles ) const;
 	virtual bool ShouldSuspendAction( const EActionNotify &eAction ) const;
 	virtual const DWORD GetNormale( const CVec2 &vCenter ) const;
@@ -202,36 +210,36 @@ public:
 	//
 	const float GetHitPoints() const { return fHitPoints; }
 	void IncreaseHitPoints( const float fInc = 1 );
-	// из редактора
+	// пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	void TakeEditorDamage( const float fDamage );
 	virtual void TakeDamage( const float fDamage, const SWeaponRPGStats::SShell *pShell, const int nPlayerOfShoot, CAIUnit *pShotUnit );
-	// true при попадании
+	// true пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual bool ProcessCumulativeExpl( class CExplosion *pExpl, const int nArmorDir, const bool bFromExpl );
-	// true при точном попадании
+	// true пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual bool ProcessBurstExpl( class CExplosion *pExpl, const int nArmorDir, const float fRadius, const float fSmallRadius );
-	// true при попадании
+	// true пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual bool ProcessAreaDamage( const class CExplosion *pExpl, const int nArmorDir, const float fRadius, const float fSmallRadius );
 
-	// вероятность, с которой нанесётся damage при попадании
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ damage пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual const float GetCover() const;
 	virtual bool IsSavedByCover() const;
 
 	virtual class CTurret* GetTurret( const int nTurret ) const { NI_ASSERT_T( false, "Wrong call of get turret" ); return 0; }
 	
-	// для стрельбы
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual void GetShotInfo( struct SAINotifyInfantryShot *pShotInfo ) const { NI_ASSERT_T( false, "Wrong call of GetShotInfo" ); }
 	virtual void GetShotInfo( struct SAINotifyMechShot *pShotInfo ) const { NI_ASSERT_T( false, "Wrong call of GetShotInfo" ); }
 	virtual const EActionNotify GetShootAction() const = 0;
 	virtual const EActionNotify GetAimAction() const = 0;
 	virtual const EActionNotify GetDieAction() const = 0;
 	virtual const EActionNotify GetIdleAction() const = 0;
-	// для Move есть типы
+	// пїЅпїЅпїЅ Move пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 	virtual const EActionNotify GetMovingAction() const = 0;
 	virtual int GetMovingType() const { return 0; }
 
 	virtual bool CanMove() const;
 	virtual bool CanMovePathfinding() const;
-	// может ли повернуться в принципе (может быть, понадобиться деинсталляция)
+	// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 	virtual bool CanRotate() const;
 	
 	virtual void SetCamoulfage();
@@ -245,9 +253,9 @@ public:
 
 	virtual const BYTE GetPlayer() const { return player; }
 	virtual void SetPlayerForEditor( const int nPlayer );
-	// сменить дипломатию с корректным update в units
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ update пїЅ units
 	virtual void ChangePlayer( const BYTE cPlayer );
-	// просто поставить другую дипломатию
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	void SetPlayer( const BYTE cPlayer ) { player = cPlayer; }
 
 	virtual bool InVisCone( const CVec2 &point ) const { return true; }
@@ -268,7 +276,7 @@ public:
 	virtual void Fired( const float fGunRadius, const int nGun );
 	virtual NTimer::STime GetDisappearInterval() const { return SConsts::TIME_TO_DISAPPEAR; }
 
-	// бонусы
+	// пїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual const float GetDispersionBonus() const { return 1.0f; }
 	virtual const void SetDispersionBonus( const float fBonus ) {}
 	virtual const float GetRelaxTimeBonus() const { return 1.0f; }
@@ -282,20 +290,20 @@ public:
 	virtual void GetShootAreas( struct SShootAreas *pShootAreas, int *pnAreas ) const;
 	void WarFogChanged();
 
-	// update изображения shoot area или range area
+	// update пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ shoot area пїЅпїЅпїЅ range area
 	virtual void UpdateArea( const EActionNotify eAction );
 	
 	virtual BYTE GetAIClass() const { return GetStats()->aiClass; }
 	
-	// патроны
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	const int GetNCommonGuns() const;
 	const SBaseGunRPGStats& GetCommonGunStats( const int nCommonGun ) const;
 	virtual int GetNAmmo( const int nCommonGun ) const;
-	// nAmmo со знаком
+	// nAmmo пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual void ChangeAmmo( const int nCommonGun, const int nAmmo );
 	virtual bool IsCommonGunFiring( const int nCommonGun ) const;
 
-	//стоимость починки 1 HP
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ 1 HP
 	
 	void SetMorale( float _fMorale ) ;
 	void SetMoraleSupport();
@@ -303,7 +311,7 @@ public:
 	
 	virtual float GetSmoothTurnThreshold() const;
 	
-	// заметен ли юнитом pUnit, радиус обнаружения fNoticeRadius
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ pUnit, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ fNoticeRadius
 	virtual bool IsNoticableByUnit( class CCommonUnit *pUnit, const float fNoticeRadius );
 	
 	const int ChooseFatality( const float fDamage );
@@ -311,10 +319,10 @@ public:
 	void NullCollisions();
 
 	virtual void SendAcknowledgement( EUnitAckType ack, bool bForce = false );
-	// ack для команды pCommand
+	// ack пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ pCommand
 	virtual void SendAcknowledgement( CAICommand *pCommand, EUnitAckType ack, bool bForce = false );
 	
-	// коллизится ли с движущимися объектами
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual bool IsColliding() const;
 	
 	virtual const int GetMinArmor() const;
@@ -325,7 +333,7 @@ public:
 	virtual const int GetRandomArmor( const int nSide ) const;
 	
 	virtual bool IsLockingTiles() const;
-	// можно ли повернуть к направлению vNewDir, если за bounding box берётся smallRect
+	// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ vNewDir, пїЅпїЅпїЅпїЅ пїЅпїЅ bounding box пїЅпїЅпїЅпїЅпїЅпїЅ smallRect
 	virtual bool CanRotateTo( SRect smallRect, const CVec2 &vNewDir, bool bWithUnits, bool bCanGoBackward = true ) const;
 	virtual bool CheckToTurn( const WORD wNewDir );
 	virtual bool HasSuspendedPoint() const;
@@ -339,54 +347,54 @@ public:
 	virtual EUnitAckType GetGunsRejectReason() const;
 	bool DoesExistRejectGunsReason( const EUnitAckType &ackType ) const;
 	
-	// целеразрешение
-	// скорость убийства юнита с pStats из pGun
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ pStats пїЅпїЅ pGun
 	const float GetKillSpeed( const SHPObjectRPGStats *pStats, const CVec2 &vCenter, CBasicGun *pGun ) const;
 	const float GetKillSpeed( const SHPObjectRPGStats *pStats, const CVec2 &vCenter, const DWORD dwGuns ) const;
-	// скорость убийства юнита из наилучшего gun
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ gun
 	virtual const float GetKillSpeed( class CAIUnit *pEnemy ) const;
-	// скорость убийства юнита из pGun
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ pGun
 	virtual const float GetKillSpeed( class CAIUnit *pEnemy, class CBasicGun *pGun ) const;
-	// скорость убийства юнита из набора Gun, номера задаются маской
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ Gun, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual const float GetKillSpeed( CAIUnit *pEnemy, const DWORD dwGuns ) const;
 	void UpdateTakenDamagePower( const float fUpdate );
 	const float GetTakenDamagePower() const { return fTakenDamagePower; }
 	
-	// обнулить время для периодов сканирования
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual void ResetTargetScan();
-	// просканировать, если пора; если нашли цель, то атаковать
-	// возвращает: в младшем бите - была ли найдена цель, во втором бите - было ли произведено сканирование
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ; пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual BYTE AnalyzeTargetScan(	CAIUnit *pCurTarget, const bool bDamageUpdated, const bool bScanForObstacles, IRefCount *pCheckBuilding = 0 );
-	// поискать цель, текущая цель для атаки - pCurTarget
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ - pCurTarget
 	virtual void LookForTarget( CAIUnit *pCurTarget, const bool bDamageUpdated, CAIUnit **pBestTarget, class CBasicGun **pGun );
-	// поискать цель вдалеке для артиллерийского обстрела, текущая цель для атаки - pCurTarget
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ - pCurTarget
 	virtual void LookForFarTarget( CAIUnit *pCurTarget, const bool bDamageUpdated, CAIUnit **pBestTarget, class CBasicGun **pGun );
-		// для того, чтобы искать врагов не только в секторе атаки, а во всём круге
+		// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	void SetCircularAttack( const bool bCanAttack );
-	// поискать препятствие.
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 	virtual interface IObstacle *LookForObstacle();
 	void UpdateNAttackingGrenages( const int nUpdate ) { nGrenades += nUpdate; NI_ASSERT_T( nGrenades >= 0, "Wrong number of grenades" ); }
 	const int GetNAttackingGrenages() const { return nGrenades; }
 
-	// установать в curTime время для периодов выбора gun
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ curTime пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ gun
 	virtual void ResetGunChoosing();
-	// если пора перевыбрать gun, то перевыбрать
+	// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ gun, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	CBasicGun* AnalyzeGunChoose( CAIUnit *pEnemy );
 
 	void EnemyKilled( CAIUnit *pEnemy );
 
 	virtual bool CanMoveForGuard() const { return CanMove() && !GetStats()->IsTrain(); }
-	// время, через которое general забудет о невидимом юните
+	// пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ general пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	virtual const float GetTimeToForget() const;
 	CAIUnitInfoForGeneral* GetUnitInfoForGeneral() const;
 	void SetLastVisibleTime( const NTimer::STime time );
 	
-	// радиус, в котром сканируются цели
+	// пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 	virtual const float GetTargetScanRadius();
-	// юнит находиться в свободном поиске целей
+	// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	virtual bool IsFreeEnemySearch() const { return bFreeEnemySearch; }
 
-	// количество сегментнов, прошедшее с прошлого вызова SecondSegment
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ SecondSegment
 	virtual const float GetPathSegmentsPeriod() const { return 1.0f; }
 	virtual const NTimer::STime GetNextSecondPathSegmTime() const;
 	
@@ -405,19 +413,19 @@ public:
 	
 	virtual void UnitCommand( CAICommand *pCommand, bool bPlaceInQueue, bool bOnlyThisUnitCommand );
 
-	//для посылки генералу информации о видимых врагах, а также посылки update о видимости юнита
+	//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ update пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	void CalcVisibility();
-	// клиент зависима!
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ!
 	virtual const bool IsVisibleByPlayer();
 	
-	// залокать unit ( если уже был залокана, то старый lock исчезает )
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ unit ( пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ lock пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ )
 	virtual void Lock( const CBasicGun *pGun );
-	// unlock unit ( если залокан другим gun-ом, то ничего не делается )
+	// unlock unit ( пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ gun-пїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ )
 	virtual void Unlock( const CBasicGun *pGun );
-	// залокан ли каким-либо gun-ом, не равным pGun
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅ gun-пїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ pGun
 	virtual bool IsLocked( const CBasicGun *pGun ) const;
 	
-	// смена текущего типа патронов.
+	// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 	void SetActiveShellType( const enum SWeaponRPGStats::SShell::EDamageType eShellType );
 
 	// for planes
@@ -440,7 +448,7 @@ public:
 	bool IsRevealed() const;
 	
 	virtual bool IsInfantry() const;
-	// обстрелян юнитом pUnit
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ pUnit
 	virtual void Grazed( CAIUnit *pUnit ) { }
 	
 	void NullCreationTime() { creationTime = 0; }

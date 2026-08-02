@@ -15,29 +15,29 @@ class CTurret : public CLinkObject
 
 	struct SRotating
 	{
-		// скорость вращения в горизонтальной плоскости
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		float wRotationSpeed;
-		// угол относ. юнита в момент начала поворота, желательный угол
+		// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 		WORD wCurAngle, wFinalAngle;
-		// в какую сторону поворачивается - + или -
+		// пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ - + пїЅпїЅпїЅ -
 		signed char sign;
 
-		// время, когда начался и закончится процесс поворачивания
+		// пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		NTimer::STime startTime, endTime;
 		
-		// поворот закончен
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		bool bFinished;
 	};
 
-	// горизонтальная наводка
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	SRotating hor;
-	// вертикальная наводка
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	SRotating ver;
 
-	// можно ли вернуть башню к default углу поворота
+	// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ default пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	bool bCanReturn;
 
-	// наводится ли по вертикали
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	bool bVerAiming;
 
 	CPtr<CAIUnit> pTracedUnit;
@@ -57,19 +57,19 @@ public:
 	const float GetHorRotationSpeed() const { return hor.wRotationSpeed; }
 	
 	virtual void Turn( const WORD wHorAngle, const WORD wVerAngle, const bool bInstantly = false );
-	// возвращает - был произведён поворот, или turret уже в нужном положении
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ turret пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual bool TurnHor( const WORD wHorAngle, const bool bInstantly = false );
-	// возвращает - был произведён поворот, или turret уже в нужном положении
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ turret пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual bool TurnVer( const WORD wVerAngle, const bool bInstantly = false );
 
 	void StopTurning();
 	void StopHorTurning();
 	void StopVerTurning();
-	// закончен ли поворот
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	bool IsFinished() const { return hor.bFinished && ver.bFinished; }
 	bool IsHorFinished() const { return hor.bFinished; }
 	bool IsVerFinished() const { return ver.bFinished; }
-	// можно вернуть пушку к нулевому углу поворота
+	// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	void SetCanReturn();
 
 	WORD GetHorCurAngle() const { return GetCurAngle( hor ); }
@@ -84,7 +84,7 @@ public:
 
 	void Segment();
 
-	// сопровождать пушкой врага
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	void TraceAim( class CAIUnit *pUnit, class CBasicGun *pGun );
 	class CAIUnit* GetTracedUnit() { return pTracedUnit; }
 	void StopTracing();
@@ -105,11 +105,11 @@ public:
 	virtual void GetHorTurretTurnInfo( struct SAINotifyTurretTurn *pTurretTurn ) = 0;
 	virtual void GetVerTurretTurnInfo( struct SAINotifyTurretTurn *pTurretTurn ) = 0;
 	
-	// залокать turret gun-ом ( если уже была залокана, то старый lock исчезает )
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ turret gun-пїЅпїЅ ( пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ lock пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ )
 	void Lock( const class CBasicGun *pGun );
-	// unlock turret ( если залокана другим gun-ом, то ничего не делается )
+	// unlock turret ( пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ gun-пїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ )
 	void Unlock( const class CBasicGun *pGun );
-	// залокана ли каким-либо gun-ом, не равным pGun
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅ gun-пїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ pGun
 	bool IsLocked( const class CBasicGun *pGun );
 
 	void SetDefaultHorAngle( const WORD wHorAngle ) { wDefaultHorAngle = wHorAngle; }
@@ -122,9 +122,21 @@ public:
 	virtual void GetTilesForVisibility( CTilesSet *pTiles ) const { pTiles->clear(); }
 	virtual bool ShouldSuspendAction( const EActionNotify &eAction ) const { return false; }
 
-	// можно/нельзя вращать
+	// пїЅпїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual void SetRotateTurretState( bool bCanRotate ) {}
 	virtual bool GetRotateTurretState() const { return true; }
+
+#ifndef _MSC_VER
+	// Drops the counted reference a turret holds back to the unit that owns it.
+	//
+	// Unit owns turret, turret owns unit: releasing that from inside the unit's
+	// own destructor dispatches Release through a vtable already lowered to this
+	// class, where it is still pure, and libc++ aborts. Breaking the cycle while
+	// the unit is alive and fully typed makes the same release an ordinary one.
+	//
+	// Called only from CUnits::Clear, immediately before the units are destroyed.
+	virtual void Bk1DetachOwner() {  }
+#endif
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CUnitTurret : public CTurret
@@ -143,9 +155,9 @@ public:
 	CUnitTurret() { }
 	CUnitTurret( class CAIUnit *pOwner, const int nModelPart, const DWORD dwGunCarriageParts, const WORD wHorRotationSpeed, const WORD wVerRotationSpeed, const WORD wHorConstraint, const WORD wVerConstraint );
 
-	// возвращает - был произведён поворот, или turret уже в нужном положении	
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ turret пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ	
 	virtual bool TurnHor( const WORD wHorAngle, const bool bInstantly = false );
-	// возвращает - был произведён поворот, или turret уже в нужном положении
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ turret пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	virtual bool TurnVer( const WORD wVerAngle, const bool bInstantly = false );
 
 	virtual void GetHorTurretTurnInfo( struct SAINotifyTurretTurn *pTurretTurn );
@@ -164,6 +176,12 @@ public:
 
 	virtual void SetRotateTurretState( bool bCanRotate ) { bCanRotateTurret = bCanRotate; }
 	virtual bool GetRotateTurretState() const { return bCanRotateTurret; }
+
+#ifndef _MSC_VER
+	// pOwner is the only non-trivial member here, and it points back at the unit
+	// being destroyed. See the note on CTurret::Bk1DetachOwner.
+	virtual void Bk1DetachOwner() { pOwner = 0; }
+#endif
 };
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CMountedTurret : public CTurret

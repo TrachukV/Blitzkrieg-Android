@@ -770,3 +770,18 @@ void CAITransportUnit::UnitCommand( CAICommand *pCommand, bool bPlaceInQueue, bo
 		CMilitaryCar::UnitCommand( pCommand, bPlaceInQueue, bOnlyThisUnitCommand );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifndef _MSC_VER
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Each turret holds a counted reference back to this unit. Dropped here, from
+// CUnits::Clear, while the unit is still alive and fully typed -- see the note
+// beside CTurret::Bk1DetachOwner for what happens when it is dropped later.
+void CMilitaryCar::Bk1DetachTurretOwners()
+{
+	for ( int i = 0; i < turrets.size(); ++i )
+	{
+		if ( turrets[i] != 0 )
+			turrets[i]->Bk1DetachOwner();
+	}
+}
+#endif

@@ -26,21 +26,21 @@ class CUnits : public IRefCount
 	OBJECT_NORMAL_METHODS( CUnits );
 	DECLARE_SERIALIZE;
 	
-	// все юниты, распределённые по дипл. сторонам
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	CListsSet< CObj<CAIUnit> > units;
 	std::set< CObj<CFormation> > formations;
 	std::vector<int> sizes;
-	// самолёты
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	std::list< CObj<CAviation> > planes;
-	// все операции проводятся с большими ячейками
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
-	// количество юнитов в ячейке
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	CArray2D<WORD> nUnitsCell;
-	// номер ячейки
+	// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	CArray2D<WORD> nCell;
-	// список юнитов для каждой из ячеек, 0 - not visible for enemy, 1 - visible for enemy
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, 0 - not visible for enemy, 1 - visible for enemy
 	std::vector< CListsSet<WORD> > unitsInCells;
-	// позиция юнита в ячейках
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	struct SUnitPosition
 	{
 		int nCellID; int nUnitPos; SVector cell;
@@ -51,9 +51,9 @@ class CUnits : public IRefCount
 	enum { N_CELLS_LEVELS = 3 };
 	CArray2D<WORD> numUnits[2][N_CELLS_LEVELS][3][2];
 	
-	// для нумерации ячеек
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	CFreeIds cellsIds;
-	// для сериализации
+	// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	std::hash_map< int, SVector > cellIdToCoord;
 
 
@@ -74,19 +74,30 @@ public:
 	CUnits() { }
 	
 	void Init();
+#ifndef _MSC_VER
+	// Turret holds unit, unit holds turret. DestroyContents below destroys every
+	// unit; if the turrets still hold their owners at that point, releasing one
+	// dispatches through a vtable already lowered past the accessor that answers
+	// it, which is pure, and libc++ aborts. Restart Mission is the path that
+	// reaches it. Breaking the cycle first costs one walk of the list and leaves
+	// the save format alone -- pOwner keeps its type, so saved games still load.
+	void Bk1DetachAllTurretOwners();
+	void Clear() { Bk1DetachAllTurretOwners(); DestroyContents(); }
+#else
 	void Clear() { DestroyContents(); }
+#endif
 	
 	int AddFormation( class CFormation *pFormation );
 	void DelFormation( class CFormation *pFormation );
 	
-	// добавить юнит в массив юнитов и выдать его номер
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	int AddUnitToUnits( class CAIUnit *pUnit, const int nPlayer, const int nUnitType );
-	// добавить юнит на карту
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	void AddUnitToMap( class CAIUnit *pUnit );
 	
-	// убирает юнит отовсюду, но не отдаёт его id
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ id
 	void DeleteUnitFromMap( class CAIUnit *pUnit );
-	// окончательно удаляет юнит
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 	void FullUnitDelete( class CAIUnit *pUnit );
 
 	void AddUnitToCell( class CAIUnit *pUnit, bool bWithLeveledCelles );
@@ -98,8 +109,8 @@ public:
 	CAIUnit* operator[]( const int id );
 	const int Size( const int nParty ) const;
 	
-	// количество солдат в круге центром vCenter и радиусом fRadius с партией nParty
-	// сейчас реализация - просто итерирование внутри круга
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ vCenter пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ fRadius пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ nParty
+	// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	const int GetNSoldiers( const CVec2 &vCenter, const float fRadius, const int nParty );
 	const int GetNUnits( const CVec2 &vCenter, const float fRadius, const int nParty );
 

@@ -718,9 +718,13 @@ void HandleCommand( android_app *pApp, int32_t nCommand )
     switch ( nCommand )
     {
     case APP_CMD_INIT_WINDOW:
+        // Ask for the whole screen first, then make the surface: created the
+        // other way round, the surface is sized for the screen minus the bars
+        // and keeps that size after they go, which leaves the game stopping
+        // short of the bottom edge.
+        Bk1GoImmersive( pApp->activity );
         if ( pApp->window != 0 )
             CreateSurface( pState );
-        Bk1GoImmersive( pApp->activity );
         break;
 
     case APP_CMD_TERM_WINDOW:
@@ -732,6 +736,14 @@ void HandleCommand( android_app *pApp, int32_t nCommand )
         // A swipe from the edge brings the bars back and nothing puts them away
         // again, so this is asked for afresh every time focus returns.
         Bk1GoImmersive( pApp->activity );
+        // And the surface may have grown when they went: re-read it, or the
+        // game keeps drawing into the smaller area the bars left behind.
+        if ( pState->bReady )
+        {
+            eglQuerySurface( pState->display, pState->surface, EGL_WIDTH, &pState->nWidth );
+            eglQuerySurface( pState->display, pState->surface, EGL_HEIGHT, &pState->nHeight );
+            Bk1SetClientSize( pState->nWidth, pState->nHeight );
+        }
         break;
 
     case APP_CMD_WINDOW_RESIZED:

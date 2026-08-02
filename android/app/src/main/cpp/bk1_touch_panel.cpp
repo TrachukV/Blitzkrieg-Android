@@ -22,9 +22,13 @@ namespace
 const float ENGINE_WIDTH  = 1024.0f;
 const float ENGINE_HEIGHT = 768.0f;
 
-const int BUTTON_SIZE  = 46;
-const int BUTTON_GAP   = 7;
-const int PANEL_MARGIN = 12;
+// Bigger than they were. At 46 the shapes were cramped and the letters I tried
+// putting under them came out as speckle -- illegible on a real phone, which is
+// where that was reported from. A touch target wants about 9mm; on the engine's
+// 1024x768 space stretched across a phone that is nearer 70 than 46.
+const int BUTTON_SIZE  = 70;
+const int BUTTON_GAP   = 10;
+const int PANEL_MARGIN = 14;
 
 // Where the interface already is, measured off a running mission rather than
 // guessed: the engine prints its own notices top left, the objectives window and
@@ -314,38 +318,65 @@ void AddIcon( const SButton &b, int nButton, float r, float g, float bl, float a
 	// A cross of two diagonals would need triangles; a square cross turned into
 	// a target reads as "attack this spot" and is built from the same rectangles
 	// as everything else: a ring drawn as four bars, with a dot at the centre.
-	// The four order buttons carry their letter as well as their shape. The
-	// shape is drawn small and high, the letter large and low, because the
-	// letter is what a player reads first and the shape is what they recognise
-	// once they know it.
+	// Force attack: a big crosshair. Four bars and a centre dot, drawn across
+	// most of the button so it reads at arm's length on a phone.
 	case BK1_PANEL_FORCE_ATTACK:
-		AddRect( cx - fArm * 0.7f, cy - fArm * 0.9f, fArm * 1.4f, fThin * 0.7f, r, g, bl, a );
-		AddRect( cx - fArm * 0.7f, cy - fArm * 0.2f, fArm * 1.4f, fThin * 0.7f, r, g, bl, a );
-		AddRect( cx - fArm * 0.7f, cy - fArm * 0.9f, fThin * 0.7f, fArm * 0.7f, r, g, bl, a );
-		AddRect( cx + fArm * 0.7f - fThin * 0.7f, cy - fArm * 0.9f, fThin * 0.7f, fArm * 0.7f, r, g, bl, a );
-		AddLetter( 'A', cx - fThin * 1.5f, cy + fThin * 0.2f, fThin, r, g, bl, a );
+	{
+		const float fR = float( b.nW ) * 0.34f;
+		const float fT = float( b.nW ) * 0.075f;
+		AddRect( cx - fR, cy - fT * 0.5f, fR * 2.0f, fT, r, g, bl, a );
+		AddRect( cx - fT * 0.5f, cy - fR, fT, fR * 2.0f, r, g, bl, a );
+		AddRect( cx - fR, cy - fR, fR * 0.7f, fT, r, g, bl, a );
+		AddRect( cx + fR - fR * 0.7f, cy - fR, fR * 0.7f, fT, r, g, bl, a );
+		AddRect( cx - fR, cy + fR - fT, fR * 0.7f, fT, r, g, bl, a );
+		AddRect( cx + fR - fR * 0.7f, cy + fR - fT, fR * 0.7f, fT, r, g, bl, a );
+		AddRect( cx - fR, cy - fR, fT, fR * 0.7f, r, g, bl, a );
+		AddRect( cx - fR, cy + fR - fR * 0.7f, fT, fR * 0.7f, r, g, bl, a );
+		AddRect( cx + fR - fT, cy - fR, fT, fR * 0.7f, r, g, bl, a );
+		AddRect( cx + fR - fT, cy + fR - fR * 0.7f, fT, fR * 0.7f, r, g, bl, a );
 		break;
-	// Aggressive move: an arrow to the right, drawn as a shaft and a stepped
-	// head, so it says "go" while the target above says "shoot".
+	}
+	// Aggressive move: one big arrow pointing right, shaft and head.
 	case BK1_PANEL_AGGRESSIVE:
-		AddRect( cx - fArm * 0.7f, cy - fArm * 0.6f, fArm * 1.1f, fThin * 0.7f, r, g, bl, a );
-		AddRect( cx + fArm * 0.35f, cy - fArm * 0.9f, fThin * 0.7f, fThin * 2.2f, r, g, bl, a );
-		AddLetter( 'M', cx - fThin * 1.5f, cy + fThin * 0.2f, fThin, r, g, bl, a );
+	{
+		const float fR = float( b.nW ) * 0.34f;
+		const float fT = float( b.nW ) * 0.10f;
+		AddRect( cx - fR, cy - fT * 0.5f, fR * 1.5f, fT, r, g, bl, a );
+		for ( int i = 0; i < 4; ++i )
+		{
+			const float fStep = fT * 0.55f;
+			AddRect( cx + fR * 0.5f + i * fStep, cy - fT * ( 2.0f - i * 0.5f ),
+			         fStep, fT * ( 4.0f - i * 1.0f ), r, g, bl, a );
+		}
 		break;
-	// Queue: bars stacked, one order after another, with its letter below.
+	}
+	// Queue: three thick bars, one order after another.
 	case BK1_PANEL_QUEUE:
-		AddRect( cx - fArm * 0.7f, cy - fArm * 0.9f, fArm * 1.4f, fThin * 0.6f, r, g, bl, a );
-		AddRect( cx - fArm * 0.7f, cy - fArm * 0.45f, fArm * 1.4f, fThin * 0.6f, r, g, bl, a );
-		AddLetter( 'Q', cx - fThin * 1.5f, cy + fThin * 0.2f, fThin, r, g, bl, a );
+	{
+		const float fR = float( b.nW ) * 0.34f;
+		const float fT = float( b.nW ) * 0.11f;
+		AddRect( cx - fR, cy - fR, fR * 2.0f, fT, r, g, bl, a );
+		AddRect( cx - fR, cy - fT * 0.5f, fR * 2.0f, fT, r, g, bl, a );
+		AddRect( cx - fR, cy + fR - fT, fR * 2.0f, fT, r, g, bl, a );
 		break;
-	// Centre camera: a frame with a dot in it.
+	}
+	// Centre camera: four corner brackets around a dot.
 	case BK1_PANEL_CENTRE_CAMERA:
-		AddRect( cx - fArm * 0.7f, cy - fArm * 0.9f, fArm * 0.5f, fThin * 0.6f, r, g, bl, a );
-		AddRect( cx + fArm * 0.2f, cy - fArm * 0.9f, fArm * 0.5f, fThin * 0.6f, r, g, bl, a );
-		AddRect( cx - fArm * 0.7f, cy - fArm * 0.9f, fThin * 0.6f, fArm * 0.5f, r, g, bl, a );
-		AddRect( cx + fArm * 0.7f - fThin * 0.6f, cy - fArm * 0.9f, fThin * 0.6f, fArm * 0.5f, r, g, bl, a );
-		AddLetter( 'C', cx - fThin * 1.5f, cy + fThin * 0.2f, fThin, r, g, bl, a );
+	{
+		const float fR = float( b.nW ) * 0.34f;
+		const float fT = float( b.nW ) * 0.085f;
+		const float fL = fR * 0.75f;
+		AddRect( cx - fR, cy - fR, fL, fT, r, g, bl, a );
+		AddRect( cx + fR - fL, cy - fR, fL, fT, r, g, bl, a );
+		AddRect( cx - fR, cy + fR - fT, fL, fT, r, g, bl, a );
+		AddRect( cx + fR - fL, cy + fR - fT, fL, fT, r, g, bl, a );
+		AddRect( cx - fR, cy - fR, fT, fL, r, g, bl, a );
+		AddRect( cx - fR, cy + fR - fL, fT, fL, r, g, bl, a );
+		AddRect( cx + fR - fT, cy - fR, fT, fL, r, g, bl, a );
+		AddRect( cx + fR - fT, cy + fR - fL, fT, fL, r, g, bl, a );
+		AddRect( cx - fT * 0.8f, cy - fT * 0.8f, fT * 1.6f, fT * 1.6f, r, g, bl, a );
 		break;
+	}
 	}
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

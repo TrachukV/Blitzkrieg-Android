@@ -61,6 +61,42 @@ void Bk1GoImmersive( ANativeActivity *pActivity )
     jobject objWindow = pEnv->CallObjectMethod( pActivity->clazz, midGetWindow );
 
     jclass clsWindow = pEnv->GetObjectClass( objWindow );
+
+    // Let the window use the whole panel, including the strip beside the camera
+    // cutout. Without this the system keeps a band reserved and the game stops
+    // short of the edge -- which is what "still a bar at the bottom, not
+    // fullscreen" looks like on a device with a cutout, even once the
+    // navigation bar itself is hidden.
+    //
+    // LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES is 1. Set on the window's
+    // attributes, because there is no theme resource in this port to carry it.
+    {
+        jmethodID midGetAttributes = pEnv->GetMethodID( clsWindow, "getAttributes",
+                                                        "()Landroid/view/WindowManager$LayoutParams;" );
+        jmethodID midSetAttributes = pEnv->GetMethodID( clsWindow, "setAttributes",
+                                                        "(Landroid/view/WindowManager$LayoutParams;)V" );
+        if ( midGetAttributes != 0 && midSetAttributes != 0 )
+        {
+            jobject objParams = pEnv->CallObjectMethod( objWindow, midGetAttributes );
+            jclass clsParams = pEnv->GetObjectClass( objParams );
+            jfieldID fidCutout = pEnv->GetFieldID( clsParams, "layoutInDisplayCutoutMode", "I" );
+            if ( fidCutout != 0 )
+            {
+                pEnv->SetIntField( objParams, fidCutout, 1 );
+                pEnv->CallVoidMethod( objWindow, midSetAttributes, objParams );
+            }
+            else
+            {
+                // Older Android has no such field; nothing to do and nothing
+                // wrong.
+                pEnv->ExceptionClear();
+            }
+        }
+        else
+        {
+            pEnv->ExceptionClear();
+        }
+    }
     jmethodID midGetDecorView = pEnv->GetMethodID( clsWindow, "getDecorView", "()Landroid/view/View;" );
     jobject objDecor = pEnv->CallObjectMethod( objWindow, midGetDecorView );
 

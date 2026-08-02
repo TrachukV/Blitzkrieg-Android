@@ -9,6 +9,10 @@
 #include "..\UI\UI.h"
 #include "..\Misc\HPTimer.h"
 #include "..\Main\TextSystem.h"
+
+#ifndef _MSC_VER
+#include "bk1_black_rect_probe.h"
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <class TInterface, int NInterfaceTypeID>
 class CInterfaceCommandBase : public IInterfaceCommand
@@ -26,9 +30,23 @@ public:
 		PreCreate( pML );
 		//
 		TInterface *pInterface = CreateObject<TInterface>( NInterfaceTypeID );
+#ifndef _MSC_VER
+		// cmd-exec is logged and start-scr is not, so the screen is never started.
+		// These four say which of the steps in between is where it stops.
+		Bk1TraceAlwaysObjects( "exec-created", pInterface, NInterfaceTypeID, pML );
+#endif
 		pInterface->Init();
+#ifndef _MSC_VER
+		Bk1TraceAlwaysObjects( "exec-inited", pInterface, NInterfaceTypeID, pML );
+#endif
 		pML->ClearResources();
+#ifndef _MSC_VER
+		Bk1TraceAlwaysObjects( "exec-cleared", pInterface, NInterfaceTypeID, pML );
+#endif
 		pInterface->StartInterface();
+#ifndef _MSC_VER
+		Bk1TraceAlwaysObjects( "exec-started", pInterface, NInterfaceTypeID, pML );
+#endif
 		//
 		PostCreate( pML, pInterface );
 	}
@@ -56,7 +74,7 @@ class CInterfaceScreenBase : public IInterfaceBase
 	float fAveTPS;												// average TPS -~-
 	int nCPUFreq;													// main CPU frequence
 	//
-	std::list<SGameMessage> messages;			// сообщения наверх
+	std::list<SGameMessage> messages;			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	// 
 	std::string szBindSection;						// this interface bind section
 	const std::string szInterfaceType;		// interface type - "InterMission", "Mission"

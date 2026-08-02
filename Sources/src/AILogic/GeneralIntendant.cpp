@@ -101,6 +101,17 @@ bool CGeneralTaskToDefendStorage::EnumWorker( class CCommonUnit *pUnit, const en
 		Bk1TracePath( "worker-type", "", (int)eType );
 		Bk1TracePath( "worker-expect", "", (int)FT_TRUCK_REPAIR_BUILDING );
 		Bk1TracePath( "worker-unit", "", pUnit != 0 ? 1 : 0 );
+		// Reading the call chain has now cost seven passes and produced six wrong
+		// answers. Ask the stack who is calling instead -- the same instrument
+		// that named CTransition::Draw after the same kind of guessing.
+		{
+			static bool bOnce = false;
+			if ( !bOnce )
+			{
+				bOnce = true;
+				Bk1TraceBacktrace( "worker-stack" );
+			}
+		}
 #endif
 		NI_ASSERT_T(false, NStr::Format( "didn't asked worker of type %i", eType ) );
 

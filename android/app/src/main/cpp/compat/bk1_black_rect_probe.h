@@ -38,3 +38,6 @@ void Bk1LiftCurtain();
 // leaves its dialog open, save closes and writes nothing. This prints what each
 // one actually built, behind debug.blitzkrieg.saveload.
 void Bk1TracePath( const char *pszTag, const char *pszPath, int nValue );
+
+// Names the caller by return address, the way the black-screen probe did.
+void Bk1TraceBacktrace( const char *pszTag );

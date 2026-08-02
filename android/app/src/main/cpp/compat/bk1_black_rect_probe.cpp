@@ -126,3 +126,29 @@ void Bk1TracePath( const char *pszTag, const char *pszPath, int nValue )
 											 "%-14s n=%d path=[%s]",
 											 pszTag, nValue, pszPath ? pszPath : "(null)" );
 }
+
+void Bk1TraceBacktrace( const char *pszTag )
+{
+	if ( !IsPropertySet( "debug.blitzkrieg.saveload" ) )
+		return;
+
+	void *pFrames[16] = { 0 };
+	SUnwindState state = { pFrames, 16, 0 };
+	_Unwind_Backtrace( &CollectFrame, &state );
+
+	Dl_info selfInfo;
+	uintptr_t nBase = 0;
+	if ( dladdr( reinterpret_cast<void*>( &Bk1TraceBacktrace ), &selfInfo ) != 0 )
+		nBase = reinterpret_cast<uintptr_t>( selfInfo.dli_fbase );
+
+	__android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.saveload",
+											 "%s: base=%p frames=%d", pszTag,
+											 reinterpret_cast<void*>( nBase ), state.nCount );
+	for ( int i = 0; i < state.nCount; ++i )
+	{
+		const uintptr_t nPC = reinterpret_cast<uintptr_t>( pFrames[i] );
+		__android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.saveload",
+												 "  #%02d off=0x%lx", i,
+												 (unsigned long)( nBase != 0 && nPC > nBase ? nPC - nBase : nPC ) );
+	}
+}

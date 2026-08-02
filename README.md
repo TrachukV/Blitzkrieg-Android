@@ -196,9 +196,25 @@ The closing curtain of the finished mission is left in the scene, opaque,
 for ever. The first mission prints nothing at all, having no curtain to begin
 with.
 
-That is the whole mechanism, evidenced. What is not yet answered is why nothing
-removes it: `RemoveTransition` deletes scene object 0 of whatever scene the new
-screen holds, and either that is not this object or it is not this scene.
+The chain from there is short and the engine is right at every step of it.
+
+The closing curtain is started deliberately infinite --
+`PlayOverInterface( "movies\\transition\\close.bik", PLAY_INFINITE, true )` --
+because it is meant to hold the black while the old screen is torn down. The
+screen that follows lifts it in `StartInterface`, which calls
+`RemoveTransition`, which calls `pScene->RemoveSceneObject( 0 )`. That 0 is not
+an index: `RemoveSceneObject` takes a pointer, and a null one means "remove them
+all". So the engine's design is sound and self-consistent.
+
+Which leaves one line:
+
+```cpp
+void RemoveTransition() { if ( pScene ) pScene->RemoveSceneObject( 0 ); }
+```
+
+If `pScene` is null when the new screen starts, the lift is skipped in silence
+and the curtain stays. That is the last link to test, and it is one line rather
+than a phenomenon.
 
 Both switches stay in the build and are off unless asked for:
 

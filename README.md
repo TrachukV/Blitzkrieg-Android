@@ -182,10 +182,23 @@ The clock was the obvious suspect and it checks out: `timeGetTime` here is
 boot, the same shape and the same width as the Win32 original, and it cannot
 return the zero that `CTransition::Update` uses as its "not started" sentinel.
 
-So the fade is the mechanism and the clock is not the reason. What remains to
-check is whether the curtain is ever removed: `RemoveTransition` deletes scene
-object 0 of whatever scene the *new* screen holds, and a curtain left in the
-old one has nothing to do with that index.
+And measured, the curtain says the rest itself:
+
+    curtain: alpha 255.0 (0.0 -> 255.0), 51694 ms of 500, alive 1
+
+Three things at once. The alpha runs 0 to 255, so this is the *closing* curtain,
+not the opening one. Fifty-one seconds have passed against a five-hundred
+millisecond duration, so it finished long ago and sits at full black. And it
+still reports itself alive, because `bInfinite` makes `Update` return true
+whatever the clock says -- so the scene never drops it.
+
+The closing curtain of the finished mission is left in the scene, opaque,
+for ever. The first mission prints nothing at all, having no curtain to begin
+with.
+
+That is the whole mechanism, evidenced. What is not yet answered is why nothing
+removes it: `RemoveTransition` deletes scene object 0 of whatever scene the new
+screen holds, and either that is not this object or it is not this scene.
 
 Both switches stay in the build and are off unless asked for:
 

@@ -1467,6 +1467,27 @@ HRESULT STDCALL SDevice::DrawPrimitive( D3DPRIMITIVETYPE type, UINT nStartVertex
                 nStride, layout,
                 pStream->data.empty() ? 0 : &pStream->data[0] );
 
+    // The one value the whole chase now rests on: the vertex colour of the
+    // untextured quad that ends the frame. With no texture the stage answers
+    // white, so MODULATE leaves the diffuse alone -- and its alpha decides
+    // whether this quad is a black sheet or nothing at all.
+    // Rate-limited on its own counter, not on nDrawInFrame -- that one resets
+    // every frame and runs 0..180, so "% 240 == 1" only ever matched draw 1,
+    // which is textured, and the log stayed empty. Third instrument in a row
+    // to go wrong this way: the switch, the cache, and now the limiter.
+    static int nQuadLogs = 0;
+    if ( pStageTexture[0] == 0 && layout.bHasDiffuse && pStream != 0 &&
+         ( nQuadLogs++ % 120 ) == 0 )
+    {
+        const size_t nAt = (size_t)( (int)nStartVertex * nStride + layout.nDiffuseOffset );
+        if ( nAt + 4 <= pStream->data.size() )
+        {
+            const BYTE *p = &pStream->data[nAt];
+            __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
+                "untextured quad at draw %d: diffuse b=%u g=%u r=%u a=%u",
+                nDrawInFrame - 1, p[0], p[1], p[2], p[3] );
+        }
+    }
     glDrawArrays( PrimitiveMode( type ), 0, (GLsizei)VertexCount( type, nPrimitiveCount ) );
     WatchForBlack( nDrawInFrame - 1 );
     return D3D_OK;

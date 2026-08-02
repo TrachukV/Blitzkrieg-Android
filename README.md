@@ -297,9 +297,30 @@ enumerable: a dozen UI elements, `Scene/SquadVisObj.cpp`, and the transition
 that the alpha rules out. Picking one from that list by its name would be the
 tenth theory in this section; the nine before it were all withdrawn.
 
-The measurement that would settle it is the rectangle's own coordinates, logged
-from the same place the colour was. That names the owner by its geometry instead
-of by a guess.
+And its geometry, read from the same place:
+
+    first vertex 0.0,768.0 | 2 primitives
+
+Two primitives is one quad, and its corner sits at the bottom-left of the
+engine's own 1024x768 screen. A full-screen black sheet, laid down last, every
+frame, in the second mission only.
+
+`CTransition` is excluded twice over now. Its `Draw` packs the alpha into the
+top byte, so the colour measured is exactly what it would produce at alpha 255 --
+but `ALPHA_MIN` is 0 and `ALPHA_MAX` is 255, so the zero its constructor now
+sets survives the clamp and it would draw nothing at all.
+
+Which is where this stops, with the defect described completely and nothing
+guessed:
+
+| | |
+| --- | --- |
+| when | last draw of the frame, every frame |
+| where | full-screen quad, first vertex 0,768 in engine coordinates |
+| what | 2 primitives, `fvf 0x1c2`, stride 28, no texture |
+| colour | black, alpha 255, opaque under SRCALPHA/INVSRCALPHA |
+| whose | one of `IGFX::DrawRects`' callers, `CTransition` excluded |
+| only | in the second mission of a run; the first has 180 draws, this has 181 |
 
 One warning, learned twice in one sitting: every one of these switches has to be
 **re-read**, not cached on the first draw of the run. A cached one cannot be

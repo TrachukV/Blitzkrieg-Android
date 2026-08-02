@@ -1486,9 +1486,22 @@ HRESULT STDCALL SDevice::DrawPrimitive( D3DPRIMITIVETYPE type, UINT nStartVertex
         if ( nAt + 4 <= pStream->data.size() )
         {
             const BYTE *p = &pStream->data[nAt];
+            // The geometry as well as the colour: a rectangle names its owner
+            // by where it is and how big it is, where a plausible-sounding
+            // class name names nothing.
+            const size_t nPos = nAt - (size_t)layout.nDiffuseOffset +
+                                (size_t)layout.nPositionOffset;
+            float fX = 0.0f, fY = 0.0f;
+            if ( nPos + 8 <= pStream->data.size() )
+            {
+                memcpy( &fX, &pStream->data[nPos], 4 );
+                memcpy( &fY, &pStream->data[nPos + 4], 4 );
+            }
             __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
-                "untextured quad at draw %d: diffuse b=%u g=%u r=%u a=%u",
-                nDrawInFrame - 1, p[0], p[1], p[2], p[3] );
+                "untextured quad at draw %d: diffuse b=%u g=%u r=%u a=%u | "
+                "first vertex %.1f,%.1f | %u primitives",
+                nDrawInFrame - 1, p[0], p[1], p[2], p[3], fX, fY,
+                (unsigned)nPrimitiveCount );
         }
     }
     glDrawArrays( PrimitiveMode( type ), 0, (GLsizei)VertexCount( type, nPrimitiveCount ) );
@@ -1573,9 +1586,22 @@ HRESULT STDCALL SDevice::DrawIndexedPrimitive( D3DPRIMITIVETYPE type, UINT,
         if ( nAt + 4 <= pStream->data.size() )
         {
             const BYTE *p = &pStream->data[nAt];
+            // The geometry as well as the colour: a rectangle names its owner
+            // by where it is and how big it is, where a plausible-sounding
+            // class name names nothing.
+            const size_t nPos = nAt - (size_t)layout.nDiffuseOffset +
+                                (size_t)layout.nPositionOffset;
+            float fX = 0.0f, fY = 0.0f;
+            if ( nPos + 8 <= pStream->data.size() )
+            {
+                memcpy( &fX, &pStream->data[nPos], 4 );
+                memcpy( &fY, &pStream->data[nPos + 4], 4 );
+            }
             __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
-                "untextured quad at draw %d: diffuse b=%u g=%u r=%u a=%u",
-                nDrawInFrame - 1, p[0], p[1], p[2], p[3] );
+                "untextured quad at draw %d: diffuse b=%u g=%u r=%u a=%u | "
+                "first vertex %.1f,%.1f | %u primitives",
+                nDrawInFrame - 1, p[0], p[1], p[2], p[3], fX, fY,
+                (unsigned)nPrimitiveCount );
         }
     }
     glDrawElements( PrimitiveMode( type ), (GLsizei)VertexCount( type, nPrimitiveCount ),

@@ -134,7 +134,14 @@ recurses into whatever comes back marked as a directory, and directories rarely
 have dots, so the walk never descended. Every list built by scanning a tree came
 up empty. One line, and six tutorials appeared.
 
-Known broken: **the mission after the first renders black.** Finishing a mission
+**Fixed.** The answer is at the end of this section; the record of getting there
+is left standing because most of it is wrong, and the wrong parts are the useful
+ones. Short version: `CTransition` paints it, the curtain that `FinishInterface`
+lowers is infinite by design, and the screen that should lift it is reached by
+popping -- a path that never calls `StartInterface`. What follows is what was
+believed along the way.
+
+Was broken: **the mission after the first renders black.** Finishing a mission
 reaches the statistics screen, which is correct and complete -- the table, both
 sides, the timings -- and leaving it advances the campaign. The next mission
 then loads, runs its script and holds 60 fps at 181 draws a frame, and the
@@ -333,13 +340,55 @@ ten withdrawn readings above were made of. Tracing `CSimpleWindow::DrawBackgroun
 for a full-screen rectangle printed nothing, so the quad does not come through
 that function -- one candidate eliminated, and the trace taken back out.
 
-This is where the investigation stopped. Seven instrumentation attempts in a row
-missed -- a cached switch, the same cache again, a limiter on the wrong counter,
-a limiter on the wrong draw, a log on one draw path of two, a compile error
-fixing that, and finally a trace in a function the draw does not pass through.
-Each cost a full cycle and each produced a silence indistinguishable from a
-finding. The bug is described exactly above; naming its owner needs a different
-approach than more traces from inside the engine.
+This is where the investigation stopped the first time. Seven instrumentation
+attempts in a row missed -- a cached switch, the same cache again, a limiter on
+the wrong counter, a limiter on the wrong draw, a log on one draw path of two, a
+compile error fixing that, and finally a trace in a function the draw does not
+pass through. Each cost a full cycle and each produced a silence
+indistinguishable from a finding.
+
+### What it actually was
+
+Stop reasoning about which object it might be, and ask the code. `DrawRects` is
+the one funnel every rectangle passes through, so a probe there recording the
+**return address** names the caller with nothing inferred:
+
+    CTransition::Draw            Scene/Transition.cpp:32
+    CScene::Draw                 Scene/SceneDraw.cpp:694   (alwaysObjects)
+    CInterfaceScreenBase::Step   Common/InterfaceScreenBase.cpp:244
+
+Identical on all 10812 samples. So `CTransition` was the painter the whole time,
+and the withdrawal above that cleared it was itself wrong -- it cleared the right
+suspect on indirect evidence.
+
+The rest followed from tracing the always-visible list and the command queue:
+
+- `FinishInterface` lowers a curtain: `PlayOverInterface` with `PLAY_INFINITE`,
+  so the transition fades to opaque black and **stays** there deliberately while
+  the next screen loads.
+- The next screen lifts it in `StartInterface` via `RemoveTransition`.
+- The queue is healthy. The command is created, counts down once per frame
+  (`650 -> 364 -> ... -> 18`) and executes. No `IsValid` failure, no
+  `ResetStack`. Both explanations guessed before this trace were wrong.
+- The command is `MAIN_COMMAND_POP` -- id 268501014, which is
+  `MAIN_BASE_VALUE + 22`. Not `CAMPAIGN` and not `CHAPTER`, which live at
+  `0x100e0085` and `0x100e0087` and were never involved.
+
+`POP` does not build an interface, so it never runs
+`CInterfaceCommandBase::Exec`, so `StartInterface` is never called, so nothing
+lifts the curtain. `CMainLoop::PopInterface` hands the screen underneath the
+focus and nothing more. Every later frame then draws correctly underneath an
+opaque black sheet.
+
+The fix follows the engine's own contract -- a screen that becomes current lifts
+the curtain. Screens built by a command do it in `StartInterface`; a screen
+reached by popping now does it in `PopInterface`. It removes only the curtain,
+not the whole always-visible list the way `RemoveTransition` does, because on
+that path the list also holds the mission's gamma fader.
+
+Verified on the emulator on the exact sequence that used to fail: finish mission
+one, dismiss statistics, and the next mission renders. Re-checked on a build with
+the diagnostics compiled out.
 
 One warning, learned twice in one sitting: every one of these switches has to be
 **re-read**, not cached on the first draw of the run. A cached one cannot be
@@ -351,28 +400,46 @@ Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road
 after a mission is a test of the port and playing well enough to earn it is not.
 
-Known broken: **Restart Mission aborts.** Taking the in-game menu (Escape twice
--- the first press is eaten by whatever panel is open) and choosing End Mission
-then Restart Mission kills the process while it tears the units down:
+Known broken: **Restart Mission aborts.** Reproduced on the German campaign's
+first mission -- End Mission, then Restart Mission -- and this is the captured
+stack, not a reconstruction:
 
+    Abort message: 'Pure virtual function called!'
     __cxa_pure_virtual
-      CUnitTurret::~CUnitTurret()
+      CUnitTurret::~CUnitTurret()+60
+      CUnitTurret::Release(int, int)
       CMilitaryCar::~CMilitaryCar()
-      CAITransportUnit::Release()
+      CTank::Release(int, int)
+      CListsSet<CObj<CAIUnit>>::~CListsSet()
+      NGlobalObjects::Clear()
+      CAILogic::Clear()
 
-A pure virtual call during destruction. libc++ aborts on that where MSVC quietly
-did something else, which is why twenty years of Windows play never showed it.
+An earlier version of this file named `CAITransportUnit::Release` here. It does
+not appear in the stack at all; the teardown runs from `CAILogic::Clear` through
+the global unit list. That guess is retired.
 
-The abort is inside the derived destructor rather than the base, which narrows
-it: `CUnitTurret` implements `CTurret`'s owner accessors -- `GetOwnerCenter`,
-`GetOwnerFrontDir`, `GetOwnerZ`, `GetOwnerParty` -- and holds a
-`CPtr<CAIUnit> pOwner`. Releasing that reference while the turret is being torn
-down can send control back through a base pointer into a vtable whose derived
-half has gone.
+What the stack and the class say together, with nothing added: `CUnitTurret`
+declares no destructor, and of its members only `CPtr<CAIUnit> pOwner` is
+non-trivial -- `nModelPart`, `dwGunCarriageParts`, `wHorConstraint`,
+`wVerConstraint` and `bCanRotateTurret` are all PODs. So the entire body of the
+generated destructor is releasing that one reference, and that is where it
+aborts.
 
-Left as a lead rather than patched: which object should outlive which is a
-question about the ownership graph, and guessing at it would change behaviour
-rather than fix it.
+`pOwner` points back at the object being destroyed. `~CMilitaryCar` releases its
+turret; the turret releases a counted reference to the car that owns it. Unit
+owns turret, turret owns unit -- a cycle. Releasing it from inside the owner's
+destructor reaches an object whose vtable has already dropped to `CTurret`,
+where seven accessors are pure.
+
+Not patched. The right repair is to make the turret's back-pointer non-owning,
+but `pOwner` is serialized and read across AILogic, so changing what keeps a
+unit alive needs testing far wider than the single path reproducible here.
+Giving the pure virtuals safe defaults would silence the abort and leave the
+cycle in place, which is worse than a known crash.
+
+End Mission on its own tears down cleanly on the same build. The fault is
+specific to restart, which queues `MISSION_COMMAND_MISSION` while the old
+mission is still alive.
 
 Not verified, and I will not claim otherwise: no real device -- every figure
 here is from an arm64 emulator; no campaign played to the end, only its opening

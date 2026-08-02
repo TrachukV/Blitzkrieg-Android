@@ -218,10 +218,17 @@ runs after a mission ends -- `CInterfaceScreenBase::StartInterface`, which every
 screen overrides without calling the base, nor `OpenCurtains`, which the screen
 after a mission does not call.
 
-So the curtain is left up because nobody asks for it to come down. That is the
-end of the diagnosis and the beginning of the fix, and the fix is a decision
-about which screen should be lifting it rather than a defect to correct in
-place.
+There is no contradiction with the original, either: `CScene::Clear` does drop
+these objects, so on Windows the curtain goes when the next mission clears the
+scene, and nobody has to ask.
+
+In this port it survived both the statistics screen and a mission load -- the
+trace had it alive and opaque for fifty-one seconds straight. So the last link
+is narrow: either the scene is not cleared between missions here, or the curtain
+is hanging in a different scene from the one that gets cleared -- the interface's
+`pScene` and the scene the mission tears down being two objects rather than one.
+
+That is one check, and it is likely to be the fix as well.
 
 Both switches stay in the build and are off unless asked for:
 

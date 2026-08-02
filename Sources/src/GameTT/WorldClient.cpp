@@ -2,6 +2,10 @@
 
 #include "WorldClient.h"
 
+#ifndef _MSC_VER
+#include "bk1_black_rect_probe.h"
+#endif
+
 #include "..\Formats\fmtTerrain.h"
 #include "..\AILogic\AITypes.h"
 #include "..\Common\Actions.h"
@@ -1797,7 +1801,7 @@ void CWorldClient::OnMouseMove( const CVec2 &vPos, interface IUIElement *pUIPick
 	{
 		GetSingleton<ICursor>()->SetMode( 0 );
 		SetStatusBar( 0 );
-		CTRect<float> rcOut; // это просто затычка, можно не заполнять
+		CTRect<float> rcOut; // пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		if ( bSetPlayerTooltip )
 			pScene->SetToolTip( 0, VNULL2, rcOut, 0x00000000 );
 		bSetPlayerTooltip = false;
@@ -2118,7 +2122,7 @@ void CWorldClient::ReportObjectiveStateChanged( int nObjective, int nState )
 
 				pHeaderText = pTexMan->GetDialog( pMission->objectives[nObjective].szHeader.c_str() );
 				pDescriptionText = pTexMan->GetDialog( pMission->objectives[nObjective].szDescriptionText.c_str() );
-				//ставим метку
+				//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 				if ( IUIScreen *pUIScreen = pScene->GetMissionScreen() )
 				{
 					if ( IUIMiniMap *pUIMiniMap = checked_cast<IUIMiniMap*>( pUIScreen->GetChildByID( 20000 ) ) )
@@ -2156,8 +2160,37 @@ void CWorldClient::ReportObjectiveStateChanged( int nObjective, int nState )
 	}
 	
 
+#ifndef _MSC_VER
+	// Both sides of the same string, counted two ways. The loop is the truth:
+	// it walks 16-bit units to the terminator and cannot be wrong about a
+	// 16-bit string. std::wstring takes its length through
+	// char_traits<wchar_t>::length, which is where a string measured as if it
+	// were 32-bit would lose half its characters.
+	//
+	// If the two disagree, the cause of the truncated mission text is found and
+	// the fix is narrow. If they agree, this whole line of thinking is dead and
+	// the loss happens further along. Either answer is worth one build.
+	{
+		IText *pProbe[2] = { pStateText, pDescriptionText };
+		const char *pszWhich[2] = { "state-text", "description" };
+		for ( int i = 0; i < 2; ++i )
+		{
+			if ( pProbe[i] == 0 || pProbe[i]->GetString() == 0 )
+				continue;
+			const wchar_t *pszText = pProbe[i]->GetString();
+			int nWalked = 0;
+			while ( pszText[nWalked] != 0 && nWalked < 100000 )
+				++nWalked;
+			const int nByString = int( std::wstring( pszText ).size() );
+			Bk1TracePath( pszWhich[i],
+			              nWalked == nByString ? "lengths agree" : "LENGTHS DISAGREE",
+			              nWalked * 1000 + nByString );
+		}
+	}
+#endif
+
 	// form complete string with objective report
-	if ( (pStateText != 0) && (pStateText->GetString() != 0) ) 
+	if ( (pStateText != 0) && (pStateText->GetString() != 0) )
 	{
 		std::wstring szObjective;
 		if ( (pHeaderText != 0) && (pHeaderText->GetString() != 0) ) 

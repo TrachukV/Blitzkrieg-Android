@@ -63,6 +63,26 @@ add_compile_options(
     # visibility have to hold across every unit that ends up in the library, or
     # the ABI check stops meaning anything.
     -fshort-wchar
+    # ...and with it, the wide-string functions have to be ours. Clang folds
+    # wcslen into an inline scan sized for the 32-bit wchar_t it believes the
+    # target has, so std::wstring built from a pointer -- which takes its length
+    # through char_traits<wchar_t>::length -- came out short. That reached the
+    # screen: a mission instruction of 198 characters drew as 99, cut mid-word.
+    # Measured at the point the string is built, the same text counted 320 by
+    # hand and 162 through std::wstring.
+    #
+    # Being inline is also why checking the shipped library for imported wcs*
+    # symbols found none and wrongly cleared the C library of any part in it.
+    # These flags send the calls to compat/bk1_wide_strings.cpp instead, which
+    # counts in 16-bit units.
+    -fno-builtin-wcslen
+    -fno-builtin-wcscpy
+    -fno-builtin-wcscmp
+    -fno-builtin-wmemcpy
+    -fno-builtin-wmemmove
+    -fno-builtin-wmemset
+    -fno-builtin-wmemcmp
+    -fno-builtin-wmemchr
     # char is signed under MSVC and unsigned on ARM by default, and the engine
     # was written against the first. It packs a surface normal into a DWORD one
     # byte a component and reads it back with
@@ -96,6 +116,7 @@ target_include_directories( native_app_glue PUBLIC
 
 set( COMPAT_SOURCES
     compat/bk1_win32_files.cpp
+    compat/bk1_wide_strings.cpp
     compat/bk1_win32_fileio.cpp
     compat/bk1_win32_strings.cpp
     compat/bk1_win32_registry.cpp

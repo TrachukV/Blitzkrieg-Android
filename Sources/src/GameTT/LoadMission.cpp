@@ -4,6 +4,10 @@
 
 #include "..\Main\iMainCommands.h"
 #include "SaveLoadCommon.h"
+
+#ifndef _MSC_VER
+#include "bk1_black_rect_probe.h"
+#endif
 #include "CommonId.h"
 #include "..\Main\ScenarioTracker.h"
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,6 +119,12 @@ void CInterfaceLoadMission::StartInterface()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CInterfaceLoadMission::ProcessMessage( const SGameMessage &msg )
 {
+#ifndef _MSC_VER
+	// Nothing at all was logged inside IMC_OK, so the question is no longer what
+	// the handler decides -- it is which events reach this screen when the tick
+	// button is pressed.
+	Bk1TracePath( "load-msg", "", msg.nEventID );
+#endif
 	switch ( msg.nEventID )
 	{
 		case IMC_SELECTION_CHANGED:
@@ -153,11 +163,20 @@ bool CInterfaceLoadMission::ProcessMessage( const SGameMessage &msg )
 				if ( !pList )
 					return true;			//�� ������� list control
 				int nSave = pList->GetSelectionItem();
+#ifndef _MSC_VER
+				// The dialog stays open when OK is pressed, which means this handler
+				// returns before CloseInterface -- and the only early exit left is
+				// the selection coming back as -1.
+				Bk1TracePath( "load-ok", "", nSave );
+#endif
 				if ( nSave == -1 )
 					return true;
 
 				std::string szEdit = szSaves[nSave];
 				IMainLoop *pML = GetSingleton<IMainLoop>();
+#ifndef _MSC_VER
+				Bk1TracePath( "load-cmd", szEdit.c_str(), nSave );
+#endif
 				CloseInterface();
 				pML->Command( MAIN_COMMAND_LOAD, szEdit.c_str() );
 				pML->Command( MAIN_COMMAND_CMD, NStr::Format("%d", CMD_GAME_UNPAUSE_MENU) );	//������ �����

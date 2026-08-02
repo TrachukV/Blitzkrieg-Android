@@ -117,3 +117,12 @@ void Bk1TraceAlwaysObjects( const char *pszWhat, const void *pObject, int nSize,
 											 "%-10s obj=%p size=%d scene=%p",
 											 pszWhat, pObject, nSize, pScene );
 }
+
+void Bk1TracePath( const char *pszTag, const char *pszPath, int nValue )
+{
+	if ( !IsPropertySet( "debug.blitzkrieg.saveload" ) )
+		return;
+	__android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.saveload",
+											 "%-14s n=%d path=[%s]",
+											 pszTag, nValue, pszPath ? pszPath : "(null)" );
+}

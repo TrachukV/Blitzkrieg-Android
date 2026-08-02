@@ -4,6 +4,10 @@
 
 #include "..\Main\iMainCommands.h"
 #include "SaveLoadCommon.h"
+
+#ifndef _MSC_VER
+#include "bk1_black_rect_probe.h"
+#endif
 #include "CommonId.h"
 #include "..\UI\UIMessages.h"
 #include "..\Main\ScenarioTracker.h"
@@ -200,6 +204,12 @@ bool CInterfaceSaveMission::ProcessMessage( const SGameMessage &msg )
 				std::string szFileName = GetSingleton<IMainLoop>()->GetBaseDir();
 				szFileName += "saves\\";
 				szFileName += szEdit + ".sav";
+#ifndef _MSC_VER
+				// The dialog closes and no file appears. This says which directory
+				// the name was built against -- GetBaseDir here, which is a
+				// different source from the one the list enumerates.
+				Bk1TracePath( "save-path", szFileName.c_str(), (int)szEdit.size() );
+#endif
 
 				// check if file exists
 				if ( NFile::IsFileExist( szFileName.c_str() ) )

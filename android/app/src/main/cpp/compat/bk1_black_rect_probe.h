@@ -33,3 +33,8 @@ void Bk1TraceAlwaysObjects( const char *pszWhat, const void *pObject, int nSize,
 // InterfaceScreenBase.h because CMainLoop::PopInterface needs it and Main does
 // not include the Common screen header. Defined in InterfaceScreenBase.cpp.
 void Bk1LiftCurtain();
+
+// Save and load compose a file name and then act on it. Neither works: load
+// leaves its dialog open, save closes and writes nothing. This prints what each
+// one actually built, behind debug.blitzkrieg.saveload.
+void Bk1TracePath( const char *pszTag, const char *pszPath, int nValue );

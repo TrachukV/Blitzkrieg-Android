@@ -550,6 +550,11 @@ void CUpdater::GetNewStaticObjects( struct SNewUnitInfo **pObjects, int *pnLen )
 			Bk1TracePath( "recalled-NULL", "", nNullRecalled );
 	}
 	const int nAfterRecalled = *pnLen;
+	// GetTempRawBuffer_Hook reserves on a vector and hands back &v[0]. reserve
+	// reallocates when it grows, so any nested request for a bigger buffer moves
+	// this array and the entries already written go with it. Comparing the
+	// address before and after the loop says whether that is what happens.
+	const void *pBufferAtStart = (const void *)*pObjects;
 #endif
 	for ( CComplexUpdatesSet::iterator iter = complexUpdates[ACTION_NOTIFY_NEW_ST_OBJ >> 4].begin(); iter != complexUpdates[ACTION_NOTIFY_NEW_ST_OBJ >> 4].end(); ++iter )
 	{
@@ -580,6 +585,11 @@ void CUpdater::GetNewStaticObjects( struct SNewUnitInfo **pObjects, int *pnLen )
 		Bk1TracePath( "complex", "", *pnLen - nAfterRecalled );
 		if ( nNullLoop != 0 )
 			Bk1TracePath( "complex-NULL", "", nNullLoop );
+		// Same size as the original request, so this call cannot grow the vector
+		// itself. A different address means something else did, mid-loop.
+		const void *pBufferNow = (const void *)GetTempBuffer<SNewUnitInfo>( nSize );
+		Bk1TracePath( pBufferNow == pBufferAtStart ? "buffer-same" : "buffer-MOVED",
+									"", nSize );
 	}
 #endif
 	ClearAllUpdates( ACTION_NOTIFY_NEW_ST_OBJ );

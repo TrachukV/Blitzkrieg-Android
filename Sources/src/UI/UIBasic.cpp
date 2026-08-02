@@ -1,5 +1,10 @@
 #include "StdAfx.h"
 #include "..\Main\TextSystem.h"
+
+#ifndef _MSC_VER
+#include "bk1_black_rect_probe.h"
+#endif
+
 #include "UIBasic.h"
 #include "UIBasicM.h"
 #include "UIMessages.h"
@@ -50,20 +55,20 @@ void CSimpleWindow::GetTextSize( const int nState, int *pSizeX, int *pSizeY ) co
 void CSimpleWindow::CopyInternals( CSimpleWindow * pWnd )
 {
 	//*pWnd = *this;
-	pWnd->wndRect = wndRect;							//координаты окошка относительно экрана
-	pWnd->nPositionFlag = nPositionFlag;									//задает точку привязки
-	pWnd->vPos = vPos;													//координаты левой верхней точки окошка относительно выбранной точки привязки
-	pWnd->vSize = vSize;												//размеры окошка
-	pWnd->nID = nID;														//уникальный идентификатор окошка
-	pWnd->pParent = pParent;					//родитель
-	pWnd->bWindowActive = bWindowActive;									//активно ли окно				//??
-	pWnd->nCmdShow = nCmdShow;												//статус обображения окна
+	pWnd->wndRect = wndRect;							//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+	pWnd->nPositionFlag = nPositionFlag;									//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	pWnd->vPos = vPos;													//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	pWnd->vSize = vSize;												//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+	pWnd->nID = nID;														//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+	pWnd->pParent = pParent;					//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	pWnd->bWindowActive = bWindowActive;									//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ				//??
+	pWnd->nCmdShow = nCmdShow;												//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 	
-	pWnd->nCurrentState = nCurrentState;									//текущее состояние
-	pWnd->nCurrentSubState = nCurrentSubState;								//текущее подсостояние окошка: NORMAL, HIGHLIGHTED, PUSHED
-	pWnd->bShowBackground = bShowBackground;								//отображать или нет текстуру ( имеет смысл для окошек только с текстом )
+	pWnd->nCurrentState = nCurrentState;									//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	pWnd->nCurrentSubState = nCurrentSubState;								//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ: NORMAL, HIGHLIGHTED, PUSHED
+	pWnd->bShowBackground = bShowBackground;								//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ( пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ )
 	
-	pWnd->szHighSound = szHighSound;						//звук, проигрываемый когда мышка наводится на контрол, возможно они должны быть разные для разных state, хз
+	pWnd->szHighSound = szHighSound;						//пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ state, пїЅпїЅ
 	
 	pWnd->nTextAlign = nTextAlign;
 	pWnd->dwTextColor = dwTextColor;
@@ -83,7 +88,7 @@ void CSimpleWindow::CopyInternals( CSimpleWindow * pWnd )
 	pWnd->nBlink = nBlink;
 	pWnd->dwLastBlinkTime = dwLastBlinkTime;
 	pWnd->dwCurrentBlinkColor = dwCurrentBlinkColor;
-	pWnd->bBlinking = bBlinking;											//если true то сейчас кнопочка мигает
+	pWnd->bBlinking = bBlinking;											//пїЅпїЅпїЅпїЅ true пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	pWnd->dwBlinkTime = dwBlinkTime;
 	pWnd->nBlinkColorIndex = nBlinkColorIndex;								// color number (for blinking)
 
@@ -212,11 +217,11 @@ void CSimpleWindow::InitDependentInfo()
 			}
 		}
 
-		//прогрузим тултипы для внутренних states
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ states
 		for ( int i = 0; i < states.size(); i++ )
 		{
 			if ( states[i].szToolKey.size() == 0 )
-				states[i].szToolKey = szToolKey;		//старый tooltip
+				states[i].szToolKey = szToolKey;		//пїЅпїЅпїЅпїЅпїЅпїЅ tooltip
 			if ( states[i].szToolKey.size() > 0 )
 				states[i].pToolText = GetSingleton<ITextManager>()->GetString( states[i].szToolKey.c_str() );
 			else
@@ -291,9 +296,9 @@ bool CSimpleWindow::IsInside( const CVec2 &vPos )
 		return wndRect.IsInside( vPos );
 	
 	if ( !wndRect.IsInside( vPos ) )
-		return false;			//вне прямоугольника кнопки
+		return false;			//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	
-	//пересчитаем экранные координаты в координаты маски
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	int nSizeX = subState.pTexture->GetSizeX( 0 );
 	int nSizeY = subState.pTexture->GetSizeY( 0 );
 	
@@ -343,7 +348,7 @@ void CSimpleWindow::SetWindowPlacement( const CVec2 *_vPos, const CVec2 *_vSize 
 		vPos = *_vPos;
 	if ( _vSize != 0 )
 	{
-		//{на хрена это здесь нужно???
+		//{пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ???
 		vSize = *_vSize;
 		CTRect<float> rc;
 		rc.left = rc.top = 0.0f;
@@ -478,18 +483,18 @@ bool CSimpleWindow::Update( const NTimer::STime &currTime )
 
 	if ( currTime - dwLastBlinkTime < dwBlinkTime )
 	{
-		//мигаем
+		//пїЅпїЅпїЅпїЅпїЅпїЅ
 		DWORD dwSubBlinkTime = GetGlobalVar( "BlinkSubTime", 1 );
 		int nStage = (currTime - dwLastBlinkTime) / dwSubBlinkTime;
 		if ( nStage & 0x01 )
 		{
-			//нормальный цвет
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 			//dwCurrentBlinkColor = 0xff000000;
 			dwCurrentBlinkColor = states[nCurrentState].subStates[nCurrentSubState].specular;
 		}
 		else
 		{
-			//подсвеченная кнопка
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			std::string szBlinkKey = "BlinkColor";
 			szBlinkKey += NStr::Format( "%d", nBlinkColorIndex );
 			dwCurrentBlinkColor = GetGlobalVar( szBlinkKey.c_str(), (int) 0xffff0000 );
@@ -522,7 +527,7 @@ void CSimpleWindow::SetFocus( bool bFocus )
 {
 	if ( bFocus )
 	{
-		//устанавливаем новую цепочку фокус окошек
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		IUIElement *pWnd = dynamic_cast<IUIElement *> ( this );
 		GetParent()->SetFocusedWindow( pWnd );
 	}
@@ -539,18 +544,18 @@ void CSimpleWindow::ShowWindow( int _nCmdShow )
 			{
 			}
 			else if ( _nCmdShow == UI_SW_SHOW || _nCmdShow == UI_SW_MAXIMIZE || _nCmdShow == UI_SW_SHOW_MODAL )
-				pParent->MoveWindowUp( pWnd );			//вверх очереди, рисуется последним
+				pParent->MoveWindowUp( pWnd );			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			else if ( _nCmdShow == UI_SW_LAST || _nCmdShow == UI_SW_MINIMIZE  )
-				pParent->MoveWindowDown( pWnd );		//вниз очереди
+				pParent->MoveWindowDown( pWnd );		//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			//		else if ( _nCmdShow == UI_SW_HIDE )
-			//			pParent->MoveWindowDown( pWnd );		//если окно скрывается, сразу его перевожу вниз очереди
+			//			pParent->MoveWindowDown( pWnd );		//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		}
 	}
 /*
 	else
 	{
 		if ( pWnd && pParent )
-			pParent->MoveWindowDown( pWnd );		//вниз очереди
+			pParent->MoveWindowDown( pWnd );		//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	}
 */
 	nCmdShow = _nCmdShow;
@@ -558,10 +563,10 @@ void CSimpleWindow::ShowWindow( int _nCmdShow )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CSimpleWindow::Reposition( const CTRect<float> &rcParent )
 {
-	//если вызвался reposition, значит были изменены координаты родителя.
-	//пользуясь координатами относительно parent здесь мы изменяем свои координаты
+	//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ reposition, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ parent пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 /*
-	// вычислим точку привязки у парента:
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ:
 	CVec2 vParent;
 	CVec2 vAxis( 1, 1 );
 	switch ( (nPositionFlag >> 8) & 0x0f )
@@ -590,7 +595,7 @@ void CSimpleWindow::Reposition( const CTRect<float> &rcParent )
 			vParent.y = rcParent.y1 + rcParent.Height()/2;
 			break;
 	}
-	// вычислим точку привязки у ребёнка:
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ:
 	CVec2 vChild;
 	switch ( nPositionFlag & 0x0f )
 	{
@@ -674,12 +679,12 @@ void CSimpleWindow::UpdateLocalCoordinates()
 {
 /*
 	if ( !pParent )
-		return;					//может быть это screen ?
+		return;					//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ screen ?
 
 	CMultipleWindow *pRealParent = dynamic_cast<CMultipleWindow *> ( pParent.GetPtr() );
 	NI_ASSERT( pRealParent != 0 );
 
-	//вычисляем новые значения локальных координат, пользуясь глобальными координатами и pParent
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ pParent
 	const CTRect<float> &rcParent = pRealParent->GetScreenRect();
 	switch ( nPositionFlag & 0xf )
 	{
@@ -707,8 +712,8 @@ void CSimpleWindow::UpdateLocalCoordinates()
 */
 
 /*
-	//теперь если это multiple window надо вызвать reposition для всех children
-	Reposition( rcParent );			//мне пофиг сколько эта функция будет выполняться
+	//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ multiple window пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ reposition пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ children
+	Reposition( rcParent );			//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 */
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -765,7 +770,7 @@ void CSimpleWindow::VisitBackground( ISceneVisitor *pVisitor )
 		
 		if ( bBounded )
 		{
-			// проверим, вдруг видно только часть контрола
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			float fTemp = rcBound.x1 - rc.rect.x1;
 			if ( fTemp > 0 )
 			{
@@ -865,7 +870,7 @@ void CSimpleWindow::VisitText( ISceneVisitor *pVisitor )
 
 	if ( vShadowShift.x != 0 || vShadowShift.y != 0 )
 	{
-		// рисуем тень
+		// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 		CTRect<float> shadowRC = textRC;
 		shadowRC.x1 += vShadowShift.x;
 		shadowRC.y1 += vShadowShift.y;
@@ -921,7 +926,7 @@ void CSimpleWindow::DrawBackground( IGFX *pGFX )
 			
 			if ( bBounded )
 			{
-				// проверим, вдруг видно только часть контрола
+				// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				float fTemp;
 				fTemp = rcBound.x1 - rc.rect.x1;
 				if ( fTemp > 0 )
@@ -1023,7 +1028,7 @@ void CSimpleWindow::DrawText( IGFX *pGFX )
 
 	if ( vShadowShift.x != 0 || vShadowShift.y != 0 )
 	{
-		//рисуем тень
+		//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 		CTRect<float> shadowRC = textRC;
 		shadowRC.x1 += vShadowShift.x;
 		shadowRC.y1 += vShadowShift.y;
@@ -1046,41 +1051,41 @@ bool CSimpleWindow::OnMouseMove( const CVec2 &vPos, EMouseState mState )
 		return false;
 	}
 
-	//Если левая кнопка мышки не нажата
+	//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	if ( mState == E_MOUSE_FREE )
 	{
 		if ( !IsInside( vPos ) )
 		{
-			//Мышка вне окошка
+			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			nCurrentSubState = E_NORMAL_STATE;
 			return false;
 		}
 		else
 		{
-			//Мышка внутри окошка
+			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			if ( nCurrentSubState == E_NORMAL_STATE )
 			{
 				nCurrentSubState = E_HIGHLIGHTED_STATE;
 				
-				// Проигрываем high звук
+				// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ high пїЅпїЅпїЅпїЅ
 				GetSingleton<IScene>()->AddSound( szHighSound.c_str(), VNULL3, SFX_INTERFACE, SAM_ADD_N_FORGET, ESCT_GENERIC );
 			}
 			return true;
 		}
 	}
 	
-	//Если левая или правая кнопка мышки нажата
+	//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	if ( mState & E_LBUTTONDOWN || mState & E_RBUTTONDOWN )
 	{
 		if ( !IsInside( vPos ) )
 		{
-			//Мышка вне окошка
+			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			nCurrentSubState = E_NORMAL_STATE;
 			return true;
 		}
 		else
 		{
-			//Мышка внутри окошка
+			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			nCurrentSubState = E_PUSHED_STATE;
 			return true;
 		}
@@ -1113,21 +1118,21 @@ bool CSimpleWindow::OnLButtonDown( const CVec2 &vPos, EMouseState mouseState )
 
 	if ( !IsInside( vPos ) )
 	{
-		//Мышка вне окошка
+		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		nCurrentSubState = E_NORMAL_STATE;
 		return false;
 	}
 	else
 	{
-		//Мышка внутри окошка
+		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		if ( nCurrentSubState != E_PUSHED_STATE )
 		{
-			//Проигрываем push звук
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ push пїЅпїЅпїЅпїЅ
 			GetSingleton<IScene>()->AddSound( states[nCurrentState].szPushSound.c_str(), VNULL3, SFX_INTERFACE, SAM_ADD_N_FORGET );
 		}
 		nCurrentSubState = E_PUSHED_STATE;
 
-		//Информируем об нажатии мышкой на кнопку
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		SUIMessage msg;
 		msg.nMessageCode = UI_NOTIFY_WINDOW_CLICKED;
 		msg.nFirst = nID;
@@ -1145,19 +1150,19 @@ bool CSimpleWindow::OnLButtonUp( const CVec2 &vPos, EMouseState mouseState )
 	
 	if ( !IsInside( vPos ) )
 	{
-		//Мышка вне окошка
+		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		nCurrentSubState = E_NORMAL_STATE;
 		return false;
 	}
 	else
 	{
-		//Мышка внутри окошка
+		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		if ( nCurrentSubState == E_PUSHED_STATE )
 		{
 			nCurrentSubState = E_HIGHLIGHTED_STATE;
 			SetState( ( nCurrentState + 1 ) % states.size(), true );
 
-			//помигаем этой кнопочкой
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			if ( ( nBlink & 2 ) || ( ( nBlink & 1 ) && states.size() == 1 ) )
 				BlinkMe();
 		}
@@ -1173,7 +1178,7 @@ bool CSimpleWindow::OnRButtonDown( const CVec2 &vPos, EMouseState mouseState )
 	if ( IsInside( vPos ) )
 	{	
 		
-			//Информируем об нажатии мышкой на кнопку
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		SUIMessage msg;
 		msg.nMessageCode = UI_NOTIFY_WINDOW_RCLICKED;
 		msg.nFirst = nID;
@@ -1207,7 +1212,7 @@ void CSimpleWindow::SetState( int nState, bool bNotify )
 
 	if ( bWindowActive )
 	{
-		//Проигрываем click звук
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ click пїЅпїЅпїЅпїЅ
 		if ( !states[nCurrentState].szClickSound.empty() ) 
 			GetSingleton<IScene>()->AddSound( states[nCurrentState].szClickSound.c_str(), VNULL3, SFX_INTERFACE, SAM_ADD_N_FORGET );
 
@@ -1219,7 +1224,7 @@ void CSimpleWindow::SetState( int nState, bool bNotify )
 
 	if ( bNotify && pParent )
 	{
-		//Информируем об изменении state
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ state
 		SUIMessage msg;
 		msg.nMessageCode = UI_NOTIFY_STATE_CHANGED_MESSAGE;
 		msg.nFirst = nID;
@@ -1253,7 +1258,7 @@ static int Error_out( struct lua_State *state )
 static int GetUserProfileVar( struct lua_State *state )
 {
 	Script script(state);
-	NI_ASSERT_T( script.GetTop() == 2, "Script function must have 2 arguments on the stack" );			//два аргумента
+	NI_ASSERT_T( script.GetTop() == 2, "Script function must have 2 arguments on the stack" );			//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	const std::string szStr = script.GetObject( -2 );
 	const int nValue = script.GetObject( -1 );
 	script.PushNumber( GetSingleton<IUserProfile>()->GetVar( szStr.c_str(), nValue ) );
@@ -1263,7 +1268,7 @@ static int GetUserProfileVar( struct lua_State *state )
 static int SetUserProfileVar( struct lua_State *state )
 {
 	Script script(state);
-	NI_ASSERT_T( script.GetTop() == 2, "Script function must have 2 arguments on the stack" );			//два аргумента
+	NI_ASSERT_T( script.GetTop() == 2, "Script function must have 2 arguments on the stack" );			//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	const std::string szStr = script.GetObject( -2 );
 	const int nValue = script.GetObject( -1 );
 	GetSingleton<IUserProfile>()->AddVar( szStr.c_str(), nValue );
@@ -1273,7 +1278,7 @@ static int SetUserProfileVar( struct lua_State *state )
 static int OutputValue( struct lua_State *state )
 {
 	Script script(state);
-	NI_ASSERT_T( script.GetTop() == 2, "Script function must have 2 arguments on the stack" );			//два аргумента
+	NI_ASSERT_T( script.GetTop() == 2, "Script function must have 2 arguments on the stack" );			//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	std::string szStr = script.GetObject( -2 );
 	int nValue = script.GetObject( -1 );
 	NStr::DebugTrace( "****Debug LUA script: %s %d\n", szStr.c_str(), nValue );
@@ -1288,25 +1293,25 @@ static int InitCommonScript( struct lua_State *state )
 	return 1;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static int SetProcessedFlag( struct lua_State *state )			//устанавливает флаг PROCESSED для сообщения
+static int SetProcessedFlag( struct lua_State *state )			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ PROCESSED пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 {
 	Script script(state);
-	NI_ASSERT_T( script.GetTop() == 1, "Script function must have 1 argument on the stack" );			//один аргумент
+	NI_ASSERT_T( script.GetTop() == 1, "Script function must have 1 argument on the stack" );			//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	int nMessageCode = script.GetObject( -1 );
 	script.PushNumber( nMessageCode | PROCESSED_FLAG );
-	return 1;										//одно возвращаемое значение
+	return 1;										//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static int IsActiveBit( struct lua_State *state )
 {
 	Script script(state);
-	NI_ASSERT_T( script.GetTop() == 2, "Script function must have 2 arguments on the stack" );			//два аргумента
+	NI_ASSERT_T( script.GetTop() == 2, "Script function must have 2 arguments on the stack" );			//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	DWORD n = script.GetObject( -2 );
 	int nBit = script.GetObject( -1 );
 	int nRes = (bool) ( n & ( 1 << nBit ) );
 	script.PushNumber( nRes );
 	
-	return 1;										//одно возвращаемое значение
+	return 1;										//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static int ProcessMessageWithLink( struct lua_State *state )
@@ -1333,20 +1338,20 @@ void CMultipleWindow::CopyInternals( CMultipleWindow * pWnd )
 	CSimpleWindow::CopyInternals( pWnd );
 	pWnd->childList.clear();							//child windows
 
-	pWnd->pHighlighted = 0;			//подсвеченное окно
-	pWnd->pPushed = 0;						//нажатое окно (левая кнопка)
-	pWnd->pRPushed = 0;					//окно с нажатой правой кнопкой мыши
-	pWnd->pFocused = 0;					//окно с фокусом, при снятии фокуса для edit box например снимается TEXT_MODE
+	pWnd->pHighlighted = 0;			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+	pWnd->pPushed = 0;						//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ)
+	pWnd->pRPushed = 0;					//пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+	pWnd->pFocused = 0;					//пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ edit box пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ TEXT_MODE
 	
 	pWnd->fMouseWheelMultiplyer = fMouseWheelMultiplyer;
 
 	pWnd->szLuaFileName = szLuaFileName;
 	
-	pWnd->bAnimation = bAnimation;						//если установлен флаг, то окошко с анимацией
-	pWnd->bAnimationRunning = bAnimationRunning;			//флаг того, что происходит анимация, полезен для скорости
-	pWnd->dwLastOpenTime = dwLastOpenTime;				//время когда началась анимация открытия
-	pWnd->dwLastCloseTime = dwLastCloseTime;			//время когда началась анимация закрытия
-	pWnd->dwAnimationTime = dwAnimationTime;			//время анимации открытия или закрытия
+	pWnd->bAnimation = bAnimation;						//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	pWnd->bAnimationRunning = bAnimationRunning;			//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	pWnd->dwLastOpenTime = dwLastOpenTime;				//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	pWnd->dwLastCloseTime = dwLastCloseTime;			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	pWnd->dwAnimationTime = dwAnimationTime;			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	pWnd->vMinPos = vMinPos;
 	pWnd->vMaxPos = vMaxPos;
 	pWnd->vBeginPos = vBeginPos;
@@ -1384,7 +1389,7 @@ int CMultipleWindow::operator&( IDataTree &ss )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CMultipleWindow::InitDependentInfoMW()
 {
-	//прохожу по всем окошкам чтобы для них установить parent
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ parent
 		IUIContainer *pContainer = dynamic_cast<IUIContainer *> ( this );
 		if ( pContainer )
 		{
@@ -1392,7 +1397,7 @@ void CMultipleWindow::InitDependentInfoMW()
 				(*it)->SetParent( pContainer );
 		}
 
-		//Если у какого то child установлен ModalFlag, то мы устанавливаем этот флаг для текущего окошка и делаем этот child первым в списке
+		//пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ child пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ModalFlag, пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ child пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		CWindowList::iterator it=childList.begin();
 		for ( ; it!=childList.end(); ++it )
 		{
@@ -1412,11 +1417,11 @@ void CMultipleWindow::InitDependentInfoMW()
 			childList.push_front( pObj );
 		}
 	
-	// Считываю поддержку LUA
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ LUA
 #if defined( _DO_ASSERT ) || defined( _DO_ASSERT_SLOW )
 			std::hash_map<int, int> mapa;
 			
-			//проверяем, чтобы не было чайлдов с повторяющимися ID
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ID
 			for ( CWindowList::iterator it = childList.begin(); it != childList.end(); ++it )
 			{
 				if ( (*it)->GetWindowID() > 10 )
@@ -1450,7 +1455,7 @@ void CMultipleWindow::InitDependentInfoMW()
 		luaScript.Register( "SetUserProfileVar", SetUserProfileVar );
 		luaScript.Register( "GetUserProfileVar", GetUserProfileVar );
 		// load LUA script data
-		bLua = false;													// априори предполагаем, что инициализация не прошла
+		bLua = false;													// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		{
 			CPtr<IDataStream> pStream = GetSingleton<IDataStorage>()->OpenStream( (szLuaFileName + ".lua").c_str(), STREAM_ACCESS_READ );
 			if ( pStream )
@@ -1458,13 +1463,13 @@ void CMultipleWindow::InitDependentInfoMW()
 				int nSize = pStream->GetSize();
 				std::vector<char> buffer( nSize + 10 );
 				pStream->Read( &(buffer[0]), nSize );
-				bLua = luaScript.DoBuffer( &(buffer[0]), nSize, "UI" ) == 0;	// компилирует lua файл
+				bLua = luaScript.DoBuffer( &(buffer[0]), nSize, "UI" ) == 0;	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ lua пїЅпїЅпїЅпїЅ
 
 				Script::Object obj = luaScript.GetGlobal( "LuaInit" );
 				if ( !obj.IsNil() )
 				{
 					luaScript.PushNumber( nID );
-					int nRes = luaScript.Call( 1, 0 );			//вызываем LUA функцию, переменное число параметров, 0 результатов
+					int nRes = luaScript.Call( 1, 0 );			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ LUA пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, 0 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 					NI_ASSERT_T( nRes == 0, "LUA script call failed" );
 				}
 			}
@@ -1488,11 +1493,11 @@ int CMultipleWindow::operator&( IStructureSaver &ss )
 	saver.Add( 11, &bModal );
 	saver.Add( 12, &fMouseWheelMultiplyer );
 
-	//20 занят под serialize LUA
+	//20 пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ serialize LUA
 	
 	if ( saver.IsReading() )
 	{
-		//прохожу по всем окошкам чтобы для них установить parent
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ parent
 		IUIContainer *pContainer = dynamic_cast<IUIContainer *> ( this );
 		if ( pContainer )
 		{
@@ -1501,7 +1506,7 @@ int CMultipleWindow::operator&( IStructureSaver &ss )
 		}
 	}
 	
-	// Считываю поддержку LUA
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ LUA
 	saver.Add( 1, &szLuaFileName );
 	if ( saver.IsReading() )
 	{
@@ -1524,7 +1529,7 @@ int CMultipleWindow::operator&( IStructureSaver &ss )
 		luaScript.Register( "SetUserProfileVar", SetUserProfileVar );
 		luaScript.Register( "GetUserProfileVar", GetUserProfileVar );
 		// load LUA script data
-		bLua = false;													// априори предполагаем, что инициализация не прошла
+		bLua = false;													// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		{
 			CPtr<IDataStream> pStream = GetSingleton<IDataStorage>()->OpenStream( (szLuaFileName + ".lua").c_str(), STREAM_ACCESS_READ );
 			if ( pStream )
@@ -1532,7 +1537,7 @@ int CMultipleWindow::operator&( IStructureSaver &ss )
 				int nSize = pStream->GetSize();
 				std::vector<char> buffer( nSize + 10 );
 				pStream->Read( &(buffer[0]), nSize );
-				bLua = luaScript.DoBuffer( &(buffer[0]), nSize, "UI" ) == 0;	// компилирует lua файл
+				bLua = luaScript.DoBuffer( &(buffer[0]), nSize, "UI" ) == 0;	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ lua пїЅпїЅпїЅпїЅ
 			}
 		}
 	}
@@ -1551,7 +1556,7 @@ int CMultipleWindow::operator&( IStructureSaver &ss )
 					luaScript.PushNumber( staticLuaValues[i].nID );
 					luaScript.PushNumber( staticLuaValues[i].nVal );
 				}
-				int nRes = luaScript.Call( staticLuaValues.size()*2, 0 );			//вызываем LUA функцию, переменное число параметров, 0 результатов
+				int nRes = luaScript.Call( staticLuaValues.size()*2, 0 );			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ LUA пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, 0 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				NI_ASSERT_T( nRes == 0, "LUA script call failed" );
 			}
 
@@ -1559,7 +1564,7 @@ int CMultipleWindow::operator&( IStructureSaver &ss )
 			if ( !obj.IsNil() )
 			{
 				luaScript.PushNumber( nID );
-				int nRes = luaScript.Call( 1, 0 );			//вызываем LUA функцию, переменное число параметров, 0 результатов
+				int nRes = luaScript.Call( 1, 0 );			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ LUA пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, 0 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				NI_ASSERT_T( nRes == 0, "LUA script call failed" );
 			}
 		}
@@ -1569,7 +1574,7 @@ int CMultipleWindow::operator&( IStructureSaver &ss )
 			Script::Object obj = luaScript.GetGlobal( "LuaSave" );
 			if ( !obj.IsNil() )
 			{
-				int nRes = luaScript.Call( 0, 0 );			//вызываем LUA функцию, 0 параметров, 0 результатов
+				int nRes = luaScript.Call( 0, 0 );			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ LUA пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, 0 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, 0 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				NI_ASSERT_T( nRes == 0, "LUA script call failed" );
 				saver.Add( 20, &staticLuaValues );
 			}
@@ -1584,7 +1589,7 @@ void CMultipleWindow::SetBoundRect( const CTRect<float> &rc )
 	CSimpleWindow::SetBoundRect( rc );
 
 	for ( CWindowList::iterator it=childList.begin(); it!=childList.end(); ++it )
-		(*it)->SetBoundRect( rc );			//возможно стоит найти пересечение этого rc с собственным прямоугольником CMultipleWindow
+		(*it)->SetBoundRect( rc );			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ rc пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ CMultipleWindow
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CMultipleWindow::ShowWindow( int _nCmdShow )
@@ -1596,10 +1601,10 @@ void CMultipleWindow::ShowWindow( int _nCmdShow )
 
 	if ( bAnimation )
 	{
-		//Если окошко с анимацией
+		//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		if ( _nCmdShow != 0 && _nCmdShow != UI_SW_MINIMIZE )
 		{
-			//Показываем окошко
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			nAnimationCmdShow = _nCmdShow;
 			DWORD dwCurrentTime = GetSingleton<IGameTimer>()->GetAbsTime();
 			if ( dwCurrentTime - dwLastCloseTime < dwAnimationTime )
@@ -1612,7 +1617,7 @@ void CMultipleWindow::ShowWindow( int _nCmdShow )
 		}
 		else
 		{
-			//Скрываем окошко
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			nAnimationCmdShow = _nCmdShow;
 			DWORD dwCurrentTime = GetSingleton<IGameTimer>()->GetAbsTime();
 			if ( dwCurrentTime - dwLastOpenTime < dwAnimationTime )
@@ -1622,8 +1627,8 @@ void CMultipleWindow::ShowWindow( int _nCmdShow )
 			dwLastOpenTime = 0;
 			bAnimationRunning = true;
 
-			//окошко не скрываю, так как все еще рисуется анимация
-			//перевожу окно вниз очереди
+			//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			if ( pParent )
 			{
 				IUIElement *pWnd = dynamic_cast<IUIElement *> ( this );
@@ -1632,7 +1637,7 @@ void CMultipleWindow::ShowWindow( int _nCmdShow )
 		}
 	}
 	else
-		CSimpleWindow::ShowWindow( _nCmdShow );		//без анимации
+		CSimpleWindow::ShowWindow( _nCmdShow );		//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 	if ( UI_SW_SHOW_MODAL == _nCmdShow )
 	{
@@ -1652,15 +1657,15 @@ bool CMultipleWindow::Update( const NTimer::STime &currTime )
 {
 	if ( bAnimation )
 	{
-		//для выезжающих окон обновим координаты
+		//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		CTRect<float> rc = GetScreenRect();
 		int nWidth = vMaxPos.x - vMinPos.x;
 		int nHeight = vMaxPos.y - vMinPos.y;
 		
 		if ( currTime - dwLastOpenTime < dwAnimationTime )
 		{
-			//окно в процессе открытия
-			// fX и fY это скорости анимации вдоль осей
+			//пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			// fX пїЅ fY пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 			float fX = (int) ( (float) nWidth * ( currTime - dwLastOpenTime ) / dwAnimationTime );
 			rc.left = vBeginPos.x + vMinPos.x + fX;
 			rc.right = rc.left + wndRect.Width();
@@ -1676,7 +1681,7 @@ bool CMultipleWindow::Update( const NTimer::STime &currTime )
 		}
 		else if ( bAnimationRunning && dwLastOpenTime != 0 )
 		{
-			//Если окно закончило свое открытие
+			//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			bAnimationRunning = false;
 			dwLastOpenTime = 0;
 			rc.left = vBeginPos.x + vMaxPos.x;
@@ -1690,7 +1695,7 @@ bool CMultipleWindow::Update( const NTimer::STime &currTime )
 			
 			if ( pParent )
 			{
-				//Информируем об окончании анимации
+				//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				SUIMessage msg;
 				msg.nMessageCode = UI_NOTIFY_ANIMATION_FINISHED;
 				msg.nFirst = nID;
@@ -1702,8 +1707,8 @@ bool CMultipleWindow::Update( const NTimer::STime &currTime )
 		
 		if ( currTime - dwLastCloseTime < dwAnimationTime )
 		{
-			//окно в процессе закрытия
-			// fX и fY это скорости анимации вдоль осей
+			//пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+			// fX пїЅ fY пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 			float fX = (int) ( (float) nWidth * ( currTime - dwLastCloseTime ) / dwAnimationTime );
 			rc.left = vBeginPos.x + vMaxPos.x - fX;
 			rc.right = rc.left + wndRect.Width();
@@ -1719,14 +1724,14 @@ bool CMultipleWindow::Update( const NTimer::STime &currTime )
 		}
 		else if ( bAnimationRunning && dwLastCloseTime != 0 )
 		{
-			//Если окно закончило свое закрытие
+			//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			bAnimationRunning = false;
 			dwLastCloseTime = 0;
 			if ( nAnimationCmdShow != UI_SW_MINIMIZE )
 				CSimpleWindow::ShowWindow( UI_SW_HIDE );
 			else
 			{
-				//Если окно закончило свое открытие
+				//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				nCmdShow = nAnimationCmdShow;
 				rc.left = vBeginPos.x + vMinPos.x;
 				rc.right = rc.left + wndRect.Width();
@@ -1739,7 +1744,7 @@ bool CMultipleWindow::Update( const NTimer::STime &currTime )
 
 			if ( pParent )
 			{
-				//Информируем об окончании анимации
+				//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				SUIMessage msg;
 				msg.nMessageCode = UI_NOTIFY_ANIMATION_FINISHED;
 				msg.nFirst = nID;
@@ -1761,7 +1766,7 @@ void CMultipleWindow::SetFocus( bool bFocus )
 	CSimpleWindow::SetFocus( bFocus );
 	if ( !bFocus )
 	{
-		//спустимся вниз и уберем фокус
+		//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 		if ( pFocused )
 		{
 			pFocused->SetFocus( false );
@@ -1780,7 +1785,7 @@ void CMultipleWindow::SetFocus( bool bFocus )
 */
 
 /*
-	//Сообщение пересылается всем окошкам
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	for ( CWindowList::iterator it = childList.begin(); it != childList.end(); ++it )
 	{
 		(*it)->SetFocus( bFocus );
@@ -1889,7 +1894,7 @@ bool CMultipleWindow::OnMouseMove( const CVec2 &vPos, EMouseState mState )
 {
 	if ( bModal )
 	{
-		//только первому ребенку
+		//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		IUIElement *pModalElement = GetFirstModal();
 		if ( pModalElement )
 			return pModalElement->OnMouseMove( vPos, mState );
@@ -1906,12 +1911,12 @@ bool CMultipleWindow::OnMouseMove( const CVec2 &vPos, EMouseState mState )
 		}
 	}
 
-	//Если левая кнопка мышки не нажата
+	//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	if ( mState == E_MOUSE_FREE )
 	{
 		if ( !IsInside( vPos ) )
 		{
-			//Мышка вне окошка
+			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			if ( pHighlighted )
 			{
 				pHighlighted->OnMouseMove( vPos, mState );
@@ -1922,7 +1927,7 @@ bool CMultipleWindow::OnMouseMove( const CVec2 &vPos, EMouseState mState )
 		}
 		else
 		{
-			//найдем новое подсвеченное окошко
+			//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			IUIElement *pNewH = 0;
 			for ( CWindowList::iterator it=childList.begin(); it!=childList.end(); ++it )
 			{
@@ -1934,7 +1939,7 @@ bool CMultipleWindow::OnMouseMove( const CVec2 &vPos, EMouseState mState )
 			}
 			if ( pHighlighted && pHighlighted != pNewH )
 			{
-				//предыдущее подсвеченное окошко снимает фокус мышки
+				//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 //				pHighlighted->OnMouseMove( vPos, mState );
 				pHighlighted->OnMouseMove( CVec2(-1, -1), mState );
 			}
@@ -1945,12 +1950,12 @@ bool CMultipleWindow::OnMouseMove( const CVec2 &vPos, EMouseState mState )
 /*
 			if ( pHighlighted && pHighlighted->IsInside( vPos ) )
 			{
-				//Мышка внутри подсвеченного окна
+				//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 				return pHighlighted->OnMouseMove( vPos, mState );
 			}
 			else
 			{
-				//Мышка вне подсвеченного окна, найдем новое подсвеченное окошко
+				//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 				if ( pHighlighted )
 				{
 					pHighlighted->OnMouseMove( vPos, mState );
@@ -1975,12 +1980,12 @@ bool CMultipleWindow::OnMouseMove( const CVec2 &vPos, EMouseState mState )
 		}
 	}
 	
-	//Если левая или правая кнопка мышки нажата
+	//пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 	if ( mState & E_LBUTTONDOWN || mState & E_RBUTTONDOWN )
 	{
 		if ( !IsInside( vPos ) )
 		{
-			//Мышка вне окошка
+			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			if ( pPushed )
 			{
 				pPushed->OnMouseMove( vPos, mState );
@@ -1989,7 +1994,7 @@ bool CMultipleWindow::OnMouseMove( const CVec2 &vPos, EMouseState mState )
 		}
 		else
 		{
-			//Мышка внутри окошка
+			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			if ( pPushed && pPushed->OnMouseMove( vPos, mState ) )
 				return true;
 			if ( GetParent() )
@@ -2011,7 +2016,7 @@ bool CMultipleWindow::OnMouseWheel( const CVec2 &vPos, EMouseState mouseState, f
 
 	if ( bModal )
 	{
-		//только первому ребенку
+		//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		IUIElement *pModalElement = GetFirstModal();
 		if ( pModalElement )
 			return pModalElement->OnMouseWheel( vPos, mouseState, fDelta );
@@ -2029,8 +2034,8 @@ bool CMultipleWindow::OnMouseWheel( const CVec2 &vPos, EMouseState mouseState, f
 	}
 	
 /*
-	//если мы хотим переделать, чтобы окошко с фокусом обрабатывало Mouse Wheel, то мы должны
-	//изменить функции обработки OnMouseWheel() в UIScrollText.cpp, UIList.cpp, UIShortcutBar.cpp
+	//пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Mouse Wheel, пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ OnMouseWheel() пїЅ UIScrollText.cpp, UIList.cpp, UIShortcutBar.cpp
 	if ( pFocused )
 	{
 		return pFocused->OnMouseWheel( vPos, mouseState, fDelta );
@@ -2063,12 +2068,25 @@ bool CMultipleWindow::OnLButtonDown( const CVec2 &vPos, EMouseState mouseState )
 {
 	if ( bModal )
 	{
-		//только первому modal ребенку
+		//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ modal пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		IUIElement *pModalElement = GetFirstModal();
 		if ( pModalElement )
+		{
+#ifndef _MSC_VER
+			Bk1TracePath( "modal-route", "to first modal child", int( childList.size() ) );
+#endif
 			return pModalElement->OnLButtonDown( vPos, mouseState );
+		}
 		else if ( !childList.empty() )
 		{
+#ifndef _MSC_VER
+			// Note what this branch does: with no modal child, the click goes to
+			// whichever child happens to be first, wherever the finger landed.
+			// If the list is not that child it never hears about the click, and
+			// that is the shape of what was measured.
+			Bk1TracePath( "modal-route", "to childList.front() regardless of position",
+			              int( childList.size() ) );
+#endif
 			childList.front()->OnLButtonDown( vPos, mouseState );
 			return true;
 		}
@@ -2083,7 +2101,7 @@ bool CMultipleWindow::OnLButtonDown( const CVec2 &vPos, EMouseState mouseState )
 			pFocused = 0;
 		}
 /*
-		//Мышка вне окошка
+		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		if ( !childList.empty() )
 			childList.back()->OnKillFocus();
 */
@@ -2091,7 +2109,7 @@ bool CMultipleWindow::OnLButtonDown( const CVec2 &vPos, EMouseState mouseState )
 	}
 	else
 	{
-		//Мышка внутри окошка, находим внутреннее окошко под мышкой
+		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		for ( CWindowList::iterator it=childList.begin(); it!=childList.end(); ++it )
 		{
 			if ( (*it)->IsVisible() && (*it)->IsInside( vPos ) )
@@ -2102,7 +2120,7 @@ bool CMultipleWindow::OnLButtonDown( const CVec2 &vPos, EMouseState mouseState )
 				}
 				else
 				{
-					//Двигаем окошко наверх zorder
+					//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ zorder
 					pPushed = *it;
 					if ( pFocused )
 						pFocused->SetFocus( false );
@@ -2115,7 +2133,7 @@ bool CMultipleWindow::OnLButtonDown( const CVec2 &vPos, EMouseState mouseState )
 				}
 			}
 		}
-		//не нашел окошко в childs под мышкой
+		//пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ childs пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		if ( pFocused )
 		{
 			pFocused->SetFocus( false );
@@ -2123,9 +2141,9 @@ bool CMultipleWindow::OnLButtonDown( const CVec2 &vPos, EMouseState mouseState )
 		}
 	}
 	if ( GetParent() )
-		return true;			//CRAP		тут в скрине надо перегрузить функциональность LButtonDown
-	//Скрин должен отдавать на выполнение child под мышкой
-	//А multiple window должен вернуть true если мышка просто внутри него
+		return true;			//CRAP		пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ LButtonDown
+	//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ child пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+	//пїЅ multiple window пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ true пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 	return false;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2158,7 +2176,7 @@ bool CMultipleWindow::OnRButtonDown( const CVec2 &vPos, EMouseState mouseState )
 {
 	if ( bModal )
 	{
-		//только первому ребенку
+		//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		IUIElement *pModalElement = GetFirstModal();
 		if ( pModalElement )
 			return pModalElement->OnRButtonDown( vPos, mouseState );
@@ -2177,7 +2195,7 @@ bool CMultipleWindow::OnRButtonDown( const CVec2 &vPos, EMouseState mouseState )
 			pFocused = 0;
 		}
 /*
-		//Мышка вне окошка
+		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		if ( !childList.empty() )
 			childList.back()->OnKillFocus();
 */
@@ -2185,7 +2203,7 @@ bool CMultipleWindow::OnRButtonDown( const CVec2 &vPos, EMouseState mouseState )
 	}
 	else
 	{
-		//Мышка внутри окошка, находим внутреннее окошко под мышкой
+		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		for ( CWindowList::iterator it=childList.begin(); it!=childList.end(); ++it )
 		{
 			if ( (*it)->IsVisible() && (*it)->IsInside( vPos ) )
@@ -2196,7 +2214,7 @@ bool CMultipleWindow::OnRButtonDown( const CVec2 &vPos, EMouseState mouseState )
 				}
 				else
 				{
-					//Двигаем окошко наверх zorder
+					//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ zorder
 					pRPushed = *it;
 					if ( pFocused && pFocused != pRPushed )
 						pFocused->SetFocus( false );
@@ -2208,7 +2226,7 @@ bool CMultipleWindow::OnRButtonDown( const CVec2 &vPos, EMouseState mouseState )
 				}
 			}
 		}
-		//не нашел окошко в childs под мышкой
+		//пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ childs пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		if ( pFocused )
 		{
 			pFocused->SetFocus( false );
@@ -2216,9 +2234,9 @@ bool CMultipleWindow::OnRButtonDown( const CVec2 &vPos, EMouseState mouseState )
 		}
 		
 		if ( GetParent() )
-			return true;			//CRAP		тут в скрине надо перегрузить функциональность RButtonDown
-		//Скрин должен отдавать на выполнение child под мышкой
-		//А multiple window должен вернуть true если мышка просто внутри него
+			return true;			//CRAP		пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ RButtonDown
+		//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ child пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+		//пїЅ multiple window пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ true пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 	}
 
 	return false;
@@ -2228,7 +2246,7 @@ bool CMultipleWindow::OnRButtonUp( const CVec2 &vPos, EMouseState mouseState )
 {
 	if ( bModal )
 	{
-		//только первому ребенку
+		//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		IUIElement *pModalElement = GetFirstModal();
 		if ( pModalElement )
 			return pModalElement->OnRButtonUp( vPos, mouseState );
@@ -2251,7 +2269,7 @@ bool CMultipleWindow::OnChar( int nAsciiCode, int nVirtualKey, bool bPressed, DW
 {
 	if ( bModal )
 	{
-		//только первому ребенку
+		//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		if ( !childList.empty() )
 		{
 			return childList.front()->OnChar( nAsciiCode, nVirtualKey, bPressed, keyState );
@@ -2261,14 +2279,14 @@ bool CMultipleWindow::OnChar( int nAsciiCode, int nVirtualKey, bool bPressed, DW
 	if ( !bPressed )
 		return false;
 
-	//Сообщение пересылается окошку у которого есть фокус
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	if ( pFocused )
 	{
 		if ( pFocused->OnChar( nAsciiCode, nVirtualKey, bPressed, keyState ) )
 			return true;
 	}
 
-	//окошко с фокусом не обработало сообщение, попробуем передать его по списку детей
+	//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	for ( CWindowList::iterator it = childList.begin(); it != childList.end(); ++it )
 	{
 		if ( (*it)->OnChar( nAsciiCode, nVirtualKey, bPressed, keyState ) )
@@ -2285,8 +2303,8 @@ bool CMultipleWindow::OnChar( int nAsciiCode, int nVirtualKey, bool bPressed, DW
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IUIElement* CMultipleWindow::PickElement( const CVec2 &vPos, int nRecursion )
 {
-	//Эта функция используется в редакторе, для определения компонента под мышкой
-	if ( GetParent() == 0 )			//UIScreen, всегда прохожу по children
+	//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+	if ( GetParent() == 0 )			//UIScreen, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ children
 	{
 		for ( CWindowList::iterator it = childList.begin(); it != childList.end(); ++it )
 		{
@@ -2316,14 +2334,14 @@ IUIElement* CMultipleWindow::PickElement( const CVec2 &vPos, int nRecursion )
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 IUIElement* CMultipleWindow::GetChildByID( int nChildID )
 {
-	//находим среди детей
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	for ( CWindowList::iterator it=childList.begin(); it!=childList.end(); ++it )
 	{
 		if ( (*it)->GetWindowID() == nChildID )
 			return *it;
 	}
 
-	//находим среди детей детей
+	//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 	for ( CWindowList::iterator it=childList.begin(); it!=childList.end(); ++it )
 	{
 		IUIContainer *pContainer = dynamic_cast<IUIContainer *> ( it->GetPtr() );
@@ -2380,7 +2398,7 @@ bool CMultipleWindow::ProcessMessage( const SUIMessage &_msg )
 	bool bRet = false;
 	messageList.push_back( _msg );
 
-	//теперь обрабатываем сообщения
+	//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	while ( !messageList.empty() )
 	{
 		const SUIMessage msg = messageList.front();
@@ -2399,12 +2417,12 @@ bool CMultipleWindow::ProcessMessage( const SUIMessage &_msg )
 		
 		if ( IsProcessedMessage( msg ) )
 		{
-			//значит эта мессага должна уйти наверх без изменения
+			//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			if ( GetParent() == 0 )
 			{
-				// это должен быть Screen!!! (т.к. у него нету парента)
+				// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ Screen!!! (пїЅ.пїЅ. пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 				NI_ASSERT_SLOW( dynamic_cast<IUIScreen*>(this) != 0 );
-				ProcessMessage( msg );			//значит это должен быть screen
+				ProcessMessage( msg );			//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ screen
 			}
 			else
 				GetParent()->ProcessMessage( msg );
@@ -2413,7 +2431,7 @@ bool CMultipleWindow::ProcessMessage( const SUIMessage &_msg )
 			continue;
 		}
 		
-		//сперва сообщения обрабатываются самим multiple window
+		//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ multiple window
 		switch( msg.nMessageCode )
 		{
 			case UI_SET_STATE_WO_NOTIFY:
@@ -2480,7 +2498,7 @@ bool CMultipleWindow::ProcessMessage( const SUIMessage &_msg )
 					bModal = msg.nSecond;
 
 				bRet = true;
-				//сбросим текущие подсвеченное и нажатые окошки
+				//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 				if ( pHighlighted )
 				{
 					pHighlighted->OnMouseMove( CVec2(-1, -1), E_MOUSE_FREE );
@@ -2492,7 +2510,7 @@ bool CMultipleWindow::ProcessMessage( const SUIMessage &_msg )
 					pPushed = 0;
 				}
 				{
-				//установим границы перемещения курсора с весь экран
+				//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 				CTRect<float> screenRect = GetSingleton<IGFX>()->GetScreenRect();
 				GetSingleton<ICursor>()->SetBounds( 0, 0, screenRect.Width(), screenRect.Height() );
 				}
@@ -2522,14 +2540,14 @@ bool CMultipleWindow::ProcessMessage( const SUIMessage &_msg )
 				continue;
 		}
 
-		//потом LUA
+		//пїЅпїЅпїЅпїЅпїЅ LUA
 		if ( bLua )
 		{
 			luaScript.GetGlobal( "LuaProcessMessage" );
 			luaScript.PushNumber( msg.nMessageCode );
 			luaScript.PushNumber( msg.nFirst );
 			luaScript.PushNumber( msg.nSecond );
-			int nRes = luaScript.Call( 3, 1 );			//вызываем LUA функцию, 3 параметра, 1 результат
+			int nRes = luaScript.Call( 3, 1 );			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ LUA пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, 3 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, 1 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			NI_ASSERT_T( nRes == 0, "LUA script call LuaProcessMessage failed" );
 			
 			nRes = luaScript.GetObject( -1 );
@@ -2543,7 +2561,7 @@ bool CMultipleWindow::ProcessMessage( const SUIMessage &_msg )
 					staticMessageList.pop_front();
 				}
 				bRet = true;
-				continue;					//сообщение обработалось в LUA
+				continue;					//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ LUA
 			}
 			else
 				staticMessageList.clear();
@@ -2551,8 +2569,8 @@ bool CMultipleWindow::ProcessMessage( const SUIMessage &_msg )
 
 		if ( IsNotifyParentMessage( msg ) )
 		{
-			//значит эта мессага здесь не обработана, но ее может обработать папка
-			//отсылаем мессагу вверх без изменения
+			//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			IUIElement *pPapa = GetParent();
 			if ( pPapa )
 				GetParent()->ProcessMessage( msg );
@@ -2561,9 +2579,9 @@ bool CMultipleWindow::ProcessMessage( const SUIMessage &_msg )
 			continue;
 		}
 
-		if ( !IsNotifyMessage( msg ) )					//все notify сообщения должны обработаться внутри LUA
+		if ( !IsNotifyMessage( msg ) )					//пїЅпїЅпїЅ notify пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ LUA
 		{
-			//Теперь дети обработают это сообщение
+			//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			for ( CWindowList::iterator child = childList.begin(); child != childList.end(); ++child )
 			{
 				if ( (*child)->ProcessMessage( msg ) != false )
@@ -2589,7 +2607,7 @@ int CMultipleWindow::AddMessage( lua_State *pLuaState )
 	staticMessageList.push_back( msg );
 */
 
-	int nNumberOfParams = script.GetTop();			//число параметров
+	int nNumberOfParams = script.GetTop();			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	NI_ASSERT_SLOW_T( nNumberOfParams == 3, "The number of parameters for function AddMessage should be 3" );
 	NI_ASSERT_SLOW_T( script.IsNumber( -3 ), "Script error in AddMessage: the 1st parameter isn't a number" );
 	NI_ASSERT_SLOW_T( script.IsNumber( -2 ), "Script error in AddMessage: the 2nd parameter isn't a number" );
@@ -2605,7 +2623,7 @@ int CMultipleWindow::AddMessage( lua_State *pLuaState )
 		int i = 0;
 #endif		//_DEBUG
 
-	staticMessageList.push_back( msg );					//в процессе ProcessMessage я должен вытащить все новые сообщения из этого списка
+	staticMessageList.push_back( msg );					//пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ProcessMessage пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 
 	return 0;
 }
@@ -2614,7 +2632,7 @@ int CMultipleWindow::SaveLuaValue( lua_State *pLuaState )
 {
 	Script script( pLuaState );
 
-	int nNumberOfParams = script.GetTop();			//число параметров
+	int nNumberOfParams = script.GetTop();			//пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	NI_ASSERT_SLOW_T( nNumberOfParams == 2, "The number of parameters for function AddMessage should be 2" );
 	NI_ASSERT_SLOW_T( script.IsNumber( -2 ), "Script error in AddMessage: the 1st parameter isn't a number" );
 	NI_ASSERT_SLOW_T( script.IsNumber( -1 ), "Script error in AddMessage: the 2nd parameter isn't a number" );

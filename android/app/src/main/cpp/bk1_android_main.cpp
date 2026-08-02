@@ -106,6 +106,11 @@ SAppState g_state;
 // because the surface reports the display density before the first event.
 NBk1Touch::CRecogniser g_gestures;
 
+// The button a tap has pressed and not yet let go of, or -1. Held for exactly
+// one game step so the press is polled on its own, the way a real mouse holds
+// it; released at the top of the next frame.
+int g_nPendingRelease = -1;
+
 // ---------------------------------------------------------------------------
 // The surface
 // ---------------------------------------------------------------------------
@@ -313,16 +318,17 @@ void Perform( const NBk1Touch::SAction &action )
         const bool bLatched = Bk1TouchPanelModifierLatched() != 0;
         const bool bOrder   = ( nOver == BK1_PICK_GROUND ) ||
                               ( bLatched && nOver != BK1_PICK_INTERFACE );
-        if ( bOrder )
-        {
-            Bk1EmulateMouseButton( DIMOFS_BUTTON1, true );
-            Bk1EmulateMouseButton( DIMOFS_BUTTON1, false );
-        }
-        else
-        {
-            Bk1EmulateMouseButton( DIMOFS_BUTTON0, true );
-            Bk1EmulateMouseButton( DIMOFS_BUTTON0, false );
-        }
+        // Press now, let go after the game has stepped once. A real mouse holds
+        // the button across frames and the engine's interface relies on it: a
+        // list row takes its selection on the press, while a button acts on the
+        // release. Sent together, both events carry one timestamp and only the
+        // last state survives to be polled -- which is why Cancel worked while
+        // no list row could ever be selected, and why neither
+        // CMultipleWindow::OnLButtonDown nor CUIList::OnLButtonDown was ever
+        // entered. Measured: with the load dialog open, a tap on a row produced
+        // no trace from either, on a channel carrying hundreds of other lines.
+        g_nPendingRelease = bOrder ? DIMOFS_BUTTON1 : DIMOFS_BUTTON0;
+        Bk1EmulateMouseButton( g_nPendingRelease, true );
         // After the click, never before: the key has to still be down while the
         // engine reads the button, or the order arrives unmodified.
         Bk1TouchPanelReleaseModifiers();
@@ -824,6 +830,16 @@ extern "C" void android_main( android_app *pApp )
                       "log can be read" );
                 g_state.bGameFailed = true;
             }
+        }
+
+        // Let go of a button pressed by a tap on the previous frame. Done here,
+        // before the step, so the press had a whole step to itself and the
+        // release gets its own -- which is what the interface expects and what
+        // sending them together denied it.
+        if ( g_nPendingRelease >= 0 && !g_state.bGameFailed )
+        {
+            Bk1EmulateMouseButton( g_nPendingRelease, false );
+            g_nPendingRelease = -1;
         }
 
         const double fStepStart = MonotonicMs();

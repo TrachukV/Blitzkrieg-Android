@@ -360,10 +360,19 @@ then Restart Mission kills the process while it tears the units down:
       CMilitaryCar::~CMilitaryCar()
       CAITransportUnit::Release()
 
-A pure virtual call during destruction: by the time the base destructor runs the
-derived part is gone and the vtable entry is the pure one. libc++ aborts on that
-where MSVC quietly did something else, which is why twenty years of Windows play
-never showed it.
+A pure virtual call during destruction. libc++ aborts on that where MSVC quietly
+did something else, which is why twenty years of Windows play never showed it.
+
+The abort is inside the derived destructor rather than the base, which narrows
+it: `CUnitTurret` implements `CTurret`'s owner accessors -- `GetOwnerCenter`,
+`GetOwnerFrontDir`, `GetOwnerZ`, `GetOwnerParty` -- and holds a
+`CPtr<CAIUnit> pOwner`. Releasing that reference while the turret is being torn
+down can send control back through a base pointer into a vtable whose derived
+half has gone.
+
+Left as a lead rather than patched: which object should outlive which is a
+question about the ownership graph, and guessing at it would change behaviour
+rather than fix it.
 
 Not verified, and I will not claim otherwise: no real device -- every figure
 here is from an arm64 emulator; no campaign played to the end, only its opening

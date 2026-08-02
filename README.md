@@ -139,8 +139,19 @@ reaches the statistics screen, which is correct and complete -- the table, both
 sides, the timings -- and leaving it advances the campaign. The next mission
 then loads, runs its script and holds 60 fps at 181 draws a frame, and the
 screen is black: 96 of 96 sampled pixels, read out of the framebuffer itself
-rather than through a screenshot. Something about a second mission in one run
-does not survive. Not diagnosed.
+rather than through a screenshot.
+
+Measured, after two wrong guesses. The world's projection has both of its scales
+negated in the second mission and not the first:
+
+    mission 1   proj implies  1448 x -2172     <- draws
+    mission 2   proj implies -1593 x  2389     <- black
+    interface   proj implies  1024 x   768     <- fine in both
+
+Mirrored on both axes, so the geometry lands outside the viewport and what does
+not is discarded by the winding. The interface pass is untouched, so this is the
+camera and not the renderer. Something in its placement is not reset when a
+second mission starts in the same run. That is where to look next.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

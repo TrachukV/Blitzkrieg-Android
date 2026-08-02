@@ -1043,6 +1043,23 @@ void SDevice::ApplyState()
     // undoing exactly the thing that makes it correct: it put the translation
     // into the w column, w then varied per vertex, and every quad came out as a
     // projective wedge.
+    {
+        // What the draws are actually being handed. A frame that is busy and
+        // black is either drawing somewhere off screen or drawing nothing that
+        // survives the transform, and these two numbers tell which.
+        static int nSeen = 0;
+        if ( ( ++nSeen % 4000 ) == 0 )
+        {
+            __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
+                "draw state: viewport %ux%u at %u,%u | proj implies %.0fx%.0f | "
+                "z %.3f..%.3f | tex0 %s",
+                viewport.Width, viewport.Height, viewport.X, viewport.Y,
+                matCombined.m[0][0] != 0.0f ? 2.0f / matCombined.m[0][0] : 0.0f,
+                matCombined.m[1][1] != 0.0f ? -2.0f / matCombined.m[1][1] : 0.0f,
+                viewport.MinZ, viewport.MaxZ,
+                pStageTexture[0] != 0 ? "bound" : "none" );
+        }
+    }
     if ( bFresh || memcmp( &matCombined.m[0][0], cache.matCombined, sizeof( cache.matCombined ) ) != 0 )
     {
         glUniformMatrix4fv( program.nTransformUniform, 1, GL_FALSE, &matCombined.m[0][0] );

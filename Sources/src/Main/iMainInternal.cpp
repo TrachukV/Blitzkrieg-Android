@@ -4,6 +4,10 @@
 
 #include "../Misc/WideString.h"
 #include "iMainInternal.h"
+
+#ifndef _MSC_VER
+#include "bk1_black_rect_probe.h"
+#endif
 #include "iMainCommands.h"
 #include "SaveCommandsHistoryCommand.h"
 #include "EmergencySave.h"
@@ -749,14 +753,32 @@ bool CMainLoop::StepApp( bool bActive )
 		cmds.pop_front();
 		if ( (pCmd == 0) || !pCmd->IsValid() )
 		{
+#ifndef _MSC_VER
+			// This branch throws the whole queue away without a word. If the command
+			// that would open the screen after the mission statistics dies here, the
+			// curtain that FinishInterface lowered is never lifted by anyone.
+			Bk1TraceAlwaysObjects( pCmd == 0 ? "cmd-NULL" : "cmd-INVALID",
+														 (const IInterfaceCommand *)pCmd, (int)cmds.size(), this );
+#endif
 			NBugSlayer::RemoveAllEmergencyCommands();
 			ResetStack();
 			return false;
 		}
-		if ( pCmd->GetDelayedTime() <= timeAbs ) 
+		if ( pCmd->GetDelayedTime() <= timeAbs )
+		{
+#ifndef _MSC_VER
+			Bk1TraceAlwaysObjects( "cmd-exec", (const IInterfaceCommand *)pCmd, 0, this );
+#endif
 			pCmd->Exec( this );
+		}
 		else
+		{
+#ifndef _MSC_VER
+			Bk1TraceAlwaysObjects( "cmd-defer", (const IInterfaceCommand *)pCmd,
+														 (int)( pCmd->GetDelayedTime() - timeAbs ), this );
+#endif
 			delayedCommands.push_back( pCmd );
+		}
 	}
 	// re-store delayed commands
 	for ( CInterfaceCommandsList::iterator it = delayedCommands.begin(); it != delayedCommands.end(); ++it )

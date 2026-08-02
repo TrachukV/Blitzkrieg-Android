@@ -260,10 +260,24 @@ Which finally gives meaning to a number measured early and dismissed: the first
 mission issues 180 draws a frame and the second 181. That extra draw is the one
 that covers the screen.
 
-So the remaining work is to identify one draw call -- the last of the frame,
-present only in the second mission. Log the vertex format, stride and bound
-texture of the draws around index 180 and nothing else; the instrumentation for
-it is in the tree behind `debug.blitzkrieg.draws`.
+And identified. The tail of the frame is the same in both missions -- draws 176
+to 179, textured -- except that the second has one more, and it is the only one
+in the frame with no texture at all:
+
+    draw 180: fvf 0x1c2 stride 28 | blend on 5/6 | alphatest 1 ref 1 | tex0 none
+
+That is the draw the pixel watcher caught blackening the screen. The format
+decodes without ambiguity: position, diffuse, specular and one texture
+coordinate pair, stride 28 -- a full-screen quad coloured by its vertices and
+textured by nothing.
+
+Which closes the loop with a fix made earlier the same day: a stage with no
+texture answers `D3DTA_TEXTURE` with white, so `MODULATE` of white by the
+diffuse is the diffuse -- black, with whatever alpha the vertex carries. The
+screen is black, so the alpha arriving at the blend is opaque when it should be
+clear.
+
+The next measurement is one value: the diffuse colour of that draw.
 
 One warning, learned twice in one sitting: every one of these switches has to be
 **re-read**, not cached on the first draw of the run. A cached one cannot be

@@ -152,3 +152,11 @@ void Bk1TraceBacktrace( const char *pszTag )
 												 (unsigned long)( nBase != 0 && nPC > nBase ? nPC - nBase : nPC ) );
 	}
 }
+
+void Bk1ReportBadCast( const char *pszType )
+{
+	if ( !IsPropertySet( "debug.blitzkrieg.badcast" ) )
+		return;
+	__android_log_print( ANDROID_LOG_WARN, "Blitzkrieg.badcast",
+											 "wrong checked_cast from %s", pszType ? pszType : "(unknown)" );
+}

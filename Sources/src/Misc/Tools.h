@@ -2,6 +2,11 @@
 #define __TOOLS_H__
 #include <math.h>
 #include <string.h>
+
+#ifndef _MSC_VER
+#include <typeinfo>
+#include "bk1_black_rect_probe.h"
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #if _MSC_VER > 1000
 #pragma once
@@ -55,6 +60,18 @@ typedef __int64 int64;
 template <class TOut, class TIn>
 inline TOut checked_cast( TIn obj )
 {
+#ifndef _MSC_VER
+	// NI_ASSERT_SLOW_TF below is an empty block unless _DO_ASSERT_SLOW is
+	// defined, and this build defines only _DO_ASSERT -- so the check the line
+	// looks like it performs is compiled away, and this is a plain static_cast.
+	// That matters: the call sites that reach the load crash use exactly this
+	// form, not the CPtr one, so arming only the other half proves nothing.
+	//
+	// Reported directly, independent of the assert macros, and the cast is left
+	// to proceed so behaviour is unchanged while the net is watching.
+	if ( obj != 0 && dynamic_cast<TOut>( obj ) == 0 )
+		Bk1ReportBadCast( typeid( *obj ).name() );
+#endif
 	NI_ASSERT_SLOW_TF( !((obj != 0) && (dynamic_cast<TOut>(obj) == 0)), "Wrong checked cast", return 0 );
 	return static_cast<TOut>( obj );
 }

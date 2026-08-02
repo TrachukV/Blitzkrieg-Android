@@ -41,3 +41,8 @@ void Bk1TracePath( const char *pszTag, const char *pszPath, int nValue );
 
 // Names the caller by return address, the way the black-screen probe did.
 void Bk1TraceBacktrace( const char *pszTag );
+
+// The engine's own checked_cast net, reported instead of trapped. Its original
+// failure path is x86 inline assembly, so on arm64 the net was never compiled
+// and every checked_cast has been an unchecked static_cast.
+void Bk1ReportBadCast( const char *pszType );

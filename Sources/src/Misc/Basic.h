@@ -4,6 +4,11 @@
 #pragma ONCE
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "..\zlib\zlib.h"
+
+#ifndef _MSC_VER
+#include <typeinfo>
+#include "bk1_black_rect_probe.h"
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <int N> struct SGenericNumber { int operator()() const { return N; } };
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -651,8 +656,20 @@ inline TOut const_cast_ptr( const CPtrBase<TUserObj, TRefFunc> &ptr )
 template <class TOut, class TUserObj, class TRefFunc>
 inline TOut checked_cast_ptr( const CPtrBase<TUserObj, TRefFunc> &ptr )
 {
+#ifdef _MSC_VER
 	if ( dynamic_cast_ptr<TOut, TUserObj, TRefFunc>(ptr) == 0 ) { _asm { int 3 } }
-	
+#else
+	// The breakpoint below it is x86 inline assembly, so this whole safety net --
+	// the engine's own run-time check that a downcast is legal -- could not be
+	// compiled for arm64 and has been silently off for the entire port. A wrong
+	// checked_cast is then an unchecked static_cast: it yields a pointer of the
+	// wrong type without a word, and calling a virtual through it lands in
+	// whatever function occupies that slot.
+	//
+	// Same check, reported rather than trapped, so the net can be switched on.
+	if ( ptr != 0 && dynamic_cast_ptr<TOut, TUserObj, TRefFunc>(ptr) == 0 )
+		Bk1ReportBadCast( typeid( *ptr ).name() );
+#endif
 	return static_cast_ptr<TOut, TUserObj, TRefFunc>(ptr);
 }
 #else

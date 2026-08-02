@@ -47,6 +47,14 @@ add_compile_options(
     # BugSlayer.h says these are "meant to be enabled in release builds", and
     # the shipped game was built that way. See compat/bk1_bugslayer.cpp.
     "$<$<COMPILE_LANGUAGE:CXX>:-D_DO_ASSERT>"
+    # The engine ships its own run-time check that a downcast is legal, and it
+    # has been off for this whole port for a silly reason: its failure path is
+    # x86 inline assembly, so the arm64 build could never compile it. Basic.h now
+    # reports instead of trapping, which lets the net be switched on. A wrong
+    # checked_cast is otherwise an unchecked static_cast that yields a pointer of
+    # the wrong type in silence -- and a virtual call through one is exactly what
+    # the load-crash stack shows.
+    "$<$<COMPILE_LANGUAGE:CXX>:-D_DO_CHECKED_CAST>"
     # bk1_msvc_types.h is force-included into every C++ unit: it is what makes
     # the original sources compile unchanged.
     "$<$<COMPILE_LANGUAGE:CXX>:-include>"

@@ -55,6 +55,14 @@ public:
 		int GetInteger() const				{  return (int)lua_tonumber(GetState(), m_stackIndex);  }
 		operator int() const				{ return GetInteger(); }
 		float GetNumber() const				{  return (float)lua_tonumber(GetState(), m_stackIndex);  }
+		// The value as Lua actually stores it. Everything above narrows: an int
+		// loses the top half of a 64-bit pointer and a float keeps only 24 bits
+		// of mantissa. Scripts pass unit handles as numbers, and on a 64-bit
+		// build those handles are addresses -- read through GetInteger, one came
+		// back as 0xfffffffff6071b60 and the dynamic_cast on it took the process
+		// down. A double carries 53 bits of mantissa, which holds every address
+		// this platform hands out.
+		double GetExactNumber() const		{  return (double)lua_tonumber(GetState(), m_stackIndex);  }
 		const char* GetString() const		{  return lua_tostring(GetState(), m_stackIndex);  }
 		operator const char *() const		{ return GetString(); }
 		// so that 'std::string s = obj' works, which the UI writes

@@ -122,7 +122,7 @@ bool CScripts::ReadScriptFile()
 		if ( pStream )
 		{
 			int nSize = pStream->GetSize();
-			// +10 на всякий случай
+			// +10 пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			std::vector<char> buffer( nSize + 10 );
 			pStream->Read( &(buffer[0]), nSize );
 
@@ -320,7 +320,7 @@ void CScripts::LandSuspendedReiforcements()
 //								if ( !CanLand( candreinforcsIter->mapObject, pIDB ) )
 								{
 									bCanLand = false;
-									// не влияет на внешнее итерирование, т.к. здесь только объекты, которые куда-нибудь цепляются
+									// пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ.пїЅ. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 									suspendedReinforcs.splice( suspendedReinforcs.begin(), candObjects );
 									break;
 								}
@@ -328,7 +328,7 @@ void CScripts::LandSuspendedReiforcements()
 								{
 									candidates.insert( nLinkID );
 									CReinfList::iterator oldIter = candreinforcsIter++;
-									// не влияет на внешнее итерирование, т.к. здесь только объекты, которые куда-нибудь цепляются
+									// пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ.пїЅ. пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 									candObjects.splice( candObjects.begin(), suspendedReinforcs, oldIter );
 									bAdded = true;
 								}
@@ -385,7 +385,7 @@ void CScripts::Segment()
 			const std::string name = segmIter->second.szName;
 			
 			const int nRef = segmIter->first;
-			// для корректного удаления скриптов
+			// пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 			++segmIter;
 
 			script.GetRef( nRef );
@@ -807,7 +807,7 @@ void CScripts::LandReinforcementWithoutLandCheck( CReinfList *pReinf, const CVec
 
 	LinkInfo linksInfo;
 	CReinfList transports;
-	// поставить все не грузовики
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	for ( CReinfList::iterator iter = pReinf->begin(); iter != pReinf->end(); ++iter )
 	{
 		const IGDBObject *pObject = NGDB::GetRPGStats<IGDBObject>( iter->mapObject.szName.c_str() );
@@ -832,7 +832,7 @@ void CScripts::LandReinforcementWithoutLandCheck( CReinfList *pReinf, const CVec
 			transports.push_back( *iter );
 	}
 
-	// поставить все грузовики
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	for ( CReinfList::iterator iter = transports.begin(); iter != transports.end(); ++iter )
 	{
 		iter->mapObject.vPos += CVec3( vShift, 0.0f );
@@ -938,7 +938,7 @@ int CScripts::LandReinforcement( struct lua_State *state )
 		playersOfReinforcement >>= 1;
 	}
 	
-	// попытаться высадить все подкрепления
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	if ( pScripts->lastTimeToCheckSuspendedReinforcs != curTime )
 	{
 		pScripts->lastTimeToCheckSuspendedReinforcs = 0;
@@ -1005,7 +1005,7 @@ int CScripts::ProcessCommand( struct lua_State *state, const bool bPlaceInQueue 
 	int nGroup = -1;
 	bool bAviationCallCommand = false;
 	std::list< std::pair<CCommonUnit*, int> > oldUnitsGroups;
-	// команда с адресатом
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	if ( scriptId != -1 && pScripts->groups.find( scriptId ) != pScripts->groups.end() )
 	{
 		//CHECK_ERROR( pScripts->groups.find( scriptId ) != pScripts->groups.end(), NStr::Format( "GiveCommand: wrong script id, %d", scriptId ), 0 );
@@ -1026,7 +1026,7 @@ int CScripts::ProcessCommand( struct lua_State *state, const bool bPlaceInQueue 
 		nGroup = pAILogic->GenerateGroupNumber();
 		pAILogic->RegisterGroup( pObjects, nLen, nGroup );
 	}
-	// формирование команды
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	SAIUnitCmd command;
 	command.cmdType = EActionCommand( int( script.GetObject( 1 ) ) );
 	bool bValid = true;
@@ -1115,7 +1115,7 @@ int CScripts::ProcessCommand( struct lua_State *state, const bool bPlaceInQueue 
 			break;
 		case ACTION_COMMAND_LEAVE:
 			CHECK_ERROR( script.IsNumber( 3 ), "Give ACTION_COMMAND_LEAVE command : the third parameter is not an X coordinate", 0 );
-			CHECK_ERROR( script.IsNumber( 4 ), "Give ACTION_COMMAND_LEAVE сommand : the fourth parameter is not an Y coordinate", 0 );
+			CHECK_ERROR( script.IsNumber( 4 ), "Give ACTION_COMMAND_LEAVE пїЅommand : the fourth parameter is not an Y coordinate", 0 );
 
 			command.vPos.x = script.GetObject( 3 );
 			command.vPos.y = script.GetObject( 4 );
@@ -1163,10 +1163,10 @@ int CScripts::ProcessCommand( struct lua_State *state, const bool bPlaceInQueue 
 				command.vPos.x = script.GetObject( 4 );
 				command.vPos.y = script.GetObject( 5 );
 				command.fNumber = 1;
-				// добавить команду Call(plane)
+				// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ Call(plane)
 				pAILogic->UnitCommand( &command, nGroup, nPlayer );
 				
-				// если вызвались
+				// пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				if ( theGroupLogic.BeginGroup( nGroup ) != theGroupLogic.EndGroup() )
 				{
 					for ( int i = 6; ; i += 2 )
@@ -1190,7 +1190,7 @@ int CScripts::ProcessCommand( struct lua_State *state, const bool bPlaceInQueue 
 						pAILogic->GroupCommand( &cmd, nGroup, true );
 					}
 				}					
-				if ( scriptId != -1 ) // пробежать через все юниты и добвить их в группу
+				if ( scriptId != -1 ) // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 				{
 					for ( int i = theGroupLogic.BeginGroup( nGroup ); 
 									i != theGroupLogic.EndGroup(); i = theGroupLogic.Next( i ) )
@@ -1370,7 +1370,7 @@ int CScripts::ProcessCommand( struct lua_State *state, const bool bPlaceInQueue 
 			
 			nGroup = pAILogic->GenerateGroupNumber();
 			pAILogic->UnitCommand( &command, nGroup, nPlayer );
-			if ( scriptId != -1 ) // пробежать через все юниты и добавить их в группу
+			if ( scriptId != -1 ) // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			{
 				for ( int i = theGroupLogic.BeginGroup( nGroup ); i != theGroupLogic.EndGroup(); i = theGroupLogic.Next( i ) )
 					pScripts->AddObjToScriptGroup( theGroupLogic.GetGroupUnit( i ), scriptId );
@@ -1468,7 +1468,7 @@ int CScripts::GetNScriptUnitsInArea( struct lua_State *state )
 		int nResult = 0;
 		if ( area.eType == SScriptArea::EAT_CIRCLE ) 
 		{
-			// CRAP{ нужно объединить static objects и юниты, и избавиться от dynamic_cast
+			// CRAP{ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ static objects пїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ dynamic_cast
 			for ( std::list< CPtr<IUpdatableObj> >::iterator iter = pScripts->groups[nScriptGroup].begin(); iter != pScripts->groups[nScriptGroup].end(); ++iter )
 			{
 				if ( CFormation *pFormation = dynamic_cast_ptr<CFormation*>( *iter ) )
@@ -1494,7 +1494,7 @@ int CScripts::GetNScriptUnitsInArea( struct lua_State *state )
 		{
 			SRect areaRect;
 			areaRect.InitRect( area.center, CVec2( 1, 0 ), area.vAABBHalfSize.x, area.vAABBHalfSize.y );
-			// CRAP{ нужно объединить static objects и юниты, и избавиться от dynamic_cast
+			// CRAP{ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ static objects пїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ dynamic_cast
 			for ( std::list<CPtr<IUpdatableObj> >::iterator iter = pScripts->groups[nScriptGroup].begin(); iter != pScripts->groups[nScriptGroup].end(); ++iter )
 			{
 				if ( CFormation *pFormation = dynamic_cast_ptr<CFormation*>( *iter ) )
@@ -1574,12 +1574,12 @@ int CScripts::God( struct lua_State *state )
 	CHECK_ERROR( nPlayer >= 0 && nPlayer < theDipl.GetNPlayers(), NStr::Format( "God: wrong nubmer of party (%d), total number of parties (%d)", nPlayer, theDipl.GetNPlayers() ), 0 );
 	CHECK_ERROR( nMode >= 0 && nMode <= 5, NStr::Format( "God: wrong nubmer of mode (%d), total number of modes (%d)", nMode, 5 ), 0 );
 
-	// nMode = 0 - снять god mode полностью
-	// nMode = 1 - неубиваемость
-	// nMode = 2 - неубиваемость и бесконечные патроны
-	// nMode = 3 - бесконечные патроны
-	// nMode = 4 - снять только неубиваемость
-	// nMode = 5 - снять только бесконечные патроны
+	// nMode = 0 - пїЅпїЅпїЅпїЅпїЅ god mode пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	// nMode = 1 - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	// nMode = 2 - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	// nMode = 3 - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	// nMode = 4 - пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	// nMode = 5 - пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
 	switch ( nMode )
 	{
@@ -2252,7 +2252,12 @@ int CScripts::ReturnScriptIDs( struct lua_State *pState )
 	{
 		NI_ASSERT_T( script.IsNumber( i ), "ReturnScriptIDs: %d parameter isn't a number" );
 		
-		const int nPtr = script.GetObject( i );
+		// Read at full width. Taking this through an int drops the top half of
+		// a 64-bit address and the reinterpret_cast below then sign-extends the
+		// remainder into a pointer that is not an object; the dynamic_cast that
+		// follows reads its vtable and the process dies. The sending side, in
+		// WorldClient, prints the whole address for the same reason.
+		const uintptr_t nPtr = (uintptr_t)script.GetObject( i ).GetExactNumber();
 		IRefCount *pObj = reinterpret_cast<IRefCount*>( nPtr );
 
 		NI_ASSERT_T( dynamic_cast<IUpdatableObj*>(pObj) != 0, "Unknown object passed" );

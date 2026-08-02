@@ -750,8 +750,17 @@ void CWorldClient::Update( const NTimer::STime &currTime )
 			{
 				std::string szCmd = "ReturnScriptIDs( ";
 
+				// The handle a script gets for a unit is the object's address, and
+				// %d with a cast to int throws away the top half of it on a
+				// 64-bit build. ReturnScriptIDs turns the number back into a
+				// pointer, so what came back was the low half sign-extended --
+				// 0xfffffffff6071b60 -- and the dynamic_cast on it killed the
+				// process. Printed in full here and read in full on the other
+				// side; Lua carries it in a double, which holds every address
+				// this platform hands out.
 				for ( CMapObjectsList::const_iterator it = selList.begin(); it != selList.end(); ++it )
-					szCmd += NStr::Format( "%d,", reinterpret_cast<int>((*it)->pAIObj.GetPtr()) );
+					szCmd += NStr::Format( "%llu,",
+					                       (unsigned long long)reinterpret_cast<uintptr_t>( (*it)->pAIObj.GetPtr() ) );
 				szCmd.resize( szCmd.size() - 1 );
 				szCmd += " )";
 

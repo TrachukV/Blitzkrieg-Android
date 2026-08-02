@@ -351,6 +351,20 @@ Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road
 after a mission is a test of the port and playing well enough to earn it is not.
 
+Known broken: **Restart Mission aborts.** Taking the in-game menu (Escape twice
+-- the first press is eaten by whatever panel is open) and choosing End Mission
+then Restart Mission kills the process while it tears the units down:
+
+    __cxa_pure_virtual
+      CUnitTurret::~CUnitTurret()
+      CMilitaryCar::~CMilitaryCar()
+      CAITransportUnit::Release()
+
+A pure virtual call during destruction: by the time the base destructor runs the
+derived part is gone and the vtable entry is the pure one. libc++ aborts on that
+where MSVC quietly did something else, which is why twenty years of Windows play
+never showed it.
+
 Not verified, and I will not claim otherwise: no real device -- every figure
 here is from an arm64 emulator; no campaign played to the end, only its opening
 missions; and two-finger gestures are covered by the recogniser's own tests but

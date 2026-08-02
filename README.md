@@ -246,14 +246,16 @@ Except that this port's `SetGammaRamp` stores the ramp and applies it nowhere,
 so that path looks inert here -- and "looks" is exactly the word that has been
 wrong six times in this file. It needs measuring before it is believed.
 
-So two threads are open and both are honest:
+The gamma thread closes by reading rather than measuring, and closes both ends
+at once: `CGraphicsEngine::SetGammaCorrectionValues` only records the numbers
+into members, and this port's `SetGammaRamp` only records the table. Neither
+half applies anything, so the fader darkens nothing here and the black screen
+is not its doing.
 
-- where the unstarted `CTransition` comes from, since none of its entry points
-  run
-- whether the gamma fader does anything at all in this port, given the ramp is
-  stored and never applied
-
-Neither is a conclusion. Both are one measurement each.
+Which leaves exactly one thread, and it is the one the measurements point at:
+a `CTransition` that updates more than a thousand times a run, was never
+started, and cannot have come from any entry point that was traced. Where it is
+constructed is the question, and it is a question rather than a theory.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

@@ -1,5 +1,9 @@
 #include "StdAfx.h"
 
+#ifndef _MSC_VER
+#include "bk1_black_rect_probe.h"
+#endif
+
 #include "GeneralIntendant.h"
 
 #include "STaticObjects.h"
@@ -89,6 +93,15 @@ bool CGeneralTaskToDefendStorage::EnumWorker( class CCommonUnit *pUnit, const en
 
 		return false;
 	default:
+#ifndef _MSC_VER
+		// The engine's own message prints values far too large for this enum, and
+		// it only says them while a save is loading. Print the same value through
+		// a different path, next to a known constant, so a genuinely wrong value
+		// can be told apart from a formatting artefact.
+		Bk1TracePath( "worker-type", "", (int)eType );
+		Bk1TracePath( "worker-expect", "", (int)FT_TRUCK_REPAIR_BUILDING );
+		Bk1TracePath( "worker-unit", "", pUnit != 0 ? 1 : 0 );
+#endif
 		NI_ASSERT_T(false, NStr::Format( "didn't asked worker of type %i", eType ) );
 
 	}

@@ -4,6 +4,10 @@
 #include <mmsystem.h>
 
 #include "InterfaceScreenBase.h"
+
+#ifndef _MSC_VER
+#include "bk1_black_rect_probe.h"
+#endif
 #include "..\Main\iMainCommands.h"
 #include "..\AILogic\AILogic.h"
 #include "..\GameTT\CommonID.h"
@@ -189,6 +193,11 @@ bool CInterfaceScreenBase::OpenCurtains()
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CInterfaceScreenBase::StartInterface()
 {
+#ifndef _MSC_VER
+	// RemoveTransition lifts the curtain -- but only through this screen's own
+	// pScene, and only if this runs at all. Both halves are worth seeing.
+	Bk1TraceAlwaysObjects( "start-scr", this, -1, pScene );
+#endif
 	RemoveTransition();
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -211,7 +220,13 @@ int CInterfaceScreenBase::FinishInterface( IInterfaceCommand *pCmdNextInterface 
 		const int nLength = PlayOverInterface( "movies\\transition\\close.bik", IVideoPlayer::PLAY_INFINITE, true );
 		const int nTime = timeGetTime();
 		EnableMessageProcessingDelayed( true, nTime + nLength );
-		if ( pCmdNextInterface ) 
+#ifndef _MSC_VER
+		// A curtain with no command behind it never opens: nothing would start the
+		// next screen, and the screen that would have lifted it never exists.
+		Bk1TraceAlwaysObjects( pCmdNextInterface ? "finish+cmd" : "finish-NOCMD",
+													 pCmdNextInterface, nLength, this );
+#endif
+		if ( pCmdNextInterface )
 			AddDelayedCommand( pCmdNextInterface, nTime + nLength );
 		return nLength;
 	}
@@ -288,7 +303,7 @@ bool CInterfaceScreenBase::ProcessTextMessage( const STextMessage &msg )
 	if ( pUIScreen )
 	{
 		pUIScreen->OnChar( msg.wChars[0], msg.nVirtualKey, msg.bPressed, E_KEYBOARD_FREE );
-		// Screen мог сгенерить сообщение, например о прекрацении TEXT_MODE, его надо сразу обработать
+		// Screen пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ TEXT_MODE, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		SGameMessage uiMessage;
 		while ( pUIScreen->GetMessage( &uiMessage) )
 			ProcessMessage( uiMessage );
@@ -336,7 +351,7 @@ bool CInterfaceScreenBase::ProcessUIMessage( const SGameMessage &msg )
 		switch ( msg.nEventID )
 		{
 
-			//частный случай, обработка нажатий мышки, должна по другому обработаться UI
+			//пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ UI
 		case CMD_MOUSE0_DBLCLK:
 			if ( pUIScreen->OnLButtonDblClk( GetPosFromMsg(pCursor, msg) ) == false )
 				ProcessAndAdd( msg );
@@ -349,7 +364,7 @@ bool CInterfaceScreenBase::ProcessUIMessage( const SGameMessage &msg )
 				if ( pUIScreen->OnLButtonUp( GetPosFromMsg(pCursor, msg), E_MOUSE_FREE ) == false )
 					ProcessAndAdd( msg );
 				break;
-			//правая мыша
+			//пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
 			case CMD_BEGIN_ACTION2:
 				if ( pUIScreen->OnRButtonDown( GetPosFromMsg(pCursor, msg), E_RBUTTONDOWN ) == false )
 					ProcessAndAdd( msg );
@@ -358,10 +373,10 @@ bool CInterfaceScreenBase::ProcessUIMessage( const SGameMessage &msg )
 				if ( pUIScreen->OnRButtonUp( GetPosFromMsg(pCursor, msg), E_MOUSE_FREE ) == false )
 					ProcessAndAdd( msg );
 				break;
-			// специальный случай - надо обработать мессаги, которые были сгенерены внутри UI screen
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ UI screen
 			case -1:
 				break;
-				//все остальные случаи
+				//пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 			default:
 				pUIScreen->ProcessGameMessage( msg );
 		}

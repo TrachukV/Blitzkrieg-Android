@@ -105,6 +105,7 @@ set( COMPAT_SOURCES
     compat/bk1_ddraw.cpp
     compat/bk1_bink.cpp
     compat/bk1_dinput.cpp
+    compat/bk1_black_rect_probe.cpp
     compat/bk1_com_apartment.cpp
     compat/bk1_d3d8_resources.cpp
     compat/bk1_d3d8_device.cpp

@@ -16,6 +16,10 @@
 #include "GFXTypes.h"
 
 #include "VideoCheck.h"
+
+#ifndef _MSC_VER
+#include "bk1_black_rect_probe.h"
+#endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int CGraphicsEngine::operator&( IStructureSaver &ss )
 {
@@ -68,7 +72,7 @@ public:
 bool EnumAdapters( std::list<SAdapterDesc> *pAdapters )
 {
 	pAdapters->clear();
-	// создадим временный D3D для перечисления необходимых параметров
+	// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ D3D пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	NWin32Helper::com_ptr<IDirect3D8> pD3D = Direct3DCreate8( D3D_SDK_VERSION );
 	NI_ASSERT_TF( pD3D != 0, NStr::Format("Can't create Direct3D8 of build %d. Pls, install latest DX", D3D_SDK_VERSION), return false );
 	pD3D->Release();
@@ -91,7 +95,7 @@ bool EnumAdapters( std::list<SAdapterDesc> *pAdapters )
 				                         D3DDEVCAPS_TEXTUREVIDEOMEMORY |
 																 D3DDEVCAPS_TEXTURENONLOCALVIDMEM ) ) == 0) )
 			continue;
-		// теперь мы уверены, что хотим этот device. посмотрим на его video modes
+		// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ device. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅ video modes
 		std::list<D3DDISPLAYMODE> modes;
     DWORD dwNumAdapterModes = pD3D->GetAdapterModeCount( i );
 		CD3DDisplayModeFilterFunctional dispfilter = CD3DDisplayModeFilterFunctional( pD3D, i, capsDevice.DeviceType, false );
@@ -103,7 +107,7 @@ bool EnumAdapters( std::list<SAdapterDesc> *pAdapters )
       // Filter out low-resolution modes
       if ( (displayMode.Width < 640) || (displayMode.Height < 400) )
         continue;
-			// отфильтруем только те video modes, которые compatible with D3D device.
+			// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ video modes, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ compatible with D3D device.
 			if ( dispfilter(displayMode) ) 
 				continue;
       // Check if the mode already exist (to filter out refresh rates)
@@ -117,7 +121,7 @@ bool EnumAdapters( std::list<SAdapterDesc> *pAdapters )
 		else
 			dwBehavior = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
 		//
-		// после того, как мы провели все проверки и перечисления, добавим адаптер в список
+		// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 		//
 		SAdapterDesc ad;
 		ad.szName = adapterInfo.Driver;
@@ -135,7 +139,7 @@ bool EnumAdapters( std::list<SAdapterDesc> *pAdapters )
 	return true;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// найти желаемый адаптер по имени...
+// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ...
 const SAdapterDesc* FindAdapter( const char *pszName, const std::list<SAdapterDesc> &adapters )
 {
 	for ( std::list<SAdapterDesc>::const_iterator pos = adapters.begin(); pos != adapters.end(); ++pos )
@@ -157,7 +161,7 @@ public:
 			return desc1.capsHWDevice.VertexShaderVersion < desc2.capsHWDevice.VertexShaderVersion;
 	}
 };
-// найти имя наилучшего адаптера
+// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 // iterate all drivers in order to find one with best 3D caps.
 // main criteria of the best 3D caps - existence of the HW T&L and pixel & vertex shaders
 // if can't find best driver with 3D then return last one
@@ -1341,8 +1345,8 @@ bool CGraphicsEngine::Clear( int nNumRects, RECT *pRects, DWORD dwFlags, DWORD d
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
 // **
-// ** работа с геометрией
-// ** создание вертексов/индексов
+// ** пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+// ** пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ/пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 // **
 // **
 // ************************************************************************************************************************ //
@@ -1471,7 +1475,7 @@ void* CGraphicsEngine::GetTempIndices( int nNumElements, DWORD dwFormat, EGFXPri
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ************************************************************************************************************************ //
 // **
-// ** работа с геометрией
+// ** пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 // ** solid blocks
 // **
 // **
@@ -1818,6 +1822,24 @@ bool CGraphicsEngine::DrawText( IGFXText *pTxt, const RECT &rect, int nY, DWORD 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CGraphicsEngine::DrawRects( const SGFXRect2 *pRects, int nNumRects, bool bSolid )
 {
+#ifndef _MSC_VER
+	// The mission that renders black ends its frame with one solid, opaque black
+	// rectangle covering the whole screen, drawn with no texture. Every attempt
+	// to name its owner by reading code has been withdrawn; this names it by
+	// measurement instead. DrawRects is the one funnel every rectangle passes
+	// through, so the return address here IS the caller, with nothing inferred.
+	//
+	// Addresses are logged raw and resolved afterwards against the unstripped
+	// library -- symbols are not available in-process for static functions.
+	if ( bSolid && nNumRects == 1 && pRects != 0 )
+	{
+		const CTRect<float> rcScreen = GetScreenRect();
+		Bk1ReportBlackScreenRect( pRects[0].rect.minx, pRects[0].rect.miny,
+															pRects[0].rect.maxx, pRects[0].rect.maxy,
+															pRects[0].color,
+															rcScreen.minx, rcScreen.miny, rcScreen.maxx, rcScreen.maxy );
+	}
+#endif
 	EGFXPrimitiveType type = bSolid ? GFXPT_TRIANGLELIST : GFXPT_LINELIST;
 	CTempBufferLock<SGFXLVertex> vertices = GetTempVertices( nNumRects * 4, SGFXLVertex::format, type );
 	DWORD dwSpecular = 0;

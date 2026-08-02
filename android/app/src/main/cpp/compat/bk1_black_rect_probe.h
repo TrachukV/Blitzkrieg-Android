@@ -1,0 +1,30 @@
+#pragma once
+// Names the caller that paints the screen black, by measurement.
+//
+// The mission that renders black ends its frame with a single solid rectangle
+// covering the whole screen, opaque black, no texture. Seven separate attempts
+// to identify its owner by reading code were each withdrawn: a measured fact,
+// a few steps of reasoning, and a conclusion carried with the weight of the
+// fact. This does not reason. CGraphicsEngine::DrawRects is the one funnel
+// every rectangle passes through, so the return address recorded there is the
+// caller itself.
+//
+// Fires only for the exact rectangle that was measured -- one solid rect
+// covering the screen, alpha 255, colour components zero -- and only while the
+// property debug.blitzkrieg.blackrect is set, so a normal run pays a float
+// comparison and nothing else.
+//
+// Addresses are logged as offsets from the library's load base. Resolve them
+// against the unstripped libblitzkrieg.so:
+//   llvm-addr2line -Cfie <unstripped .so> <offset> ...
+void Bk1ReportBlackScreenRect( float rminx, float rminy, float rmaxx, float rmaxy,
+                               unsigned long dwColour,
+                               float sminx, float sminy, float smaxx, float smaxy );
+
+// The curtain that CTransition paints lives in the scene's always-visible list.
+// A screen lifts it by clearing that list when it starts. Following the list --
+// who adds to it, who clears it, and which scene it belongs to -- is what shows
+// why the curtain outlives the screen that lowered it.
+//
+// Enabled by debug.blitzkrieg.always, read afresh on every call.
+void Bk1TraceAlwaysObjects( const char *pszWhat, const void *pObject, int nSize, const void *pScene );

@@ -1395,6 +1395,52 @@ void SDevice::BindVertexLayout( const SVertexLayout &layout, int nBaseOffset )
     }
 }
 
+// Watches the screen go black, rather than reasoning about what might have
+// blackened it. Reads one pixel back after a draw and reports the draw that
+// turned it dark, and the one after which it stayed dark to the end of the
+// frame. Ruinously slow -- a pipeline stall per draw -- so it runs only when
+// asked:
+//   adb shell setprop debug.blitzkrieg.watch 1
+static void WatchForBlack( int nDrawInFrame )
+{
+    // Re-read, not cached. Caching it meant the value was fixed on the first
+    // draw of the run -- before the interesting part -- and turning the switch
+    // on later did nothing, which looked exactly like a screen that never went
+    // black. A diagnostic that can only be armed before launch is a diagnostic
+    // that lies about the case you wanted it for.
+    static int nCounter = 0;
+    static int nWanted = 0;
+    if ( ( nCounter++ % 240 ) == 0 )
+    {
+        char szValue[PROP_VALUE_MAX] = { 0 };
+        __system_property_get( "debug.blitzkrieg.watch", szValue );
+        nWanted = ( szValue[0] != 0 && szValue[0] != '0' ) ? 1 : 0;
+    }
+    if ( nWanted == 0 )
+        return;
+
+    int nWidth = 0, nHeight = 0;
+    Bk1GetClientSize( &nWidth, &nHeight );
+    if ( nWidth <= 0 || nHeight <= 0 )
+        return;
+
+    unsigned char pixel[4] = { 0, 0, 0, 0 };
+    glReadPixels( nWidth / 2, nHeight / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel );
+    const bool bDark = ( pixel[0] + pixel[1] + pixel[2] ) < 12;
+
+    static bool bWasDark = false;
+    static int nLastReport = -1;
+    if ( bDark != bWasDark && nDrawInFrame != nLastReport )
+    {
+        __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
+            "centre pixel went %s at draw %d: %u %u %u",
+            bDark ? "BLACK" : "bright", nDrawInFrame,
+            pixel[0], pixel[1], pixel[2] );
+        nLastReport = nDrawInFrame;
+        bWasDark = bDark;
+    }
+}
+
 HRESULT STDCALL SDevice::DrawPrimitive( D3DPRIMITIVETYPE type, UINT nStartVertex,
                                         UINT nPrimitiveCount )
 {
@@ -1417,6 +1463,7 @@ HRESULT STDCALL SDevice::DrawPrimitive( D3DPRIMITIVETYPE type, UINT nStartVertex
                 pStream->data.empty() ? 0 : &pStream->data[0] );
 
     glDrawArrays( PrimitiveMode( type ), 0, (GLsizei)VertexCount( type, nPrimitiveCount ) );
+    WatchForBlack( nDrawInFrame - 1 );
     return D3D_OK;
 }
 
@@ -1488,6 +1535,7 @@ HRESULT STDCALL SDevice::DrawIndexedPrimitive( D3DPRIMITIVETYPE type, UINT,
     glDrawElements( PrimitiveMode( type ), (GLsizei)VertexCount( type, nPrimitiveCount ),
                     bWide ? GL_UNSIGNED_INT : GL_UNSIGNED_SHORT,
                     (const void *)( (size_t)nStartIndex * nIndexSize ) );
+    WatchForBlack( nDrawInFrame - 1 );
     return D3D_OK;
 }
 

@@ -246,9 +246,24 @@ in a while:
 - `Clear` runs, and its colour does not survive to the readback
 - nothing yet identified accounts for that
 
-The next attempt should find what covers the screen by *watching it get
-covered* -- reading the framebuffer back between draws until it goes black --
-rather than by reasoning about which object might be responsible.
+Watching it get covered -- reading one pixel back after every draw -- answered
+in one run what seven readings of the code could not:
+
+    centre pixel went BLACK  at draw 180:  0 0 0
+    centre pixel went bright at draw 0:   72 62 25
+
+The scene draws correctly. At draw 0 the middle of the screen is terrain
+colour, and it stays that way through the frame. The **last draw of the frame**
+blackens the whole thing, every frame, and the next frame starts bright again.
+
+Which finally gives meaning to a number measured early and dismissed: the first
+mission issues 180 draws a frame and the second 181. That extra draw is the one
+that covers the screen.
+
+So the remaining work is to identify one draw call -- the last of the frame,
+present only in the second mission -- and it can be identified the same way it
+was found, by watching rather than reasoning: log the vertex format, primitive
+count and bound texture of that draw and no other.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

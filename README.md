@@ -141,17 +141,25 @@ then loads, runs its script and holds 60 fps at 181 draws a frame, and the
 screen is black: 96 of 96 sampled pixels, read out of the framebuffer itself
 rather than through a screenshot.
 
-Measured, after two wrong guesses. The world's projection has both of its scales
-negated in the second mission and not the first:
+Measured, and the first reading of that measurement was wrong. Logging the
+combined matrix showed its diagonal changing sign between the two missions, and
+I wrote that down as the projection being mirrored. Splitting the three matrices
+apart says otherwise:
 
-    mission 1   proj implies  1448 x -2172     <- draws
-    mission 2   proj implies -1593 x  2389     <- black
-    interface   proj implies  1024 x   768     <- fine in both
+    mission 1   view 0.7071 0.3536 0.5000   proj 0.00195 0.00260 -0.00010
+    mission 2   view 0.7071 0.3536 0.5000   proj 0.00195 0.00260 -0.00010
 
-Mirrored on both axes, so the geometry lands outside the viewport and what does
-not is discarded by the winding. The interface pass is untouched, so this is the
-camera and not the renderer. Something in its placement is not reset when a
-second mission starts in the same run. That is where to look next.
+The view and the projection are identical. What differs is the world matrix,
+which carries a rotation of about 87 degrees in the second mission where the
+first had identity -- and the sign I had read off the combined diagonal was that
+rotation, not a mirror. A rotated matrix says nothing useful through its
+diagonal alone.
+
+That is still not a diagnosis. The trace samples every four-thousandth draw, so
+one mission's sample may have landed on terrain and the other's on a mesh, and
+those carry different world matrices by design. The next measurement has to
+compare like with like -- the same pass in both runs -- before anything is
+concluded from it.
 
 Found by adding a way to end a mission as a win on request --
 `adb shell setprop debug.blitzkrieg.winmission 1` -- because walking the road

@@ -1050,14 +1050,15 @@ void SDevice::ApplyState()
         static int nSeen = 0;
         if ( ( ++nSeen % 4000 ) == 0 )
         {
+            // The three separately: a sign that flips in the combined matrix
+            // came from one of them, and knowing which is the whole question.
             __android_log_print( ANDROID_LOG_INFO, "Blitzkrieg.gfx",
-                "draw state: viewport %ux%u at %u,%u | proj implies %.0fx%.0f | "
-                "z %.3f..%.3f | tex0 %s",
-                viewport.Width, viewport.Height, viewport.X, viewport.Y,
-                matCombined.m[0][0] != 0.0f ? 2.0f / matCombined.m[0][0] : 0.0f,
-                matCombined.m[1][1] != 0.0f ? -2.0f / matCombined.m[1][1] : 0.0f,
-                viewport.MinZ, viewport.MaxZ,
-                pStageTexture[0] != 0 ? "bound" : "none" );
+                "draw state: world %.4f %.4f %.4f | view %.4f %.4f %.4f | "
+                "proj %.5f %.5f %.5f | combined %.5f %.5f",
+                matWorld.m[0][0], matWorld.m[1][1], matWorld.m[2][2],
+                matView.m[0][0], matView.m[1][1], matView.m[2][2],
+                matProjection.m[0][0], matProjection.m[1][1], matProjection.m[2][2],
+                matCombined.m[0][0], matCombined.m[1][1] );
         }
     }
     if ( bFresh || memcmp( &matCombined.m[0][0], cache.matCombined, sizeof( cache.matCombined ) ) != 0 )

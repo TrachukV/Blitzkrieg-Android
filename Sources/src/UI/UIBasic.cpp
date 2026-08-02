@@ -2116,6 +2116,14 @@ bool CMultipleWindow::OnLButtonDown( const CVec2 &vPos, EMouseState mouseState )
 			{
 				if ( !(*it)->IsWindowEnabled() )
 				{
+#ifndef _MSC_VER
+					// A disabled child swallows the click and reports it
+					// handled, raising nothing. From outside that is
+					// indistinguishable from a button that does not work, which
+					// is exactly how the confirm button in the save/load dialog
+					// behaves while the cancel button beside it answers.
+					Bk1TracePath( "click-swallowed", "child disabled", 0 );
+#endif
 					return true;
 				}
 				else

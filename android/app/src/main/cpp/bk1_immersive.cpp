@@ -41,6 +41,29 @@ void Bk1GoImmersive( ANativeActivity *pActivity )
     if ( pActivity == 0 || pActivity->vm == 0 )
         return;
 
+    // First, the one that works from this thread.
+    //
+    // Everything below reaches Java through JNI and calls View and Window
+    // methods, and those belong to the UI thread; called from the game's thread
+    // they can quietly do nothing. Measured: with all of it in place the window
+    // still came back 2700 wide against a 2856 screen -- the 156-pixel strip
+    // reported from a real phone -- and the native window itself was 2700, so
+    // nothing had widened it.
+    //
+    // ANativeActivity_setWindowFlags is the NDK's own call for this, is safe
+    // from any thread, and LAYOUT_NO_LIMITS is precisely the flag that lets a
+    // window extend under the system decorations instead of being inset by
+    // them. FULLSCREEN goes with it for the status bar.
+    // The NDK headers here name only some of these, so the two that matter are
+    // written out. They are WindowManager.LayoutParams.FLAG_FULLSCREEN and
+    // FLAG_LAYOUT_NO_LIMITS, whose values are part of the platform's public
+    // interface and do not move.
+    const int nFlagFullscreen     = 0x00000400;
+    const int nFlagLayoutNoLimits = 0x00000200;
+    ANativeActivity_setWindowFlags( pActivity,
+                                    nFlagFullscreen | nFlagLayoutNoLimits,
+                                    0 );
+
     JNIEnv *pEnv = 0;
     // The caller is the app's own thread, not the one the VM knows about, so it
     // has to attach before it may touch anything Java.

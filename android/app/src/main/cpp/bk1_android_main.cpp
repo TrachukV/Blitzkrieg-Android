@@ -225,6 +225,17 @@ bool CreateSurface( SAppState *pState )
     // rather than ahead of it.
     eglSwapInterval( pState->display, 1 );
 
+    // The window's own size beside the surface's. The screen is 2856 wide and
+    // the surface came back 2700 -- 156 short, which is the strip still visible
+    // on a real phone. These two numbers say which half is at fault: a window
+    // already 2856 means only the EGL surface lagged and wants recreating; a
+    // window of 2700 means the system never widened it and the flags are being
+    // applied too late or ignored. The fixes are different, so the log
+    // distinguishes them rather than leaving it to be guessed.
+    if ( pState->pApp != 0 && pState->pApp->window != 0 )
+        LOGI( "native window %dx%d",
+              ANativeWindow_getWidth( pState->pApp->window ),
+              ANativeWindow_getHeight( pState->pApp->window ) );
     LOGI( "surface %dx%d, renderer %s", pState->nWidth, pState->nHeight,
           (const char *)glGetString( GL_RENDERER ) );
     pState->bReady = true;

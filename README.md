@@ -502,16 +502,21 @@ not care. The list now shows all seven with clean names.
 
 Two things past it still fail, both measured:
 
-**The tick button is not bound to touch.** Tapping it delivers no `IMC_OK` at
-all -- only `1000` (`IMC_SELECTION_CHANGED`) from the row and a stray `31415`.
-The config binds `load_mission` to `ENTER` and `NUM_ENTER` and to nothing else.
-Sending a real Enter proves the rest of the chain is sound:
+**Withdrawn: the tick button being unreachable by touch.** This file said that,
+and it was wrong. Confirming works on touch -- by double-tapping the row, which
+is what a mouse user does too:
 
+    load-msg  n=1000                                   selection changed
     load-msg  n=10002                                  IMC_OK arrives
-    load-ok   n=1                                      selection valid
     load-cmd  path=[GERMAN Mission Start Auto.sav]     correct file
 
-That is a genuine gap in the touch adaptation rather than a mystery.
+The earlier test put a full second between the two taps. `CControlKey` derives a
+double click from two presses of the same control inside `TIME_DIFF_DBL_CLK`, so
+a one-second gap is not a double click and never was. The measurement was badly
+built, and the conclusion drawn from it was published here as fact.
+
+`load_mission` really is bound to `ENTER` and `NUM_ENTER` only -- but the list
+row's own double click is what confirms, and it reaches `IMC_OK` on a finger.
 
 **The load then aborts.**
 
@@ -547,8 +552,8 @@ entries and the database names them.
 Manual Save Game likewise accepts a name and writes no file, and has not been
 traced yet.
 
-Binding the tick to a tap on its own would only make the abort reachable by
-finger, which is why neither is patched ahead of the other.
+So the touch side of loading is fine; what a double tap reaches is the abort
+above. That is the one thing standing between the finger and a loaded game.
 
 Not verified, and I will not claim otherwise: no real device -- every figure
 here is from an arm64 emulator; no campaign played to the end, only its opening

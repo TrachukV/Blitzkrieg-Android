@@ -747,13 +747,36 @@ void HandleCommand( android_app *pApp, int32_t nCommand )
         // A swipe from the edge brings the bars back and nothing puts them away
         // again, so this is asked for afresh every time focus returns.
         Bk1GoImmersive( pApp->activity );
-        // And the surface may have grown when they went: re-read it, or the
-        // game keeps drawing into the smaller area the bars left behind.
-        if ( pState->bReady )
+        // The window grows when the bars go, and the EGL surface made before
+        // that does not always follow it. Telling the engine the window's size
+        // while it draws into a smaller surface leaves a band along the edge --
+        // which is what a photo from a real phone showed after the window
+        // itself was already reporting the full 2856.
+        //
+        // So the two are compared, and the surface is built again when they
+        // disagree. Costly enough not to do blindly, which is why it is a
+        // comparison rather than an unconditional recreate.
+        if ( pState->bReady && pApp->window != 0 )
         {
-            eglQuerySurface( pState->display, pState->surface, EGL_WIDTH, &pState->nWidth );
-            eglQuerySurface( pState->display, pState->surface, EGL_HEIGHT, &pState->nHeight );
-            Bk1SetClientSize( pState->nWidth, pState->nHeight );
+            EGLint nSurfaceWidth = 0, nSurfaceHeight = 0;
+            eglQuerySurface( pState->display, pState->surface, EGL_WIDTH, &nSurfaceWidth );
+            eglQuerySurface( pState->display, pState->surface, EGL_HEIGHT, &nSurfaceHeight );
+            const int nWindowWidth  = ANativeWindow_getWidth( pApp->window );
+            const int nWindowHeight = ANativeWindow_getHeight( pApp->window );
+            if ( nWindowWidth > 0 && nWindowHeight > 0 &&
+                 ( nWindowWidth != nSurfaceWidth || nWindowHeight != nSurfaceHeight ) )
+            {
+                LOGI( "surface %dx%d is behind the window %dx%d; rebuilding it",
+                      nSurfaceWidth, nSurfaceHeight, nWindowWidth, nWindowHeight );
+                DestroySurface( pState );
+                CreateSurface( pState );
+            }
+            else
+            {
+                pState->nWidth  = nSurfaceWidth;
+                pState->nHeight = nSurfaceHeight;
+                Bk1SetClientSize( pState->nWidth, pState->nHeight );
+            }
         }
         break;
 

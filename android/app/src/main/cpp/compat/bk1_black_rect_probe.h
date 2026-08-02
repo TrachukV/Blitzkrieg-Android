@@ -46,3 +46,19 @@ void Bk1TraceBacktrace( const char *pszTag );
 // failure path is x86 inline assembly, so on arm64 the net was never compiled
 // and every checked_cast has been an unchecked static_cast.
 void Bk1ReportBadCast( const char *pszType );
+
+// Whether the per-frame traces may print.
+//
+// The updater's probes print three lines a frame. At 45 fps that is 135 lines a
+// second, and logcat's ring cannot hold a run's worth: a twenty second
+// interaction produced 113344 lines. They do not merely add noise -- they push
+// every other trace out of the buffer before it can be read, so a tag that did
+// print looks exactly like one that never ran. That cost a wrong reading in
+// this port, and would have cost more.
+//
+// So the noisy ones answer to a property of their own:
+//
+//   adb shell setprop debug.blitzkrieg.updater 1
+//
+// debug.blitzkrieg.saveload alone now leaves the one-shot traces legible.
+int Bk1NoisyTracesEnabled( void );

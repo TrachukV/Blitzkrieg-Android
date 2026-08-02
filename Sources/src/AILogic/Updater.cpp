@@ -545,9 +545,14 @@ void CUpdater::GetNewStaticObjects( struct SNewUnitInfo **pObjects, int *pnLen )
 			if ( (*pObjects)[i].pObj == 0 )
 				++nNullRecalled;
 		}
-		Bk1TracePath( "recalled", "", *pnLen );
-		if ( nNullRecalled != 0 )
-			Bk1TracePath( "recalled-NULL", "", nNullRecalled );
+		// Behind its own property: printed every frame, this drowns every other
+		// trace out of the log buffer before it can be read.
+		if ( Bk1NoisyTracesEnabled() )
+		{
+			Bk1TracePath( "recalled", "", *pnLen );
+			if ( nNullRecalled != 0 )
+				Bk1TracePath( "recalled-NULL", "", nNullRecalled );
+		}
 	}
 	const int nAfterRecalled = *pnLen;
 	// GetTempRawBuffer_Hook reserves on a vector and hands back &v[0]. reserve
@@ -570,26 +575,29 @@ void CUpdater::GetNewStaticObjects( struct SNewUnitInfo **pObjects, int *pnLen )
 
 #ifndef _MSC_VER
 	{
-		int nNullLoop = 0;
-		for ( int i = nAfterRecalled; i < *pnLen; ++i )
+		if ( Bk1NoisyTracesEnabled() )
 		{
-			if ( (*pObjects)[i].pObj == 0 )
+			int nNullLoop = 0;
+			for ( int i = nAfterRecalled; i < *pnLen; ++i )
 			{
-				// The database index names the type; only the first few are needed
-				// and 107 lines of the same thing help nobody.
-				if ( nNullLoop < 8 )
-					Bk1TracePath( "null-dbid", "", (int)(*pObjects)[i].dbID );
-				++nNullLoop;
+				if ( (*pObjects)[i].pObj == 0 )
+				{
+					// The database index names the type; only the first few are needed
+					// and 107 lines of the same thing help nobody.
+					if ( nNullLoop < 8 )
+						Bk1TracePath( "null-dbid", "", (int)(*pObjects)[i].dbID );
+					++nNullLoop;
+				}
 			}
+			Bk1TracePath( "complex", "", *pnLen - nAfterRecalled );
+			if ( nNullLoop != 0 )
+				Bk1TracePath( "complex-NULL", "", nNullLoop );
+			// Same size as the original request, so this call cannot grow the vector
+			// itself. A different address means something else did, mid-loop.
+			const void *pBufferNow = (const void *)GetTempBuffer<SNewUnitInfo>( nSize );
+			Bk1TracePath( pBufferNow == pBufferAtStart ? "buffer-same" : "buffer-MOVED",
+										"", nSize );
 		}
-		Bk1TracePath( "complex", "", *pnLen - nAfterRecalled );
-		if ( nNullLoop != 0 )
-			Bk1TracePath( "complex-NULL", "", nNullLoop );
-		// Same size as the original request, so this call cannot grow the vector
-		// itself. A different address means something else did, mid-loop.
-		const void *pBufferNow = (const void *)GetTempBuffer<SNewUnitInfo>( nSize );
-		Bk1TracePath( pBufferNow == pBufferAtStart ? "buffer-same" : "buffer-MOVED",
-									"", nSize );
 	}
 #endif
 	ClearAllUpdates( ACTION_NOTIFY_NEW_ST_OBJ );

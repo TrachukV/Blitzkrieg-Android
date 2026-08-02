@@ -153,6 +153,11 @@ void Bk1TraceBacktrace( const char *pszTag )
 	}
 }
 
+int Bk1NoisyTracesEnabled( void )
+{
+	return IsPropertySet( "debug.blitzkrieg.updater" ) ? 1 : 0;
+}
+
 void Bk1ReportBadCast( const char *pszType )
 {
 	if ( !IsPropertySet( "debug.blitzkrieg.badcast" ) )

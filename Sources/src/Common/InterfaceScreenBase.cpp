@@ -163,12 +163,48 @@ void CInterfaceScreenBase::EnableMessageProcessingDelayed( const bool bEnable, c
 	AddDelayedCommand( pCmd, timeToPerform );
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#ifndef _MSC_VER
+namespace
+{
+// The curtain FinishInterface lowers is infinite by design: it must stay opaque
+// while the next screen loads, and the screen that starts lifts it in
+// StartInterface. Popping back to a screen that already exists never calls
+// StartInterface -- PopInterface only hands it the focus -- so on that path the
+// curtain has no one to lift it and stays down for the rest of the process.
+//
+// Remembering the one object lets it be lifted on its own. Clearing the whole
+// always-visible list there instead would also take the mission's gamma fader,
+// which lives in the same list and has nothing to do with any of this.
+CPtr<ISceneObject> g_pLoweredCurtain;
+}
+
+void Bk1RememberCurtain( ISceneObject *pCurtain )
+{
+	g_pLoweredCurtain = pCurtain;
+}
+
+void Bk1LiftCurtain()
+{
+	if ( g_pLoweredCurtain == 0 )
+		return;
+	IScene *pScene = GetSingleton<IScene>();
+	if ( pScene )
+		pScene->RemoveSceneObject( g_pLoweredCurtain );
+	g_pLoweredCurtain = 0;
+}
+#endif
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int CInterfaceScreenBase::PlayOverInterface( const char *pszName, const DWORD dwAddFlags, const bool bFadeIn )
 {
 	CPtr<ITransition> pTransition = CreateObject<ITransition>( SCENE_TRANSITION );
 	const int nLength = pTransition->Start( pszName, dwAddFlags, timeGetTime(), bFadeIn );
-	if ( nLength > 0 ) 
+	if ( nLength > 0 )
+	{
 		pScene->AddSceneObject( pTransition );
+#ifndef _MSC_VER
+		Bk1RememberCurtain( pTransition );
+#endif
+	}
 	return nLength;
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,14 +235,25 @@ void CInterfaceScreenBase::StartInterface()
 	Bk1TraceAlwaysObjects( "start-scr", this, -1, pScene );
 #endif
 	RemoveTransition();
+#ifndef _MSC_VER
+	// RemoveTransition clears the whole list, so the remembered curtain is gone
+	// with it; forget it here rather than leave a pointer to a removed object.
+	Bk1RememberCurtain( 0 );
+#endif
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int CInterfaceScreenBase::FinishInterface( const int nInterfaceCommandTypeID, const char *pszCommandConfig )
 {
 	CPtr<IInterfaceCommand> pCmd;
-	if ( nInterfaceCommandTypeID != 0 ) 
+	if ( nInterfaceCommandTypeID != 0 )
 	{
 		pCmd = CreateObject<IInterfaceCommand>( nInterfaceCommandTypeID );
+#ifndef _MSC_VER
+		// The last unnamed thing in the chain: which command id the finishing
+		// screen asks for, and what CreateObject actually handed back for it.
+		Bk1TraceAlwaysObjects( "finish-id", (const IInterfaceCommand *)pCmd,
+													 nInterfaceCommandTypeID, this );
+#endif
 		pCmd->Configure( pszCommandConfig );
 	}
 	return FinishInterface( pCmd );

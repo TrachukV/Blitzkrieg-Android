@@ -12,6 +12,12 @@
 
 #ifndef _MSC_VER
 #include "bk1_black_rect_probe.h"
+
+// The curtain lowered by FinishInterface, and the lift for the one path that
+// has no StartInterface to do it: popping back to a screen that already exists.
+// See the note beside g_pLoweredCurtain in InterfaceScreenBase.cpp.
+void Bk1RememberCurtain( interface ISceneObject *pCurtain );
+void Bk1LiftCurtain();
 #endif
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 template <class TInterface, int NInterfaceTypeID>
@@ -30,23 +36,9 @@ public:
 		PreCreate( pML );
 		//
 		TInterface *pInterface = CreateObject<TInterface>( NInterfaceTypeID );
-#ifndef _MSC_VER
-		// cmd-exec is logged and start-scr is not, so the screen is never started.
-		// These four say which of the steps in between is where it stops.
-		Bk1TraceAlwaysObjects( "exec-created", pInterface, NInterfaceTypeID, pML );
-#endif
 		pInterface->Init();
-#ifndef _MSC_VER
-		Bk1TraceAlwaysObjects( "exec-inited", pInterface, NInterfaceTypeID, pML );
-#endif
 		pML->ClearResources();
-#ifndef _MSC_VER
-		Bk1TraceAlwaysObjects( "exec-cleared", pInterface, NInterfaceTypeID, pML );
-#endif
 		pInterface->StartInterface();
-#ifndef _MSC_VER
-		Bk1TraceAlwaysObjects( "exec-started", pInterface, NInterfaceTypeID, pML );
-#endif
 		//
 		PostCreate( pML, pInterface );
 	}

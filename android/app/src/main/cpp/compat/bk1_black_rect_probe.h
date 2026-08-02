@@ -28,3 +28,8 @@ void Bk1ReportBlackScreenRect( float rminx, float rminy, float rmaxx, float rmax
 //
 // Enabled by debug.blitzkrieg.always, read afresh on every call.
 void Bk1TraceAlwaysObjects( const char *pszWhat, const void *pObject, int nSize, const void *pScene );
+
+// Lifts the curtain lowered by FinishInterface. Declared here as well as in
+// InterfaceScreenBase.h because CMainLoop::PopInterface needs it and Main does
+// not include the Common screen header. Defined in InterfaceScreenBase.cpp.
+void Bk1LiftCurtain();
